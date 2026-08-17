@@ -7829,8 +7829,10 @@ const MacroNewsEngine = {
         if (!this.data) {
             this.data = {
                 policyIndicators: {
-                    tcmbPolicyRate: { rate: 50.00, sourceUrl: 'https://www.tcmb.gov.tr' },
-                    fundWithholdingTax: { generalRate: 7.50, equityRate: 0.00, sourceUrl: 'https://www.resmigazete.gov.tr' }
+                    tcmbPolicyRate: { rate: 37.00, sourceUrl: 'https://www.tcmb.gov.tr' },
+                    tuikInflation: { rate: 31.75, sourceUrl: 'https://www.tuik.gov.tr' },
+                    realInterestRate: { rate: 5.25, sourceUrl: 'https://www.tcmb.gov.tr' },
+                    fundWithholdingTax: { generalRate: 17.50, equityRate: 0.00, sourceUrl: 'https://www.resmigazete.gov.tr' }
                 },
                 bulletins: [
                     {
@@ -7838,8 +7840,8 @@ const MacroNewsEngine = {
                         category: 'tcmb',
                         categoryLabel: 'TCMB',
                         title: 'TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti',
-                        summary: 'Para Politikası Kurulu, politika faizi olan bir hafta vadeli repo ihale faiz oranının %50 düzeyinde sabit tutulmasına karar vermiştir.',
-                        date: '17.08.2026',
+                        summary: 'Para Politikası Kurulu, bir hafta vadeli repo ihale faiz oranını %37.00 seviyesinde sabit tutmuştur.',
+                        date: '18.08.2026',
                         source: 'TCMB Resmi Duyuru',
                         sourceUrl: 'https://www.tcmb.gov.tr',
                         badge: 'badge-primary',
@@ -7853,7 +7855,7 @@ const MacroNewsEngine = {
     },
 
     getPolicyRate() {
-        return this.data?.policyIndicators?.tcmbPolicyRate?.rate || 50.00;
+        return this.data?.policyIndicators?.tcmbPolicyRate?.rate || 37.00;
     },
 
     render() {
@@ -7870,10 +7872,10 @@ const MacroNewsEngine = {
             ? bulletins 
             : bulletins.filter(b => b.category === this.activeCategory);
 
-        const tcmbRate = indicators.tcmbPolicyRate?.rate || 50.00;
-        const tuikInflation = indicators.tuikInflation?.rate || 44.38;
+        const tcmbRate = indicators.tcmbPolicyRate?.rate || 37.00;
+        const tuikInflation = indicators.tuikInflation?.rate || 31.75;
         const realRate = indicators.realInterestRate?.rate || Number((tcmbRate - tuikInflation).toFixed(2));
-        const generalTax = indicators.fundWithholdingTax?.generalRate || 7.50;
+        const generalTax = indicators.fundWithholdingTax?.generalRate || 17.50;
         const equityTax = indicators.fundWithholdingTax?.equityRate || 0.0;
         const tcmbUrl = indicators.tcmbPolicyRate?.sourceUrl || 'https://www.tcmb.gov.tr';
         const tuikUrl = indicators.tuikInflation?.sourceUrl || 'https://www.tuik.gov.tr';
@@ -9072,8 +9074,8 @@ const MacroRegimeEngine = {
             ? MacroNewsEngine.data.policyIndicators
             : ((typeof window !== 'undefined' && window.ZENITH_MACRO_NEWS?.policyIndicators) || {});
 
-        const policyRate = indicators.tcmbPolicyRate?.rate || 50.00;
-        const inflation = indicators.tuikInflation?.rate || 44.38;
+        const policyRate = indicators.tcmbPolicyRate?.rate || 37.00;
+        const inflation = indicators.tuikInflation?.rate || 31.75;
         const realRate = indicators.realInterestRate?.rate || Number((policyRate - inflation).toFixed(2));
 
         let activeRegime = this.regimes[1];

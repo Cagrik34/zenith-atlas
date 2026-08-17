@@ -1,36 +1,36 @@
 // Zenith Atlas - Makroekonomi & Resmi Politika Bültenleri Çevrimdışı Verisi
 window.ZENITH_MACRO_NEWS = {
-  "lastUpdate": "2026-08-17T23:21:30.662398+03:00",
+  "lastUpdate": "2026-08-18T00:00:03.301043+03:00",
   "policyIndicators": {
     "tcmbPolicyRate": {
       "name": "TCMB 1 Hafta Vadeli Repo (Politika Faizi)",
-      "rate": 50.0,
+      "rate": 37.0,
       "change": 0.0,
-      "lastDecisionDate": "2026-08-17",
+      "lastDecisionDate": "2026-08-18",
       "source": "TCMB (Türkiye Cumhuriyet Merkez Bankası)",
       "sourceUrl": "https://www.tcmb.gov.tr"
     },
     "tuikInflation": {
       "name": "TÜİK Yıllık TÜFE Enflasyonu (Tüketici Fiyat Endeksi)",
-      "rate": 44.38,
-      "monthlyChange": 2.24,
+      "rate": 31.75,
+      "monthlyChange": 1.85,
       "period": "Yıllık TÜFE",
       "source": "TÜİK (Türkiye İstatistik Kurumu)",
       "sourceUrl": "https://www.tuik.gov.tr"
     },
     "realInterestRate": {
       "name": "TCMB Net Reel Faiz Düzeyi (Politika Faizi - TÜFE)",
-      "rate": 5.62,
-      "formula": "TCMB Politika Faizi (%50.00) - TÜİK Yıllık TÜFE (%44.38)",
+      "rate": 5.25,
+      "formula": "TCMB Politika Faizi (%37.00) - TÜİK Yıllık TÜFE (%31.75)",
       "status": "Pozitif Reel Faiz (Sıkı Para Politikası)",
       "source": "TCMB & TÜİK Resmi Verileri",
       "sourceUrl": "https://www.tcmb.gov.tr"
     },
     "fundWithholdingTax": {
-      "name": "Yatırım Fonları Stopaj Oranı (TL / Hisse / Katılım)",
-      "generalRate": 7.5,
+      "name": "Yatırım Fonları Stopaj Oranı (Standart / Hisse / Döviz)",
+      "generalRate": 17.5,
       "equityRate": 0.0,
-      "fxRate": 10.0,
+      "fxRate": 17.5,
       "decree": "Cumhurbaşkanı Kararı (Resmi Gazete)",
       "source": "Gelir İdaresi Başkanlığı / Resmi Gazete",
       "sourceUrl": "https://www.resmigazete.gov.tr"
@@ -44,7 +44,7 @@ window.ZENITH_MACRO_NEWS = {
     },
     "fedRate": {
       "name": "FED Politika Faizi (Federal Funds Rate)",
-      "rate": "5.25 - 5.50",
+      "rate": "4.75 - 5.00",
       "source": "Federal Reserve (ABD)",
       "sourceUrl": "https://www.federalreserve.gov"
     }
@@ -55,8 +55,8 @@ window.ZENITH_MACRO_NEWS = {
       "category": "tcmb",
       "categoryLabel": "TCMB",
       "title": "TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti",
-      "summary": "Para Politikası Kurulu, politika faizi olan bir hafta vadeli repo ihale faiz oranının %50 düzeyinde sabit tutulmasına karar vermiştir. Kurul, enflasyon beklentileri ve fiyatlama davranışlarını yakından izlemektedir.",
-      "date": "17.08.2026",
+      "summary": "Para Politikası Kurulu, bir hafta vadeli repo ihale faiz oranını %37.00 seviyesinde sabit tutmuştur. Kurul, dezenflasyon sürecinin güçlenmesini ve fiyatlama davranışlarını yakından izlemektedir.",
+      "date": "18.08.2026",
       "source": "TCMB Resmi Duyuru",
       "sourceUrl": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin/2026",
       "badge": "badge-primary",
@@ -67,14 +67,14 @@ window.ZENITH_MACRO_NEWS = {
       "id": "NEWS-02",
       "category": "spk",
       "categoryLabel": "SPK & Vergi",
-      "title": "Yatırım Fonlarında Stopaj Oranları ve Teşvik Düzenlemeleri",
-      "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında stopaj oranı %7,5 olarak uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
-      "date": "17.08.2026",
+      "title": "Yatırım Fonlarında Stopaj Oranları ve Vergi Düzenlemeleri",
+      "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında standart stopaj oranı %17,5 olarak uygulanırken; BIST hisse senedi yoğun fonlar (en az %80 hisse) %0 stopaj tam muafiyetini sürdürmektedir.",
+      "date": "18.08.2026",
       "source": "Resmi Gazete & GİB",
       "sourceUrl": "https://www.resmigazete.gov.tr",
       "badge": "badge-success",
       "impact": "high",
-      "impactLabel": "Vergi Avantajı"
+      "impactLabel": "Vergi Düzenlemesi"
     },
     {
       "id": "NEWS-03",
@@ -82,7 +82,7 @@ window.ZENITH_MACRO_NEWS = {
       "categoryLabel": "KAP & BIST",
       "title": "TEFAS Portföy Yönetim Şirketleri Aylık Fon Dağılım Raporları",
       "summary": "Kamuyu Aydınlatma Platformu (KAP) üzerinde TEFAS bünyesindeki 1.051 fonun portföy dağılım detayları ve doluluk oranları güncellenmiştir.",
-      "date": "17.08.2026",
+      "date": "18.08.2026",
       "source": "KAP (Kamuyu Aydınlatma Platformu)",
       "sourceUrl": "https://www.kap.org.tr",
       "badge": "badge-info",
@@ -95,7 +95,7 @@ window.ZENITH_MACRO_NEWS = {
       "categoryLabel": "Küresel Makro",
       "title": "Küresel Piyasalarda Enflasyon Göstergeleri ve Tahvil Getirileri",
       "summary": "ABD 10 yıllık tahvil faizleri ve ons altın paritesi küresel merkez bankaları açıklamaları doğrultusunda dengeli seyrini sürdürmektedir.",
-      "date": "17.08.2026",
+      "date": "18.08.2026",
       "source": "Federal Reserve & Bloomberg",
       "sourceUrl": "https://www.federalreserve.gov",
       "badge": "badge-warning",

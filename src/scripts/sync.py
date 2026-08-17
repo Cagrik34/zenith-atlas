@@ -486,7 +486,7 @@ def sync_macro_news(target_dirs):
         "policyIndicators": {
             "tcmbPolicyRate": {
                 "name": "TCMB 1 Hafta Vadeli Repo (Politika Faizi)",
-                "rate": 50.00,
+                "rate": 37.00,
                 "change": 0.00,
                 "lastDecisionDate": datetime.date.today().strftime('%Y-%m-%d'),
                 "source": "TCMB (Türkiye Cumhuriyet Merkez Bankası)",
@@ -494,25 +494,25 @@ def sync_macro_news(target_dirs):
             },
             "tuikInflation": {
                 "name": "TÜİK Yıllık TÜFE Enflasyonu (Tüketici Fiyat Endeksi)",
-                "rate": 44.38,
-                "monthlyChange": 2.24,
+                "rate": 31.75,
+                "monthlyChange": 1.85,
                 "period": "Yıllık TÜFE",
                 "source": "TÜİK (Türkiye İstatistik Kurumu)",
                 "sourceUrl": "https://www.tuik.gov.tr"
             },
             "realInterestRate": {
                 "name": "TCMB Net Reel Faiz Düzeyi (Politika Faizi - TÜFE)",
-                "rate": 5.62,
-                "formula": "TCMB Politika Faizi (%50.00) - TÜİK Yıllık TÜFE (%44.38)",
+                "rate": 5.25,
+                "formula": "TCMB Politika Faizi (%37.00) - TÜİK Yıllık TÜFE (%31.75)",
                 "status": "Pozitif Reel Faiz (Sıkı Para Politikası)",
                 "source": "TCMB & TÜİK Resmi Verileri",
                 "sourceUrl": "https://www.tcmb.gov.tr"
             },
             "fundWithholdingTax": {
-                "name": "Yatırım Fonları Stopaj Oranı (TL / Hisse / Katılım)",
-                "generalRate": 7.50,
+                "name": "Yatırım Fonları Stopaj Oranı (Standart / Hisse / Döviz)",
+                "generalRate": 17.50,
                 "equityRate": 0.00,
-                "fxRate": 10.00,
+                "fxRate": 17.50,
                 "decree": "Cumhurbaşkanı Kararı (Resmi Gazete)",
                 "source": "Gelir İdaresi Başkanlığı / Resmi Gazete",
                 "sourceUrl": "https://www.resmigazete.gov.tr"
@@ -526,7 +526,7 @@ def sync_macro_news(target_dirs):
             },
             "fedRate": {
                 "name": "FED Politika Faizi (Federal Funds Rate)",
-                "rate": "5.25 - 5.50",
+                "rate": "4.75 - 5.00",
                 "source": "Federal Reserve (ABD)",
                 "sourceUrl": "https://www.federalreserve.gov"
             }
@@ -537,7 +537,7 @@ def sync_macro_news(target_dirs):
                 "category": "tcmb",
                 "categoryLabel": "TCMB",
                 "title": "TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti",
-                "summary": "Para Politikası Kurulu, politika faizi olan bir hafta vadeli repo ihale faiz oranının %50 düzeyinde sabit tutulmasına karar vermiştir. Kurul, enflasyon beklentileri ve fiyatlama davranışlarını yakından izlemektedir.",
+                "summary": "Para Politikası Kurulu, bir hafta vadeli repo ihale faiz oranını %37.00 seviyesinde sabit tutmuştur. Kurul, dezenflasyon sürecinin güçlenmesini ve fiyatlama davranışlarını yakından izlemektedir.",
                 "date": datetime.date.today().strftime('%d.%m.%Y'),
                 "source": "TCMB Resmi Duyuru",
                 "sourceUrl": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin/2026",
@@ -549,14 +549,14 @@ def sync_macro_news(target_dirs):
                 "id": "NEWS-02",
                 "category": "spk",
                 "categoryLabel": "SPK & Vergi",
-                "title": "Yatırım Fonlarında Stopaj Oranları ve Teşvik Düzenlemeleri",
-                "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında stopaj oranı %7,5 olarak uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
+                "title": "Yatırım Fonlarında Stopaj Oranları ve Vergi Düzenlemeleri",
+                "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında standart stopaj oranı %17,5 olarak uygulanırken; BIST hisse senedi yoğun fonlar (en az %80 hisse) %0 stopaj tam muafiyetini sürdürmektedir.",
                 "date": datetime.date.today().strftime('%d.%m.%Y'),
                 "source": "Resmi Gazete & GİB",
                 "sourceUrl": "https://www.resmigazete.gov.tr",
                 "badge": "badge-success",
                 "impact": "high",
-                "impactLabel": "Vergi Avantajı"
+                "impactLabel": "Vergi Düzenlemesi"
             },
             {
                 "id": "NEWS-03",
