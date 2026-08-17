@@ -9,14 +9,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Zenith Atlas">
-    <title>Zenith Atlas – Evrensel Çoklu Varlık & Finansal Zekâ Terminali</title>
+    <title>Zenith Atlas - Evrensel Çoklu Varlık & Finansal Zekâ Terminali</title>
     
     <!-- Open Graph / Meta -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Zenith Atlas – Evrensel Çoklu Varlık & Finansal Zekâ Terminali">
+    <meta property="og:title" content="Zenith Atlas - Evrensel Çoklu Varlık & Finansal Zekâ Terminali">
     <meta property="og:description" content="Hisse Senetleri (BIST/US), 1.051 Yatırım Fonu, Kapalıçarşı Altın/Gümüş ve Döviz piyasalarını tek çatı altında birleştiren kurumsal finans terminali.">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Zenith Atlas – Evrensel Finansal Terminal">
+    <meta name="twitter:title" content="Zenith Atlas - Evrensel Finansal Terminal">
     <meta name="twitter:description" content="Çoklu varlık portföy yönetimi, canlı saliselik WebSocket akışı ve kurumsal finansal zekâ motoru.">
     <meta name="keywords" content="zenith atlas, finans terminali, portföy yönetimi, hisse senedi, borsa istanbul, tefas fonları, altın, döviz, monte carlo, quant analizi">
 
@@ -160,14 +160,14 @@
                         </div>
                     </div>
                     <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
-                        <button class="portfolio-empty-cta" id="emptyStateCta" onclick="Navigation.switchTab('add-fund')">
+                        <button class="portfolio-empty-cta" id="emptyStateCta">
                             ➕ İlk Fonunuzu Ekleyin
                         </button>
-                        <button class="portfolio-empty-cta" id="emptyStateImportBtn" onclick="PortfolioBackup.triggerImport()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);">
+                        <button class="portfolio-empty-cta" id="emptyStateImportBtn" style="background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);">
                             📂 Portföy Yedeği Yükle (JSON)
                         </button>
                     </div>
-                    <input type="file" id="portfolioBackupFileInput" accept=".json" style="display:none;" onchange="PortfolioBackup.handleFileSelect(event)">
+                    <input type="file" id="portfolioBackupFileInput" accept=".json" style="display:none;">
                 </div>
 
                 <!-- Active Dashboard View (shown when portfolio has funds) -->
@@ -267,7 +267,7 @@
                         <div class="qr-icon">📐</div>
                         <div class="qr-content">
                             <span class="qr-label">Sharpe Oranı</span>
-                            <span class="qr-value" id="sharpeRatioDisplay">—</span>
+                            <span class="qr-value" id="sharpeRatioDisplay">-</span>
                             <span class="qr-sub" id="sharpeRatioSub">Risk-Getiri Verimi</span>
                         </div>
                     </div>
@@ -275,7 +275,7 @@
                         <div class="qr-icon">📉</div>
                         <div class="qr-content">
                             <span class="qr-label">Max Drawdown</span>
-                            <span class="qr-value" id="maxDrawdownDisplay">—</span>
+                            <span class="qr-value" id="maxDrawdownDisplay">-</span>
                             <span class="qr-sub" id="maxDrawdownSub">En Kötü Durum Kaybı</span>
                         </div>
                     </div>
@@ -283,7 +283,7 @@
                         <div class="qr-icon">🇹🇷</div>
                         <div class="qr-content">
                             <span class="qr-label">BIST Betası</span>
-                            <span class="qr-value" id="bistBetaDisplay">—</span>
+                            <span class="qr-value" id="bistBetaDisplay">-</span>
                             <span class="qr-sub" id="bistBetaSub">Borsa Duyarlılığı</span>
                         </div>
                     </div>
@@ -291,7 +291,7 @@
                         <div class="qr-icon">💵</div>
                         <div class="qr-content">
                             <span class="qr-label">USD Betası</span>
-                            <span class="qr-value" id="usdBetaDisplay">—</span>
+                            <span class="qr-value" id="usdBetaDisplay">-</span>
                             <span class="qr-sub" id="usdBetaSub">Dolar Duyarlılığı</span>
                         </div>
                     </div>
@@ -334,6 +334,7 @@
                         <div class="chart-container">
                             <canvas id="riskChart"></canvas>
                         </div>
+                    </div>
                 </div>
 
                 <!-- Monte Carlo Risk & Future Simulator Section -->
@@ -1008,8 +1009,8 @@
                         <div class="card-header">
                             <h3>📂 Portföyümdeki Fonlar</h3>
                             <div style="display:flex; gap:6px;">
-                                <button class="btn btn-sm btn-ghost" id="exportBackupBtn" onclick="PortfolioBackup.exportBackup()" title="Portföyü JSON Olarak Yedekle">💾 Yedekle</button>
-                                <button class="btn btn-sm btn-ghost" id="importBackupBtn" onclick="PortfolioBackup.triggerImport()" title="JSON Yedeğini İçe Aktar">📂 Yedeği Yükle</button>
+                                <button class="btn btn-sm btn-ghost" id="exportBackupBtn" title="Portföyü JSON Olarak Yedekle">💾 Yedekle</button>
+                                <button class="btn btn-sm btn-ghost" id="importBackupBtn" title="JSON Yedeğini İçe Aktar">📂 Yedeği Yükle</button>
                                 <button class="btn btn-sm btn-ghost" id="clearAllFundsBtn" title="Tüm portföyü sıfırla">🗑️ Sıfırla</button>
                             </div>
                         </div>
@@ -1269,7 +1270,7 @@
                     <span class="modal-icon">📂</span>
                     <h3>Portföy Yedeği Geri Yükle (JSON)</h3>
                 </div>
-                <button class="modal-close" id="closePortfolioImportModal" onclick="PortfolioBackup.closeImportModal()">&times;</button>
+                <button class="modal-close" id="closePortfolioImportModal">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px 24px;">
                 <div style="text-align: center; margin-bottom: 20px;">
@@ -1286,16 +1287,16 @@
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button class="btn btn-primary" onclick="PortfolioBackup.triggerFilePicker()" style="justify-content: center; padding: 12px; font-size: 0.92rem;">
+                    <button class="btn btn-primary" id="importModalPickFileBtn" style="justify-content: center; padding: 12px; font-size: 0.92rem;">
                         <span>📂</span> Bilgisayarımdan JSON Dosyası Seç
                     </button>
-                    <button class="btn btn-secondary" onclick="PortfolioBackup.closeImportModal(); Navigation.switchTab('add-fund');" style="justify-content: center; padding: 12px; font-size: 0.92rem;">
+                    <button class="btn btn-secondary" id="importModalManualAddBtn" style="justify-content: center; padding: 12px; font-size: 0.92rem;">
                         <span>➕</span> Sıfırdan Fon Ekle
                     </button>
                 </div>
             </div>
             <div class="modal-footer" style="display: flex; justify-content: flex-end;">
-                <button class="btn btn-ghost" onclick="PortfolioBackup.closeImportModal()">Vazgeç</button>
+                <button class="btn btn-ghost" id="importModalCancelBtn">Vazgeç</button>
             </div>
         </div>
     </div>

@@ -255,6 +255,65 @@ const PortfolioBackup = {
         const badge = document.getElementById('strategyBadgeHeader');
         if (badge) badge.textContent = `${PortfolioData.funds.length} Varlık`;
         Utils.showToast(`✅ Portföy yedeği başarıyla geri yüklendi (${funds.length} varlık).`, 'success');
+    },
+
+    bindEvents() {
+        const emptyCta = document.getElementById('emptyStateCta');
+        if (emptyCta && !emptyCta._bound) {
+            emptyCta._bound = true;
+            emptyCta.addEventListener('click', () => Navigation.switchTab('add-fund'));
+        }
+
+        const emptyImportBtn = document.getElementById('emptyStateImportBtn');
+        if (emptyImportBtn && !emptyImportBtn._bound) {
+            emptyImportBtn._bound = true;
+            emptyImportBtn.addEventListener('click', () => this.triggerImport());
+        }
+
+        const fileInput = document.getElementById('portfolioBackupFileInput');
+        if (fileInput && !fileInput._bound) {
+            fileInput._bound = true;
+            fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        }
+
+        const exportBtn = document.getElementById('exportBackupBtn');
+        if (exportBtn && !exportBtn._bound) {
+            exportBtn._bound = true;
+            exportBtn.addEventListener('click', () => this.exportBackup());
+        }
+
+        const importBtn = document.getElementById('importBackupBtn');
+        if (importBtn && !importBtn._bound) {
+            importBtn._bound = true;
+            importBtn.addEventListener('click', () => this.triggerImport());
+        }
+
+        const closeBtn = document.getElementById('closePortfolioImportModal');
+        if (closeBtn && !closeBtn._bound) {
+            closeBtn._bound = true;
+            closeBtn.addEventListener('click', () => this.closeImportModal());
+        }
+
+        const pickBtn = document.getElementById('importModalPickFileBtn');
+        if (pickBtn && !pickBtn._bound) {
+            pickBtn._bound = true;
+            pickBtn.addEventListener('click', () => this.triggerFilePicker());
+        }
+
+        const manualBtn = document.getElementById('importModalManualAddBtn');
+        if (manualBtn && !manualBtn._bound) {
+            manualBtn._bound = true;
+            manualBtn.addEventListener('click', () => {
+                this.closeImportModal();
+                Navigation.switchTab('add-fund');
+            });
+        }
+
+        const cancelBtn = document.getElementById('importModalCancelBtn');
+        if (cancelBtn && !cancelBtn._bound) {
+            cancelBtn._bound = true;
+            cancelBtn.addEventListener('click', () => this.closeImportModal());
+        }
     }
 };
 
@@ -1323,9 +1382,9 @@ const Dashboard = {
                     <td class="mono font-semibold" style="color:var(--warning);">${fund.valorCutoff || '13:30'}</td>
                     <td><span class="badge ${(fund.tax || '').includes('%0') ? 'badge-success' : 'badge-purple'}">${fund.tax || 'Vergili'}</span></td>
                     <td class="mono font-bold">%${(fund.managementFee || 0).toFixed(2)}</td>
-                    <td class="mono">${fund.marketShare > 0 ? '%' + fund.marketShare.toFixed(2) : '—'}</td>
-                    <td class="mono">${fund.occupancyRate > 0 ? '%' + fund.occupancyRate.toFixed(2) : '—'}</td>
-                    <td class="mono">${fund.investors > 0 ? Utils.formatNumber(fund.investors) : '—'}</td>
+                    <td class="mono">${fund.marketShare > 0 ? '%' + fund.marketShare.toFixed(2) : '-'}</td>
+                    <td class="mono">${fund.occupancyRate > 0 ? '%' + fund.occupancyRate.toFixed(2) : '-'}</td>
+                    <td class="mono">${fund.investors > 0 ? Utils.formatNumber(fund.investors) : '-'}</td>
                 </tr>
             `;
         });
@@ -1932,7 +1991,7 @@ const MonteCarloEngine = {
         }
         if (winEl) winEl.textContent = `%${data.winRate.toFixed(1)}`;
         if (varEl) varEl.textContent = Utils.formatCurrency(data.var95);
-        if (rangeEl) rangeEl.textContent = `${Utils.formatCurrency(data.rangeMin, 0)} – ${Utils.formatCurrency(data.rangeMax, 0)}`;
+        if (rangeEl) rangeEl.textContent = `${Utils.formatCurrency(data.rangeMin, 0)} - ${Utils.formatCurrency(data.rangeMax, 0)}`;
 
         this.renderChart(data);
     },
@@ -2358,7 +2417,7 @@ const StressTestEngine = {
         const recEl = document.getElementById('stressSelectedRecBadge');
         const listEl = document.getElementById('stressBreakdownList');
 
-        if (titleEl) titleEl.textContent = `${res.scenario.icon} ${res.scenario.title} — Backtest Simülasyonu`;
+        if (titleEl) titleEl.textContent = `${res.scenario.icon} ${res.scenario.title} - Backtest Simülasyonu`;
         if (impactEl) {
             const sign = res.netPnlPct >= 0 ? '+' : '';
             impactEl.textContent = `Kriz Sonu Net: ${sign}%${res.netPnlPct.toFixed(1)} (${sign}${Utils.formatCurrency(res.netPnlTL)})`;
@@ -3557,7 +3616,7 @@ const StrategyTab = {
                 <div class="principle-item">
                     <span class="principle-icon">${icon}</span>
                     <div class="principle-text">
-                        <h4>${idx + 1}. ${f.code} – ${Utils.escapeHtml(f.shortName || f.name)} (%${pct.toFixed(1)} / ${Utils.formatCurrency(val)})</h4>
+                        <h4>${idx + 1}. ${f.code} - ${Utils.escapeHtml(f.shortName || f.name)} (%${pct.toFixed(1)} / ${Utils.formatCurrency(val)})</h4>
                         <p>${roleDesc}</p>
                     </div>
                 </div>
@@ -4486,7 +4545,7 @@ const ZenithIntelligence = {
         const today = new Date().toISOString().slice(0, 10);
 
         let reportTxt = `================================================================================\n`;
-        reportTxt += `🌌 ZENITH ATLAS – YAPAY ZEKÂ PORTFÖY & RİSK ANALİZ RAPORU\n`;
+        reportTxt += `🌌 ZENITH ATLAS - YAPAY ZEKÂ PORTFÖY & RİSK ANALİZ RAPORU\n`;
         reportTxt += `================================================================================\n`;
         reportTxt += `Rapor Tarihi         : ${Utils.getTimestamp()}\n`;
         reportTxt += `Toplam Portföy Değeri: ${Utils.formatCurrency(totalVal)}\n`;
@@ -4598,7 +4657,7 @@ const ZenithIntelligence = {
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Zenith Atlas – Yapay Zekâ Analiz Raporu</title>
+    <title>Zenith Atlas - Yapay Zekâ Analiz Raporu</title>
     <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F172A; margin: 0; padding: 20px; font-size: 13px; line-height: 1.5; background: #FFF; }
@@ -4721,7 +4780,7 @@ const ExcelExport = {
 
         const wb = XLSX.utils.book_new();
         wb.Props = {
-            Title: 'Zenith Atlas – Portföy Takip ve Analiz Modeli',
+            Title: 'Zenith Atlas - Portföy Takip ve Analiz Modeli',
             Subject: 'Zenith Atlas Çoklu Varlık Portföy Modeli',
             Author: 'Zenith Atlas',
             CreatedDate: new Date()
@@ -4734,7 +4793,7 @@ const ExcelExport = {
         const totalReturn = Calculations.getTotalReturn();
 
                 const summaryData = [
-            ['ZENITH ATLAS – PORTFÖY VE KANTİTATİF ANALİZ RAPORU'],
+            ['ZENITH ATLAS - PORTFÖY VE KANTİTATİF ANALİZ RAPORU'],
             ['Strateji:', 'Dengeli ve Büyüme'],
             ['Raporlama Tarihi:', Utils.getTimestamp()],
             [],
@@ -4799,7 +4858,7 @@ const ExcelExport = {
         // 3. AI and Quant Analysis Sheet
         const quant = ZenithIntelligence.getQuantMetrics();
         const aiData = [
-            ['ZENITH ATLAS – DUAL INTELLIGENCE & QUANT RİSK RAPORU'],
+            ['ZENITH ATLAS - DUAL INTELLIGENCE & QUANT RİSK RAPORU'],
             ['Raporlama Tarihi:', Utils.getTimestamp()],
             [],
             ['KANTİTATİF VE RİSK GÖSTERGELERİ', 'DEĞER', 'DEĞERLENDİRME'],
@@ -5056,7 +5115,7 @@ const FundSearch = {
         results.forEach(fund => {
             const inPortfolio = portfolioCodes.has(fund.code);
             const inWatchlist = watchlistSet.has(fund.code);
-            const priceStr = fund.price > 0 ? `₺${fund.price.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 6})}` : '—';
+            const priceStr = fund.price > 0 ? `₺${fund.price.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 6})}` : '-';
             const safeCode = Utils.escapeHtml(fund.code);
             const safeTitle = Utils.escapeHtml(fund.title);
             const safeCat = Utils.escapeHtml(fund.category || 'TEFAS Fonu');
@@ -5273,7 +5332,7 @@ const AddFundTab = {
             totalReturn: totalValue - totalCost,
             totalReturnPct: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0,
             benchmarks: [],
-            description: `${fund.title} — ${fund.category || 'TEFAS Fonu'}.`
+            description: `${fund.title} - ${fund.category || 'TEFAS Fonu'}.`
         };
 
         const ok = PortfolioManager.addFund(newFund);
@@ -6930,7 +6989,7 @@ const ExecutiveReportEngine = {
             <div class="executive-memo">
                 <div class="memo-header">
                     <div>
-                        <div class="memo-title">🌌 ZENITH ATLAS – YATIRIMCI PORTFÖY RAPORU</div>
+                        <div class="memo-title">🌌 ZENITH ATLAS - YATIRIMCI PORTFÖY RAPORU</div>
                         <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:3px;">
                             Çoklu Varlık Dağılımı, Quant Risk Analizi ve Piyasa Görünümü
                         </div>
@@ -7394,18 +7453,18 @@ const MarketSessionsEngine = {
                 flag: '📈',
                 name: 'Borsa İstanbul (BIST)',
                 subName: 'BIST 100, BIST 30, Pay Piyasası',
-                hours: 'Hafta içi 10:00 – 18:00 (Açılış: 09:40)',
+                hours: 'Hafta içi 10:00 - 18:00 (Açılış: 09:40)',
                 status: bistStatus,
                 countdown: bistCountdown,
                 badgeClass: bistBadgeClass,
-                note: 'Sürekli müzayede 18:00\'de tamamlanır; 18:00–18:10 arası gün sonu kapanış seansıdır.'
+                note: 'Sürekli müzayede 18:00\'de tamamlanır; 18:00-18:10 arası gün sonu kapanış seansıdır.'
             },
             {
                 id: 'tefas',
                 flag: '🏛️',
                 name: 'TEFAS Fon Piyasası',
                 subName: 'Takasbank & SPK Yatırım Fonları',
-                hours: 'Hafta içi 09:00 – 13:30 (Aynı Gün Valör)',
+                hours: 'Hafta içi 09:00 - 13:30 (Aynı Gün Valör)',
                 status: tefasStatus,
                 countdown: tefasCountdown,
                 badgeClass: tefasBadgeClass,
@@ -7416,18 +7475,18 @@ const MarketSessionsEngine = {
                 flag: '🇺🇸',
                 name: 'Amerikan Borsaları (Midas)',
                 subName: 'NYSE, NASDAQ & S&P 500',
-                hours: 'TSİ 16:30 – 23:00 (Pre: 11:00 / Post: 03:00)',
+                hours: 'TSİ 16:30 - 23:00 (Pre: 11:00 / Post: 03:00)',
                 status: usStatus,
                 countdown: usCountdown,
                 badgeClass: usBadgeClass,
-                note: 'Midas kullanıcıları için hafta içi 24 saat işlem imkânı; ana borsa seansı 16:30–23:00 arasıdır.'
+                note: 'Midas kullanıcıları için hafta içi 24 saat işlem imkânı; ana borsa seansı 16:30-23:00 arasıdır.'
             },
             {
                 id: 'gold',
                 flag: '🥇',
                 name: 'Kapalıçarşı & Serbest Piyasa',
                 subName: 'Fiziki Altın, Gümüş ve Döviz',
-                hours: 'Hafta içi 09:00 – 18:00',
+                hours: 'Hafta içi 09:00 - 18:00',
                 status: goldStatus,
                 countdown: goldCountdown,
                 badgeClass: goldBadgeClass,
@@ -7730,6 +7789,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     AddFundTab.initEventListeners();
     KeyboardManager.init();
     ZenithIntelligence.init();
+    PortfolioBackup.bindEvents();
     FundSearch.renderResults(null);
 
     const badge = document.getElementById('strategyBadgeHeader');

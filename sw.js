@@ -1,5 +1,5 @@
 /**
- * Zenith Atlas – Service Worker (PWA Offline & Cache Engine)
+ * Zenith Atlas - Service Worker (PWA Offline & Cache Engine)
  * Version: 1.0.0
  * Author: Çağrı Giray Keşan
  */

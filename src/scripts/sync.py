@@ -416,7 +416,7 @@ def fetch_and_update_real_markets(target_dirs):
 def parse_args():
     """Komut satırı argümanlarını çözümler."""
     parser = argparse.ArgumentParser(
-        description="Zenith Atlas – TEFAS Fon ve Canlı Finansal Terminal Senkronizasyon Motoru",
+        description="Zenith Atlas - TEFAS Fon ve Canlı Finansal Terminal Senkronizasyon Motoru",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Örnek Kullanımlar:
