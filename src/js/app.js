@@ -9514,37 +9514,84 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================================================
-    // Otomatik Arka Plan Canlı Senkronizasyon (Zero-Touch Continuous Auto-Sync)
+    // Sıfır-Müdahale Otomatik Arka Plan Senkronizasyonu (Zero-Touch Live Auto-Sync)
     // ==========================================================================
-    const runAutoSync = async () => {
-        try {
-            if (typeof FundSearch !== 'undefined') await FundSearch.loadDatabase();
-            if (typeof PriceService !== 'undefined') await PriceService.init();
-            if (typeof MarketService !== 'undefined') await MarketService.loadData();
-            if (typeof MacroNewsEngine !== 'undefined') await MacroNewsEngine.loadData();
-            if (typeof MacroNewsEngine !== 'undefined') MacroNewsEngine.render();
-            if (typeof Dashboard !== 'undefined') Dashboard.init();
-            if (typeof Charts !== 'undefined') Charts.init();
-            if (typeof TerminalTicker !== 'undefined') TerminalTicker.renderTrack();
-        } catch (e) {
-            // Silent fallback
+    const LiveAutoSyncEngine = {
+        isSyncing: false,
+        lastSyncTimestamp: null,
+
+        async runFullAutoSync() {
+            if (this.isSyncing) return;
+            this.isSyncing = true;
+
+            try {
+                // 1. Canlı 1.051 Fon Veri Tabanı Senkronizasyonu
+                if (typeof FundSearch !== 'undefined') {
+                    await FundSearch.loadDatabase();
+                }
+
+                // 2. Canlı Fon Fiyatları ve Portföy Senkronizasyonu
+                if (typeof PriceService !== 'undefined') {
+                    await PriceService.loadPricesFromJsonFile();
+                }
+
+                // 3. Canlı Piyasa, Altın & Döviz Akışı
+                if (typeof MarketService !== 'undefined') {
+                    if (!MarketService.data) await MarketService.init();
+                    if (typeof TerminalTicker !== 'undefined') TerminalTicker.renderTrack();
+                }
+
+                // 4. Canlı Makroekonomi & TCMB / TÜİK Göstergeleri
+                if (typeof MacroNewsEngine !== 'undefined') {
+                    await MacroNewsEngine.loadData();
+                    MacroNewsEngine.render();
+                }
+
+                // 5. Kantitatif Modellerin & Dashboard'un Otomatik Yenilenmesi
+                if (typeof Dashboard !== 'undefined') Dashboard.init();
+                if (typeof Charts !== 'undefined') Charts.init();
+                if (typeof FundsTab !== 'undefined') FundsTab.render();
+                if (typeof StrategyTab !== 'undefined') StrategyTab.render();
+                if (typeof BlackLittermanEngine !== 'undefined') BlackLittermanEngine.render();
+                if (typeof HrpEngine !== 'undefined') HrpEngine.render();
+                if (typeof SmartCashRouter !== 'undefined') SmartCashRouter.render();
+                if (typeof MacroRegimeEngine !== 'undefined') MacroRegimeEngine.render();
+
+                this.lastSyncTimestamp = new Date();
+                const timeStr = this.lastSyncTimestamp.toLocaleTimeString('tr-TR');
+                
+                const updateText = document.querySelector('.update-text');
+                const pulseDot = document.querySelector('.pulse-dot');
+                if (updateText) {
+                    updateText.textContent = `🟢 Canlı Senkronize (${timeStr})`;
+                }
+                if (pulseDot) {
+                    pulseDot.className = 'pulse-dot';
+                }
+
+                console.info(`[LiveAutoSyncEngine] Tüm veriler arka planda sıfır müdahaleyle güncellendi: ${timeStr}`);
+            } catch (err) {
+                console.warn('[LiveAutoSyncEngine Uyarı]', err);
+            } finally {
+                this.isSyncing = false;
+            }
         }
     };
 
-    // 1. Initial Auto-Sync on startup
-    runAutoSync();
+    // 1. Sayfa açıldığı an ilk çalıştırma (Boot Auto-Sync)
+    LiveAutoSyncEngine.runFullAutoSync();
 
-    // 2. Periodic Auto-Sync every 60 seconds
-    setInterval(runAutoSync, 60000);
+    // 2. Her 60 saniyede bir otomatik periyodik senkronizasyon
+    setInterval(() => LiveAutoSyncEngine.runFullAutoSync(), 60000);
 
-    // 3. Instant Auto-Sync when user switches back to browser tab
-    window.addEventListener('focus', runAutoSync);
+    // 3. Kullanıcı sekmeye geri döndüğünde anında taze veri çekimi
+    window.addEventListener('focus', () => LiveAutoSyncEngine.runFullAutoSync());
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            runAutoSync();
+            LiveAutoSyncEngine.runFullAutoSync();
         }
     });
 
-    console.info('Zenith Atlas: ready with continuous background auto-sync.');
+    console.info('Zenith Atlas: 100% otonom arka plan veri senkronizasyonu aktif.');
 });
 
