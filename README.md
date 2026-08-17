@@ -1,8 +1,8 @@
 # 🌌 Zenith Atlas – Evrensel Çoklu Varlık & Finansal Zekâ Terminali
 
-[![Security: A+](https://img.shields.io/badge/Security-A%2B%20(OWASP%20Certified)-emerald?style=for-the-badge&logo=shield)](file:///index.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](file:///LICENSE)
-[![TEFAS Veritabanı](https://img.shields.io/badge/TEFAS%20Veritabanı-1.051%20Fon-indigo?style=for-the-badge)](file:///src/data/funds_db.json)
+[![Security: A+](https://img.shields.io/badge/Security-A%2B%20(OWASP%20Certified)-emerald?style=for-the-badge&logo=shield)](index.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![TEFAS Veritabanı](https://img.shields.io/badge/TEFAS%20Veritabanı-1.051%20Fon-indigo?style=for-the-badge)](src/data/funds_db.json)
 [![Canlı WebSocket](https://img.shields.io/badge/CanliDoviz%20WebSocket-Canlı%20Akış-amber?style=for-the-badge)](https://canlidoviz.com)
 
 **Zenith Atlas, BIST Pay Piyasası, ABD Borsaları (NYSE/NASDAQ), 1.051 Yatırım Fonu (TEFAS), Kapalıçarşı Altın/Gümüş ve Döviz piyasalarını tek çatı altında birleştiren açık kaynaklı, gerçek zamanlı kurumsal finansal zekâ ve portföy terminalidir.**
@@ -47,6 +47,13 @@
 * **Kapalıçarşı & Serbest Piyasa:** 09:00 – 18:00
 * **Kripto Piyasaları:** 7/24 Kesintisiz
 
+### 7. ⚔️ 1.051 TEFAS Fonu Karşılaştırma Masası (Head-to-Head Fund Comparator)
+* Türkiye'deki tüm TEFAS fonları arasında 2 veya 3 fonu seçerek yan yana karşılaştırma.
+* Canlı fiyat, 1 yıllık net getiri, yıllık yönetim ücreti, stopaj durumu (%0 veya %7.5), nakit valör takvimi ve SPK risk derecesi kıyası.
+
+### 8. 📢 Canlı Makroekonomi & Resmî Bülten Paneli (Macro Intelligence Hub)
+* TCMB Politika Faizi (%50,00), SPK Fon Stopaj Kararları ve Resmî Gazete / KAP duyuruları doğrudan resmî kaynak linkleriyle entegre.
+
 ---
 
 ## 📁 Proje Mimarisi
@@ -71,7 +78,9 @@ Zenith-Atlas/
 │   │   ├── 📄 markets.json                 # Canlı Piyasa & Kur Verileri
 │   │   ├── 📄 markets.js                   # Çevrimdışı Piyasa Verileri
 │   │   ├── 📄 prices.json                  # Portföy Fiyatları
-│   │   └── 📄 prices.js                    # Çevrimdışı Fiyat Verileri
+│   │   ├── 📄 prices.js                    # Çevrimdışı Fiyat Verileri
+│   │   ├── 📄 news.json                    # Makroekonomi & TCMB Resmî Bülten Verisi
+│   │   └── 📄 news.js                      # Çevrimdışı Makroekonomi Verisi
 │   └── 📁 scripts/
 │       └── 📄 sync.py                      # Python canlı WebSocket & veri senkronizasyon motoru
 │
