@@ -1,58 +1,63 @@
-# 🌌 Zenith Atlas – Evrensel Çoklu Varlık & Finansal Zekâ Terminali
+# Zenith Atlas
 
-[![Security: A+](https://img.shields.io/badge/Security-A%2B%20(OWASP%20Certified)-emerald?style=for-the-badge&logo=shield)](index.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![TEFAS Veritabanı](https://img.shields.io/badge/TEFAS%20Veritabanı-1.051%20Fon-indigo?style=for-the-badge)](src/data/funds_db.json)
-[![Canlı WebSocket](https://img.shields.io/badge/CanliDoviz%20WebSocket-Canlı%20Akış-amber?style=for-the-badge)](https://canlidoviz.com)
+### Çoklu Varlık Portföy Yönetimi & Kantitatif Risk Terminali
 
-**Zenith Atlas, BIST Pay Piyasası, ABD Borsaları (NYSE/NASDAQ), 1.051 Yatırım Fonu (TEFAS), Kapalıçarşı Altın/Gümüş ve Döviz piyasalarını tek çatı altında birleştiren açık kaynaklı, gerçek zamanlı kurumsal finansal zekâ ve portföy terminalidir.**
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![TEFAS Veritabanı](https://img.shields.io/badge/TEFAS-1.051%20Fon-indigo?style=flat-square)](src/data/funds_db.json)
+[![Piyasa Akışı](https://img.shields.io/badge/Canlı%20Veri-WebSocket-emerald?style=flat-square)](https://canlidoviz.com)
+[![Mimari](https://img.shields.io/badge/Mimari-İstemci%20Taraflı%20(Zero--Server)-slate?style=flat-square)](index.html)
+
+Zenith Atlas; Borsa İstanbul pay senetleri, ABD hisse senetleri (NYSE/NASDAQ), TEFAS fonları (1.051 fon), Kapalıçarşı kıymetli madenler ve döviz kurlarını tek arayüzde birleştiren, istemci taraflı çalışan bir finansal analiz ve portföy takip terminalidir.
+
+Kullanıcı verilerini tamamen yerel tarayıcı hafızasında saklar; harici bir kullanıcı veritabanı gerektirmeden gerçek zamanlı fiyatlama, vergi simülasyonları, kantitatif risk metrikleri ve uzun vadeli varlık projeksiyonları sunar.
 
 ---
 
 ## 🚀 Hızlı Başlangıç
 
-1. **`index.html`** dosyasını tarayıcınızda açın.
-2. Çoklu varlıklarınızı, hisse veya fonlarınızı ekleyin; canlı piyasa kurlarını takip edin.
-3. Çalışma masaları arasında geçiş yapın: **Genel Bakış**, **Quant & Risk**, **Nakit & Valör**, **Stopaj & Net Kazanç** ve **FIRE & Varlık Hedefi**.
+1. Depoyu klonlayın veya indirin:
+   ```bash
+   git clone https://github.com/Cagrik34/zenith-atlas.git
+   ```
+2. **`index.html`** dosyasını herhangi bir modern web tarayıcısında açın.
+3. Canlı piyasa ve fon verilerini yerel olarak güncellemek için (isteğe bağlı):
+   ```bash
+   pip install -r requirements.txt
+   python src/scripts/sync.py
+   ```
+   *(veya Windows üzerinde doğrudan `sync.bat` dosyasını çalıştırabilirsiniz).*
 
 ---
 
-## 🎯 Amiral Gemisi Özellikler & Modüller
+## 🎯 Temel Modüller & Fonksiyonlar
 
-### 1. 💱 Çoklu Para Birimi & Reel Değer Motoru (Multi-Currency Engine)
-* **Desteklenen Birimler:** `[ ₺ TRY ] [ $ USD ] [ € EUR ] [ 🥇 Gram Altın ]`
-* Portföy büyüklüğü, günlük kazanç ve varlık değerlerini anlık canlı kurlarla Dolar, Euro ve Fiziki Altın cinsinden hesaplar; reel satın alma gücünüzü gösterir.
+### 1. 💱 Çoklu Para Birimi & Reel Değerleme Motoru
+* **Desteklenen Birimler:** `TRY`, `USD`, `EUR`, `Gram Altın`.
+* Portföy büyüklüğünü, kâr/zarar durumunu ve varlık dağılımını döviz ve fiziki altın bazında anlık olarak hesaplar; portföyün reel satın alma gücünü izler.
 
-### 2. ⚡ Stopaj & Net Getiri Optimizasyon Laboratuvarı (Tax & Net Yield Engine)
-* 2026 güncel vergi mevzuatına tam uyumlu stopaj simülasyonu.
-* **%0 Stopaj Kalkanı:** Hisse Senedi Yoğun Fonlar ve BIST payları için tam vergi muafiyeti takibi, brüt/net getiri kıyaslaması ve vergi avantajı tavsiyeleri.
+### 2. ⚡ Stopaj ve Vergi Optimizasyonu Modülü
+* Güncel sermaye piyasası ve fon vergi mevzuatına uygun brüt/net getiri analizi.
+* Hisse senedi yoğun fonlar ve BIST hisselerinde geçerli %0 stopaj muafiyetinin net getiriye katkısını simüle eder ve portföy bazında vergi yükünü hesaplar.
 
-### 3. 🔔 Akıllı Fiyat, K/Z & Eşik Alarm Motoru (Smart Alerts Engine)
-* Canlı `canlidoviz.com` ve `haremaltin.com` WebSocket akışına entegre saliselik alarm denetimi.
-* Hedef fiyat (`USD >= 48.50`, `Gram Altın >= 7000`), portföy günlük getiri eşikleri ve dip alım fırsatı alarmları.
-* Web Audio API synthesized terminal uyarısı ve tarayıcı masaüstü bildirim desteği.
+### 3. 🔔 Eşik & Fiyat Uyarı Sistemi
+* Canlı piyasa akışına entegre fiyat, getiri ve portföy eşik alarmları.
+* Hedef kur/fiyat seviyeleri ve günlük hareket sınırları için Web Audio API ve tarayıcı masaüstü bildirimleri desteği.
 
-### 4. 🎯 Hedef Odaklı Varlık & FIRE Simülatörü (Goal-Based Wealth Builder)
-* **Hazır Hedefler:** Ev Peşinatı, Finansal Özgürlük (FIRE), Yeni Araç ve Eğitim Fonu.
-* Başlangıç varlığı, aylık düzenli ekleme, beklenen bileşik getiri (CAGR) ve enflasyon düzeltmesiyle hedefe ulaşma tarihi projeksiyonu ve interaktif grafik eğrisi.
+### 4. 🎯 Hedef Odaklı Varlık & Finansal Planlama Simülatörü
+* Düzenli birikim, beklenen bileşik getiri (CAGR) ve enflasyon düzeltmesi içeren hedef projeksiyon modelleri.
+* Finansal özgürlük (FIRE), gayrimenkul ve birikim hedefleri için tahmini vade ve sermaye eğrisi hesaplamaları.
 
-### 5. 🖨️ Tek Tıkla Kurumsal Yatırımcı Bülteni & A4 PDF (Executive Memo Engine)
-* Banka ve portföy yönetim şirketleri standartlarında, A4 yazdırmaya ve PDF kaydetmeye hazır tek sayfalık yönetici özeti.
-* Çoklu para birimi özeti, varlık ağırlıkları tablosu, Quant risk metrikleri (Sharpe, Sortino, VaR, Beta) ve yasal bülten çıktısı.
+### 5. 🖨️ Yönetici Portföy Özeti & A4/PDF Çıktısı
+* Varlık dağılımı, risk metrikleri (Sharpe, Sortino, VaR, Beta) ve performans tablolarını içeren, standart A4 yazdırma ve PDF aktarımına uygun kurumsal raporlama.
 
-### 6. ⏱️ Çoklu Borsa & Piyasa Seans Saatleri Hub'ı (Market Sessions Engine)
-* **Borsa İstanbul (BIST 100/30):** 10:00 – 18:00
-* **TEFAS Fon Piyasası (Takasbank & SPK):** 09:00 – 13:30 (Aynı Gün Valör) / 17:30 (İleri Valör)
-* **Amerikan Borsaları (NYSE & NASDAQ / Midas):** 16:30 – 23:00 TSİ
-* **Kapalıçarşı & Serbest Piyasa:** 09:00 – 18:00
-* **Kripto Piyasaları:** 7/24 Kesintisiz
+### 6. ⏱️ Piyasa ve Seans Takibi
+* Borsa İstanbul, TEFAS Fon İşlem Saatleri, ABD Borsaları (NYSE/NASDAQ), Serbest Piyasa ve Kripto piyasalarının seans açılış/kapanış zamanlarını gösteren dinamik durum göstergesi.
 
-### 7. ⚔️ 1.051 TEFAS Fonu Karşılaştırma Masası (Head-to-Head Fund Comparator)
-* Türkiye'deki tüm TEFAS fonları arasında 2 veya 3 fonu seçerek yan yana karşılaştırma.
-* Canlı fiyat, 1 yıllık net getiri, yıllık yönetim ücreti, stopaj durumu (%0 veya %7.5), nakit valör takvimi ve SPK risk derecesi kıyası.
+### 7. ⚔️ TEFAS Fon Karşılaştırma Modülü
+* 1.051 TEFAS yatırım fonu arasından seçilen fonları fiyat, 1 yıllık getiri, yönetim ücreti, stopaj oranı, valör süresi ve risk kategorisi kriterlerine göre yan yana karşılaştırma.
 
-### 8. 📢 Canlı Makroekonomi & Resmî Bülten Paneli (Macro Intelligence Hub)
-* TCMB Politika Faizi (%50,00), SPK Fon Stopaj Kararları ve Resmî Gazete / KAP duyuruları doğrudan resmî kaynak linkleriyle entegre.
+### 8. 📢 Makroekonomik Göstergeler & Resmî Bülten Paneli
+* TCMB Politika Faizi, SPK düzenlemeleri ve resmî duyuruları kaynak bağlantılarıyla birlikte gösteren makroekonomik bilgi paneli.
 
 ---
 
@@ -60,55 +65,57 @@
 
 ```text
 Zenith-Atlas/
-├── 📄 index.html                           # Evrensel finans terminali arayüzü
-├── 📄 sync.bat                             # Windows tek tık senkronizasyon aracı
+├── 📄 index.html                           # Terminal ana kullanıcı arayüzü
+├── 📄 sync.bat                             # Windows veri güncelleme betiği
 ├── 📄 requirements.txt                     # Python bağımlılıkları
-├── 📄 .gitignore                           # Git kuralları
+├── 📄 .gitignore                           # Git konfigürasyonu
 ├── 📄 README.md                            # Proje dokümantasyonu
-├── 📄 LICENSE                              # MIT Telif Lisansı
+├── 📄 LICENSE                              # MIT Lisansı
 │
-├── 📁 src/                                 # Kaynak kodlar ve modüller
+├── 📁 src/                                 # Kaynak kodlar
 │   ├── 📁 css/
-│   │   └── 📄 styles.css                   # Zenith Atlas Design System
+│   │   └── 📄 styles.css                   # Arayüz ve tema stilleri
 │   ├── 📁 js/
-│   │   └── 📄 app.js                       # Finansal motorlar, WebSocket ve Quant analitiği
+│   │   └── 📄 app.js                       # Portföy motoru, WebSocket ve hesaplama mantığı
 │   ├── 📁 data/                            # Veri katmanı
-│   │   ├── 📄 funds_db.json                # 1.051 TEFAS Fonu Veritabanı
-│   │   ├── 📄 funds_db.js                  # Çevrimdışı Fon Veritabanı
-│   │   ├── 📄 markets.json                 # Canlı Piyasa & Kur Verileri
-│   │   ├── 📄 markets.js                   # Çevrimdışı Piyasa Verileri
-│   │   ├── 📄 prices.json                  # Portföy Fiyatları
-│   │   ├── 📄 prices.js                    # Çevrimdışı Fiyat Verileri
-│   │   ├── 📄 news.json                    # Makroekonomi & TCMB Resmî Bülten Verisi
-│   │   └── 📄 news.js                      # Çevrimdışı Makroekonomi Verisi
+│   │   ├── 📄 funds_db.json                # 1.051 TEFAS Fonu veri tabanı
+│   │   ├── 📄 funds_db.js                  # Çevrimdışı fon verisi
+│   │   ├── 📄 markets.json                 # Canlı piyasa ve kur verileri
+│   │   ├── 📄 markets.js                   # Çevrimdışı piyasa verisi
+│   │   ├── 📄 prices.json                  # Örnek fiyat verileri
+│   │   ├── 📄 prices.js                    # Çevrimdışı fiyat verisi
+│   │   ├── 📄 news.json                    # Makroekonomik bülten verisi
+│   │   └── 📄 news.js                      # Çevrimdışı makro veri
 │   └── 📁 scripts/
-│       └── 📄 sync.py                      # Python canlı WebSocket & veri senkronizasyon motoru
+│       └── 📄 sync.py                      # Canlı veri senkronizasyon motoru
 │
 └── 📁 docs/
-    └── 📄 portfolio-model.xlsx             # Portföy hesaplama tablosu
+    └── 📄 portfolio-model.xlsx             # Portföy modelleme tablosu
 ```
 
 ---
 
-## 🛡️ Güvenlik & Veri Bütünlüğü
+## 🛡️ Güvenlik ve Gizlilik Prensipleri
 
-1. **Content Security Policy (CSP):** Sıkılaştırılmış ve yalnızca onaylı finans API kaynaklarına izin veren güvenlik mimarisi.
-2. **Subresource Integrity (SRI) SHA-384:** CDN üzerinden yüklenen harici kütüphanelerin kriptografik doğrulaması.
-3. **XSS Koruması (`Utils.escapeHtml`):** Tüm dinamik kullanıcı girdilerinin ve piyasa verilerinin sanitize edilmesi.
-4. **Excel Formula Injection (DDE) Koruması:** Dışa aktarılan dosyalarda formül enjeksiyonu (`=`, `+`, `-`, `@`) önleme kalkanı.
-5. **Atomik Dosya Yönetimi:** Geçici dosyalar üzerinden kesintisiz veri güncelleme.
-6. **%100 Yerel Veri Gizliliği:** Tüm kullanıcı verileri yerel cihazda (`localStorage`) saklanır, sunucuya aktarılmaz.
+* **İstemci Taraflı Gizlilik (Zero Data Transmission):** Tüm portföy ve işlem verileri yalnızca kullanıcının yerel tarayıcısında (`localStorage`) tutulur; herhangi bir uzak sunucuya aktarılmaz.
+* **Content Security Policy (CSP):** Yalnızca tanımlı ve güvenli CDN/API kaynaklarına izin veren kısıtlayıcı güvenlik başlıkları.
+* **Subresource Integrity (SRI):** CDN üzerinden yüklenen harici kütüphaneler için SHA-384 kriptografik doğrulama.
+* **XSS Sanitizasyonu:** Kullanıcı girdileri ve dış kaynaklı veriler render edilmeden önce sanitize edilir.
+* **CSV/DDE Enjeksiyon Koruması:** Excel/CSV dışa aktarımlarında formül enjeksiyonu (`=`, `+`, `-`, `@`) engellenir.
 
 ---
 
-## 👨‍💻 Geliştirici & İletişim
+## 👨‍💻 Geliştirici
 
 **Çağrı Giray Keşan**  
 *Frontend-Heavy Full-Stack Engineer | AI Intern @ Microsoft*  
-* 🐙 **GitHub:** [@Cagrik34](https://github.com/Cagrik34)  
-* 💼 **LinkedIn:** [in/cagrigiraykesan](https://www.linkedin.com/in/cagrigiraykesan)  
+* GitHub: [@Cagrik34](https://github.com/Cagrik34)  
+* LinkedIn: [in/cagrigiraykesan](https://www.linkedin.com/in/cagrigiraykesan)
 
 ---
 
-## ⚠️ Yasal Bilgilendirme
-Bu uygulama **yatırım tavsiyesi niteliği taşımaz.** Tüm piyasa verileri kamuya açık resmî platformlardan (TEFAS, Takasbank, Harem Altın, Bigpara, BIST) bilgilendirme ve analiz amacıyla sunulmaktadır.
+## 📄 Lisans & Yasal Uyarı
+
+Bu proje [MIT Lisansı](LICENSE) altında sunulmaktadır.
+
+**Yasal Bilgilendirme:** Bu yazılım yalnızca kişisel analiz, eğitim ve portföy izleme amacıyla geliştirilmiştir; herhangi bir yatırım tavsiyesi, alım-satım önerisi veya portföy yöneticiliği hizmeti içermez. Piyasa verileri kamuya açık kaynaklardan bilgilendirme amaçlı temin edilmektedir.
