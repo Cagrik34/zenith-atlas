@@ -1036,6 +1036,9 @@ const Dashboard = {
         if (typeof MarkowitzOptimizer !== 'undefined') {
             MarkowitzOptimizer.render();
         }
+        if (typeof DividendYieldEngine !== 'undefined') {
+            DividendYieldEngine.render();
+        }
         if (typeof ValorTimeline !== 'undefined') {
             ValorTimeline.render();
         }
@@ -1438,7 +1441,7 @@ const WorkspaceManager = {
     init() {
         try {
             const saved = localStorage.getItem('zenith_active_workspace');
-            if (saved && ['overview', 'risk-lab', 'settlement-desk', 'tax-lab', 'goal-planner'].includes(saved)) {
+            if (saved && ['overview', 'risk-lab', 'settlement-desk', 'tax-lab', 'goal-planner', 'dividend-matrix'].includes(saved)) {
                 this.currentWorkspace = saved;
             }
         } catch (e) {}
@@ -1447,7 +1450,7 @@ const WorkspaceManager = {
     },
 
     setWorkspace(ws) {
-        if (!['overview', 'risk-lab', 'settlement-desk', 'tax-lab', 'goal-planner'].includes(ws)) return;
+        if (!['overview', 'risk-lab', 'settlement-desk', 'tax-lab', 'goal-planner', 'dividend-matrix'].includes(ws)) return;
         this.currentWorkspace = ws;
         try {
             localStorage.setItem('zenith_active_workspace', ws);
@@ -1458,7 +1461,8 @@ const WorkspaceManager = {
             'risk-lab': 'Quant & Risk Laboratuvarı',
             'settlement-desk': 'Nakit & Valör Masası',
             'tax-lab': 'Stopaj & Net Kazanç Masası',
-            'goal-planner': 'FIRE & Varlık Hedefi Planlayıcı'
+            'goal-planner': 'FIRE & Varlık Hedefi Planlayıcı',
+            'dividend-matrix': 'Temettü & Pasif Gelir Masası'
         };
         Utils.showToast(`🖥️ Çalışma Alanı: ${nameMap[ws]} aktif edildi.`, 'info');
     },
@@ -1467,7 +1471,7 @@ const WorkspaceManager = {
         const viewEl = document.getElementById('dashboardActiveView');
         if (!viewEl) return;
 
-        viewEl.classList.remove('ws-mode-risk-lab', 'ws-mode-settlement-desk', 'ws-mode-tax-lab', 'ws-mode-goal-planner');
+        viewEl.classList.remove('ws-mode-risk-lab', 'ws-mode-settlement-desk', 'ws-mode-tax-lab', 'ws-mode-goal-planner', 'ws-mode-dividend-matrix');
 
         if (ws === 'risk-lab') {
             viewEl.classList.add('ws-mode-risk-lab');
@@ -1479,6 +1483,9 @@ const WorkspaceManager = {
         } else if (ws === 'goal-planner') {
             viewEl.classList.add('ws-mode-goal-planner');
             if (typeof GoalWealthBuilder !== 'undefined') GoalWealthBuilder.render();
+        } else if (ws === 'dividend-matrix') {
+            viewEl.classList.add('ws-mode-dividend-matrix');
+            if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
         }
 
         const container = document.getElementById('workspacePillsGroup');
@@ -1548,6 +1555,10 @@ const Charts = {
         if (typeof StressTestEngine !== 'undefined' && StressTestEngine.chartInstance) {
             StressTestEngine.chartInstance.destroy();
             StressTestEngine.chartInstance = null;
+        }
+        if (typeof DividendYieldEngine !== 'undefined' && DividendYieldEngine.chartInstance) {
+            DividendYieldEngine.chartInstance.destroy();
+            DividendYieldEngine.chartInstance = null;
         }
     },
 
@@ -6582,6 +6593,226 @@ const GoalWealthBuilder = {
                         this.render();
                     }
                 });
+            }
+        });
+    }
+};
+
+// ==========================================================================
+// 4.5. DividendYieldEngine (Akıllı Temettü & Pasif Gelir Nakit Akışı Matrisi)
+// ==========================================================================
+const DividendYieldEngine = {
+    chartInstance: null,
+
+    MONTH_NAMES: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+    
+    CATEGORY_YIELDS: {
+        'Hisse Senedi': { yield: 6.2, season: 'Mart-Nisan Peak', weights: [0.02, 0.03, 0.28, 0.32, 0.14, 0.04, 0.02, 0.02, 0.08, 0.03, 0.01, 0.01] },
+        'Hisse Senedi Yoğun': { yield: 6.8, season: 'Mart-Nisan Peak', weights: [0.02, 0.03, 0.28, 0.32, 0.14, 0.04, 0.02, 0.02, 0.08, 0.03, 0.01, 0.01] },
+        'Yabancı Teknoloji': { yield: 1.2, season: 'Üçer Aylık Düzenli', weights: [0.08, 0.08, 0.09, 0.08, 0.08, 0.09, 0.08, 0.08, 0.09, 0.08, 0.08, 0.09] },
+        'Altın & Emtia': { yield: 0.0, season: 'Temettüsüz (Sermaye Kazancı)', weights: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        'Kıymetli Madenler': { yield: 0.0, season: 'Temettüsüz (Sermaye Kazancı)', weights: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        'Para Piyasası': { yield: 0.0, season: 'Günlük Bileşik Getiri', weights: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        'Borçlanma Araçları': { yield: 9.5, season: 'Kupon Dağıtımlı', weights: [0.08, 0.08, 0.09, 0.08, 0.08, 0.09, 0.08, 0.08, 0.09, 0.08, 0.08, 0.09] },
+        'Değişken': { yield: 3.5, season: 'Dönemsel Dağıtım', weights: [0.05, 0.05, 0.18, 0.22, 0.12, 0.05, 0.05, 0.05, 0.08, 0.05, 0.05, 0.05] }
+    },
+
+    getFundYieldProfile(fund) {
+        if (!fund) return { yield: 0, season: 'Temettüsüz', weights: new Array(12).fill(0) };
+        const cat = fund.category || 'Değişken';
+        let matched = this.CATEGORY_YIELDS[cat];
+        if (!matched) {
+            for (const key of Object.keys(this.CATEGORY_YIELDS)) {
+                if (cat.toLowerCase().includes(key.toLowerCase())) {
+                    matched = this.CATEGORY_YIELDS[key];
+                    break;
+                }
+            }
+        }
+        if (!matched) matched = { yield: 2.0, season: 'Genel', weights: new Array(12).fill(1 / 12) };
+
+        const code = (fund.code || '').toUpperCase();
+        if (code === 'GSP' || code === 'FBC' || code === 'TAV' || code === 'MAC') {
+            return {
+                yield: 7.8,
+                season: 'Nisan-Mayıs BIST Temettü',
+                weights: [0.01, 0.02, 0.30, 0.35, 0.15, 0.03, 0.02, 0.01, 0.08, 0.02, 0.01, 0.00]
+            };
+        }
+
+        return matched;
+    },
+
+    calculate() {
+        const totalVal = Calculations.getTotalPortfolioValue();
+        const funds = PortfolioData.funds || [];
+
+        let totalAnnualDividend = 0;
+        const monthlyFlows = new Array(12).fill(0);
+        const breakdowns = [];
+
+        funds.forEach(f => {
+            const val = f.shares * f.currentPrice;
+            const profile = this.getFundYieldProfile(f);
+            const fundAnnualDiv = val * (profile.yield / 100);
+
+            totalAnnualDividend += fundAnnualDiv;
+
+            profile.weights.forEach((w, mIdx) => {
+                monthlyFlows[mIdx] += fundAnnualDiv * w;
+            });
+
+            breakdowns.push({
+                fund: f,
+                val,
+                yieldPct: profile.yield,
+                annualDivTL: fundAnnualDiv,
+                season: profile.season
+            });
+        });
+
+        const weightedYieldPct = totalVal > 0 ? (totalAnnualDividend / totalVal) * 100 : 0;
+        const monthlyAvg = totalAnnualDividend / 12;
+        
+        const cagr = 0.50;
+        let withDrip = totalVal;
+        let withoutDrip = totalVal;
+        for (let y = 1; y <= 10; y++) {
+            withDrip = withDrip * (1 + cagr) + totalAnnualDividend * Math.pow(1 + cagr, y - 1);
+            withoutDrip = withoutDrip * (1 + cagr);
+        }
+        const dripBoost = Math.max(0, withDrip - withoutDrip);
+
+        return {
+            totalVal,
+            totalAnnualDividend,
+            weightedYieldPct,
+            monthlyAvg,
+            dripBoost,
+            monthlyFlows,
+            breakdowns
+        };
+    },
+
+    render() {
+        const res = this.calculate();
+        if (!res) return;
+
+        const annualEl = document.getElementById('divAnnualTotalVal');
+        const yieldEl = document.getElementById('divWeightedYieldVal');
+        const monthlyEl = document.getElementById('divMonthlyAvgVal');
+        const dripEl = document.getElementById('divDripBoostVal');
+        const panelEl = document.getElementById('dividendBreakdownPanel');
+
+        if (annualEl) annualEl.textContent = Utils.formatCurrency(res.totalAnnualDividend);
+        if (yieldEl) yieldEl.textContent = `%${res.weightedYieldPct.toFixed(2)}`;
+        if (monthlyEl) monthlyEl.textContent = `${Utils.formatCurrency(res.monthlyAvg)}/ay`;
+        if (dripEl) dripEl.textContent = `+${Utils.formatCurrency(res.dripBoost)}`;
+
+        this.renderChart(res);
+
+        if (panelEl) {
+            let html = `
+                <table class="dividend-breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Varlık / Fon</th>
+                            <th>Piyasa Değeri</th>
+                            <th>Temettü Verimi</th>
+                            <th>Yıllık Pasif Nakit</th>
+                            <th>Dağıtım Sezonu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            res.breakdowns.forEach(item => {
+                const f = item.fund;
+                html += `
+                    <tr>
+                        <td>
+                            <strong style="color: ${f.color || 'var(--text-primary)'}">${f.code}</strong>
+                            <div style="font-size:0.74rem; color:var(--text-secondary);">${f.name}</div>
+                        </td>
+                        <td>${Utils.formatCurrency(item.val)}</td>
+                        <td>
+                            <span class="badge ${item.yieldPct > 4 ? 'badge-success' : 'badge-primary'}">%${item.yieldPct.toFixed(1)}</span>
+                        </td>
+                        <td style="font-family:'JetBrains Mono'; font-weight:700; color:var(--success);">
+                            ${Utils.formatCurrency(item.annualDivTL)}
+                        </td>
+                        <td style="font-size:0.78rem; color:var(--text-secondary);">${item.season}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+            panelEl.innerHTML = html;
+        }
+    },
+
+    renderChart(res) {
+        const canvas = document.getElementById('dividendMonthlyChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+            this.chartInstance = null;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        this.chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: this.MONTH_NAMES,
+                datasets: [{
+                    label: 'Aylık Pasif Temettü Nakit Akışı (₺)',
+                    data: res.monthlyFlows.map(v => Number(v.toFixed(2))),
+                    backgroundColor: res.monthlyFlows.map((v, i) => {
+                        return (i === 2 || i === 3) ? 'rgba(16, 185, 129, 0.85)' : 'rgba(99, 102, 241, 0.65)';
+                    }),
+                    borderColor: res.monthlyFlows.map((v, i) => {
+                        return (i === 2 || i === 3) ? '#10B981' : '#6366F1';
+                    }),
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94A3B8', font: { family: "'JetBrains Mono', monospace", size: 10 } }
+                    },
+                    y: {
+                        title: { display: true, text: 'Tahmini Nakit Girişi (₺)', color: '#94A3B8', font: { size: 10 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#94A3B8',
+                            callback: v => '₺' + v.toLocaleString('tr-TR'),
+                            font: { family: "'JetBrains Mono', monospace", size: 10 }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: 'rgba(16, 185, 129, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: ctx => ` Aylık Pasif Nakit: ${Utils.formatCurrency(ctx.raw)}`
+                        }
+                    }
+                }
             }
         });
     }

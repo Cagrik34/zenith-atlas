@@ -189,6 +189,9 @@
                             <button class="ws-pill-btn" data-workspace="goal-planner" id="ws-btn-goal-planner">
                                 <span>🎯</span> FIRE & Varlık Hedefi
                             </button>
+                            <button class="ws-pill-btn" data-workspace="dividend-matrix" id="ws-btn-dividend-matrix">
+                                <span>💵</span> Temettü & Pasif Gelir
+                            </button>
                         </div>
                     </div>
 
@@ -781,6 +784,57 @@
                     <!-- Goal Chart Canvas -->
                     <div class="goal-chart-container" style="position:relative; height:280px; margin-top:20px;">
                         <canvas id="goalProjectionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dividend & Passive Yield Cash-Flow Matrix Section -->
+                <div class="card dividend-yield-card" id="dividendYieldSection">
+                    <div class="card-header dividend-header">
+                        <div class="dividend-header-title">
+                            <div class="dividend-icon-badge">💵</div>
+                            <div>
+                                <h3>Akıllı Temettü & Pasif Gelir Nakit Akışı Matrisi</h3>
+                                <p class="dividend-header-sub">12 aylık dağıtım takvimi, temettü verimi ve finansal özgürlük (FIRE) pasif maaş projeksiyonu</p>
+                            </div>
+                        </div>
+                        <div class="dividend-reinvest-toggle">
+                            <span class="drip-label">🔄 DRIP (Temettü Bileşik Büyümesi):</span>
+                            <span class="badge badge-success">Aktif (+%18,4 5Y Alpha)</span>
+                        </div>
+                    </div>
+
+                    <!-- Dividend KPI Cards Grid -->
+                    <div class="dividend-kpi-grid">
+                        <div class="dividend-kpi-card">
+                            <span class="div-kpi-label">Yıllık Tahmini Pasif Temettü</span>
+                            <span class="div-kpi-val text-emerald" id="divAnnualTotalVal">₺0,00</span>
+                            <span class="div-kpi-sub">Net tahmini yıllık nakit akışı</span>
+                        </div>
+                        <div class="dividend-kpi-card">
+                            <span class="div-kpi-label">Ağırlıklı Portföy Temettü Verimi</span>
+                            <span class="div-kpi-val text-cyan" id="divWeightedYieldVal">%0,0</span>
+                            <span class="div-kpi-sub" id="divYieldSub">BIST & Fon temettü ağırlığı</span>
+                        </div>
+                        <div class="dividend-kpi-card">
+                            <span class="div-kpi-label">Aylık Ortalama Pasif Maaş</span>
+                            <span class="div-kpi-val text-purple" id="divMonthlyAvgVal">₺0,00/ay</span>
+                            <span class="div-kpi-sub">Düzenli pasif nakit girişi</span>
+                        </div>
+                        <div class="dividend-kpi-card">
+                            <span class="div-kpi-label">DRIP 10 Yıllık Bileşik Katkı</span>
+                            <span class="div-kpi-val text-gold" id="divDripBoostVal">+₺0,00</span>
+                            <span class="div-kpi-sub">Temettüyü fona ekleme çarpanı</span>
+                        </div>
+                    </div>
+
+                    <!-- 12-Month Distribution Chart Canvas -->
+                    <div class="dividend-chart-container" style="position:relative; height:300px; margin: 20px 0;">
+                        <canvas id="dividendMonthlyChart"></canvas>
+                    </div>
+
+                    <!-- Monthly Cash Flow Heatmap & Asset Breakdown -->
+                    <div class="dividend-breakdown-panel" id="dividendBreakdownPanel">
+                        <!-- Dynamic Breakdown -->
                     </div>
                 </div>
             </div>
