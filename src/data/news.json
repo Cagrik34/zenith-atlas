@@ -11,10 +11,10 @@
     },
     "fundWithholdingTax": {
       "name": "Yatırım Fonları Stopaj Oranı (TL / Hisse / Katılım)",
-      "generalRate": 7.5,
+      "generalRate": 10.0,
       "equityRate": 0.0,
       "fxRate": 10.0,
-      "decree": "Cumhurbaşkanı Kararı (Resmî Gazete)",
+      "decree": "9075 Sayılı Cumhurbaşkanı Kararı (Resmî Gazete)",
       "source": "Gelir İdaresi Başkanlığı / Resmî Gazete",
       "sourceUrl": "https://www.resmigazete.gov.tr"
     },
@@ -51,7 +51,7 @@
       "category": "spk",
       "categoryLabel": "SPK & Vergi",
       "title": "Yatırım Fonlarında Stopaj Oranları ve Teşvik Düzenlemeleri",
-      "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında stopaj oranı %7,5 olarak uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
+      "summary": "9075 Sayılı Cumhurbaşkanı Kararı uyarınca TL para piyasası, katılım ve borçlanma fonlarında stopaj oranı %10 uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
       "date": "17.08.2026",
       "source": "Resmî Gazete & GİB",
       "sourceUrl": "https://www.resmigazete.gov.tr",

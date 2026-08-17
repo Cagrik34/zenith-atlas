@@ -6032,29 +6032,29 @@ const TaxOptimizer = {
                 isExempt: true,
                 badgeClass: 'badge-success',
                 badgeText: '🛡️ %0 Stopaj Kalkanı',
-                desc: 'Hisse Senedi Yoğun Fon mevzuatı gereği kazançtan stopaj kesilmez.'
+                desc: '193 Sayılı GVK Geçici 67. Madde uyarınca hisse senedi yoğun fon kazançlarından %0 stopaj kesilir.'
             };
         }
 
         if (cat.includes('PARA PİYASASI') || cat.includes('BORÇLANMA') || cat.includes('BORCLANMA') || ['AIS', 'PPZ', 'NVB'].includes(code)) {
             return {
-                rate: 7.5,
-                rateText: '%7.5 Stopaj',
+                rate: 10.0,
+                rateText: '%10 Stopaj',
                 isExempt: false,
                 badgeClass: 'badge-warning',
-                badgeText: '⚠️ %7.5 Kesinti',
-                desc: 'TL Para Piyasası / Borçlanma stopaj kesintisi uygulanır.'
+                badgeText: '⚠️ %10 Kesinti',
+                desc: '9075 Sayılı CBK uyarınca TL Para Piyasası ve Borçlanma fonlarında %10 stopaj uygulanır.'
             };
         }
 
         if (cat.includes('KIYMETLİ') || cat.includes('ALTIN') || ['KZL', 'GGK', 'TTA'].includes(code)) {
             return {
-                rate: 7.5,
-                rateText: '%7.5 Stopaj',
+                rate: 10.0,
+                rateText: '%10 Stopaj',
                 isExempt: false,
                 badgeClass: 'badge-warning',
-                badgeText: '⚠️ %7.5 Kesinti',
-                desc: 'Kıymetli madenler fon stopaj kesintisi uygulanır.'
+                badgeText: '⚠️ %10 Kesinti',
+                desc: '9075 Sayılı CBK uyarınca kıymetli madenler fonlarında %10 stopaj kesintisi uygulanır.'
             };
         }
 
@@ -6064,7 +6064,7 @@ const TaxOptimizer = {
             isExempt: false,
             badgeClass: 'badge-secondary',
             badgeText: '⚠️ %10 Kesinti',
-            desc: 'Standart yatırım fonu stopaj kesintisi uygulanır.'
+            desc: 'Standart yatırım fonlarında 9075 Sayılı CBK uyarınca %10 stopaj kesintisi uygulanır.'
         };
     },
 
