@@ -24,6 +24,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="src/icons/icon-192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
 </head>
 <body>
@@ -71,6 +73,9 @@
                     <span class="pulse-dot"></span>
                     <span class="update-text">Güncelleniyor...</span>
                 </div>
+                <button class="btn btn-ghost pwa-install-btn hidden" id="pwaInstallBtn" title="Uygulamayı Masaüstü veya Telefona Yükle (PWA)">
+                    <span>📲</span> Yükle
+                </button>
                 <button class="btn btn-ghost" id="openAlertsBtn" title="Akıllı Fiyat & Portföy Alarmları">
                     <span>🔔</span> <span class="alerts-badge-count" id="alertsActiveBadge" style="display:none;">0</span>
                 </button>

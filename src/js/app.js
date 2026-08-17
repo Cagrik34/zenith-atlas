@@ -7551,6 +7551,73 @@ const KeyboardManager = {
     }
 };
 
+// ==========================================================================
+// PwaManager (Progressive Web App & Çevrimdışı Hizmet Yöneticisi)
+// ==========================================================================
+const PwaManager = {
+    deferredPrompt: null,
+
+    init() {
+        this.registerServiceWorker();
+        this.bindInstallPrompt();
+        this.bindNetworkStatus();
+    },
+
+    registerServiceWorker() {
+        if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => {
+                        console.info('Zenith Atlas Service Worker registered:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.warn('Service Worker registration failed:', err);
+                    });
+            });
+        }
+    },
+
+    bindInstallPrompt() {
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (!installBtn) return;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            installBtn.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!this.deferredPrompt) return;
+            this.deferredPrompt.prompt();
+            const { outcome } = await this.deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                Utils.showToast('🚀 Zenith Atlas başarıyla cihazınıza yüklendi!', 'success');
+            }
+            this.deferredPrompt = null;
+            installBtn.classList.add('hidden');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBtn.classList.add('hidden');
+            this.deferredPrompt = null;
+        });
+    },
+
+    bindNetworkStatus() {
+        const updateOnlineStatus = () => {
+            if (navigator.onLine) {
+                Utils.showToast('🟢 Çevrimiçi bağlantı sağlandı. Canlı veriler senkronize ediliyor.', 'info');
+            } else {
+                Utils.showToast('📡 Çevrimdışı moda geçildi. Zenith Atlas yerel veritabanından kesintisiz çalışıyor.', 'warning');
+            }
+        };
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+    }
+};
+
 window.addEventListener('error', (event) => {
     console.error('[Zenith Atlas Hata]', event.message);
 });
@@ -7561,7 +7628,9 @@ window.addEventListener('unhandledrejection', (event) => {
 document.addEventListener('DOMContentLoaded', async () => {
     console.info('Zenith Atlas: initializing...');
 
-        await FundSearch.loadDatabase();
+    PwaManager.init();
+
+    await FundSearch.loadDatabase();
     await PriceService.init();
     await MarketService.init();
 
@@ -7590,6 +7659,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     CurrencyEngine.init();
     AlertsEngine.init();
     GoalWealthBuilder.init();
+    if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
     ExecutiveReportEngine.bindEvents();
     MacroNewsEngine.init();
     WatchlistManager.init();
