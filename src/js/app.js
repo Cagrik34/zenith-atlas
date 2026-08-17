@@ -3463,55 +3463,116 @@ const FundsTab = {
 };
 
 const StrategyTab = {
+    getRoleDescription(fund) {
+        const cat = (fund.category || '').toLowerCase();
+        const code = (fund.code || '').toUpperCase();
+
+        if (fund.sellValor === 0 || cat.includes('para piyasası')) {
+            return 'T+0 valörlü likit havuz; alım fırsatlarını anında yakalar ve düşüşlerde nakit gücünüzü korur.';
+        }
+        if (cat.includes('yabancı') || code === 'AFT' || code === 'IJC' || code === 'YAY') {
+            return 'Küresel teknoloji ve mega-trend şirketlerine yatırım yaparak döviz ve büyüme kazancı üretir.';
+        }
+        if (cat.includes('altın') || cat.includes('kıymetli') || code === 'KZL' || code === 'TCA' || code === 'GGK') {
+            return 'Fiziki kıymetli maden temeli ile portföyün enflasyon ve jeopolitik kriz kalkanıdır.';
+        }
+        if (cat.includes('hisse') || code === 'MAC' || code === 'TI2' || code === 'ADE' || code === 'TTE') {
+            return 'Borsa İstanbul seçici hisse senedi yatırımı ile %0 Stopaj avantajlı net alfa üretir.';
+        }
+        if (cat.includes('borçlanma') || cat.includes('eurobond') || cat.includes('kira')) {
+            return 'Düzenli kupon ve sabit getirili enstrümanlar ile portföy oynaklığını dengeler.';
+        }
+        return `${fund.category || 'Çoklu Varlık'} kategorisinde portföy çeşitlendirmesi ve risk dağıtımı sağlar.`;
+    },
+
+    getArchetype(targets) {
+        const liquid = targets['Likit Güvence & Alım Havuzu']?.current || 0;
+        const tech = targets['Küresel Teknoloji & Büyüme']?.current || 0;
+        const gold = targets['Altın Katılım & Enflasyon Kalkanı']?.current || 0;
+        const bist = targets['Vergisiz BIST Alfa']?.current || 0;
+
+        if (liquid >= 40) return { title: '🛡️ Likit Kalkan & Alım Odaklı', summary: 'Yüksek nakit ve likit rezerviyle olası piyasa düzeltmelerinde alım gücünü maksimize eden savunmacı yapı.' };
+        if (tech + bist >= 50) return { title: '🚀 Yüksek Büyüme & Hisse Odaklı', summary: 'Yerli ve küresel hisse senedi ağırlığıyla uzun vadeli reel sermaye büyümesini hedefleyen dinamik mimari.' };
+        if (gold >= 30) return { title: '🥇 Enflasyon & Kıymetli Maden Kalkanı', summary: 'Altın ve değerli maden ağırlığıyla kur şoklarına ve enflasyona karşı yüksek koruma sağlayan yapı.' };
+        return { title: '⚖️ Dengeli & Çoklu Varlık Büyümesi', summary: 'Likit, küresel büyüme, enflasyon kalkanı ve hisse alfa arasında dengelenmiş optimum portföy mimarisi.' };
+    },
+
     render() {
         const container = document.getElementById('strategyContainer');
         if (!container) return;
 
+        const totalVal = Calculations.getTotalPortfolioValue();
+        const funds = PortfolioData.funds || [];
+        const cashTL = PortfolioData.cashTL || 0;
+        const targets = Calculations.getStrategyTargets();
+
+        if (funds.length === 0 && cashTL === 0) {
+            container.innerHTML = `
+                <div class="strategy-overview">
+                    <div class="card strategy-text" style="text-align: center; padding: 48px 24px;">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">🎯</div>
+                        <h2 style="margin-bottom: 8px;">Portföy Stratejisi ve Varlık Mimarisi</h2>
+                        <p style="color: var(--text-secondary); max-width: 580px; margin: 0 auto 24px; font-size: 0.95rem; line-height: 1.6;">
+                            Strateji motorunun dinamik varlık dağılımınızı, likit kalkanınızı ve rebalancing ihtiyaçlarınızı analiz edebilmesi için lütfen portföyünüze fon veya nakit ekleyin.
+                        </p>
+                        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="Navigation.switchTab('add-fund')">
+                                ➕ İlk Fonunuzu Ekleyin
+                            </button>
+                            <button class="btn btn-ghost" onclick="PortfolioBackup.openImportModal()">
+                                📂 Yedekten Yükle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const archetype = this.getArchetype(targets);
+        const sortedFunds = [...funds].sort((a, b) => (b.shares * b.currentPrice) - (a.shares * a.currentPrice));
+
+        let pillarsHtml = '';
+        if (cashTL > 0) {
+            const cashPct = totalVal > 0 ? (cashTL / totalVal) * 100 : 0;
+            pillarsHtml += `
+                <div class="principle-item">
+                    <span class="principle-icon">💵</span>
+                    <div class="principle-text">
+                        <h4>Serbest Nakit Havuzu (%${cashPct.toFixed(1)} / ${Utils.formatCurrency(cashTL)})</h4>
+                        <p>Anında kullanılabilir serbest TL rezervi; düşüşlerde alım fırsatı ve T+0 likidite gücü sağlar.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        sortedFunds.forEach((f, idx) => {
+            const val = f.shares * f.currentPrice;
+            const pct = totalVal > 0 ? (val / totalVal) * 100 : 0;
+            const meta = Utils.getFundMeta(f.code, f.category, f.name);
+            const icon = f.icon || meta.icon || '💼';
+            const roleDesc = this.getRoleDescription(f);
+
+            pillarsHtml += `
+                <div class="principle-item">
+                    <span class="principle-icon">${icon}</span>
+                    <div class="principle-text">
+                        <h4>${idx + 1}. ${f.code} – ${Utils.escapeHtml(f.shortName || f.name)} (%${pct.toFixed(1)} / ${Utils.formatCurrency(val)})</h4>
+                        <p>${roleDesc}</p>
+                    </div>
+                </div>
+            `;
+        });
+
         container.innerHTML = `
             <div class="strategy-overview">
                 <div class="card strategy-text">
-                    <h2>🎯 Güncel "Dengeli ve Büyüme+" Portföy Mimarisi</h2>
-                    <p>Portföyünüz toplam <strong>₺5.815,50</strong> büyüklüğe ulaşmış olup, mükemmel bir 
-                    <strong>Likit Güvence (%45 AIS)</strong>, <strong>Küresel Büyüme (%30 AFT + IJC)</strong>, 
-                    <strong>Enflasyon Kalkanı (%12,5 KZL)</strong> ve <strong>Vergisiz Yerli Hisse (%8,4 MAC)</strong> dengesine oturmuştur.</p>
+                    <h2>🎯 Güncel "${archetype.title}" Portföy Mimarisi</h2>
+                    <p>Portföyünüz toplam <strong>${Utils.formatCurrency(totalVal)}</strong> büyüklüğe ulaşmış olup, ${funds.length} aktif fon ve serbest nakit ile dağıtılmıştır. ${archetype.summary}</p>
 
-                    <h4 style="margin-top: 20px; margin-bottom: 12px; color:var(--accent-primary);">Portföyün 5 Temel Direği:</h4>
+                    <h4 style="margin-top: 20px; margin-bottom: 12px; color:var(--accent-primary);">Portföyün Temel Direkleri (Varlık Dağılımı):</h4>
                     <div class="strategy-principles">
-                        <div class="principle-item">
-                            <span class="principle-icon">🕌</span>
-                            <div class="principle-text">
-                                <h4>1. Ana Likit Gövde (AIS - %45,06 / ₺2.620,51)</h4>
-                                <p>Düşük yönetim ücretli (%0,39) ve T+0 valörlü katılım fonunda bekleyen sermayeniz hem bileşik getiri üretir (+₺69,41) hem de düşüşlerde alım gücünüzü korur.</p>
-                            </div>
-                        </div>
-                        <div class="principle-item">
-                            <span class="principle-icon">🌐</span>
-                            <div class="principle-text">
-                                <h4>2. Küresel Teknoloji Devleri (AFT - %16,09 / ₺935,52)</h4>
-                                <p>Nvidia, Apple, Microsoft, Amazon ile küresel büyümeden pay alır ve dolara karşı doğal koruma sağlar.</p>
-                            </div>
-                        </div>
-                        <div class="principle-item">
-                            <span class="principle-icon">💻</span>
-                            <div class="principle-text">
-                                <h4>3. Yapay Zeka & Yarı İletken (IJC - %13,63 / ₺792,64)</h4>
-                                <p>1 yıllık +%97,91 getirisiyle mega-trend lideri çip üreticilerine yatırım yapar.</p>
-                            </div>
-                        </div>
-                        <div class="principle-item">
-                            <span class="principle-icon">🥇</span>
-                            <div class="principle-text">
-                                <h4>4. Altın Katılım Sigortası (KZL - %12,52 / ₺728,36)</h4>
-                                <p>Fiziki altına dayalı faizsiz katılım fonu ile portföyün kriz ve enflasyon kalkanıdır.</p>
-                            </div>
-                        </div>
-                        <div class="principle-item">
-                            <span class="principle-icon">⛵</span>
-                            <div class="principle-text">
-                                <h4>5. Vergisiz Yerli BIST Alfa (MAC - %8,43 / ₺490,06)</h4>
-                                <p>Borsa İstanbul'da seçici değer yatırımı yapar. %0 Stopaj avantajı ile net kazanç sağlar.</p>
-                            </div>
-                        </div>
+                        ${pillarsHtml}
                     </div>
                 </div>
 
