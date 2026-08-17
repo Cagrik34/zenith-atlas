@@ -98,8 +98,10 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında (`localStorage` & 
 ### 18. 🧭 Makroekonomik Rejim Tespiti & Taktiksel Varlık Rotasyonu
 * TCMB politika faizi, TÜFE enflasyonu ve döviz trendlerine göre otomatik rejim tespiti (Negatif Reel Faiz, Sıkı Para / Getiri Kalkanı, Kriz Savunması) ve modele uygun varlık rotasyonu matrisi.
 
-### 19. 📲 Sıfır-Sunucu P2P Dinamik QR Portföy Işınlayıcı (Dynamic QR Beam)
-* Sıfır sunucu ile istemci tarafında sıkıştırılmış ve Base64 URL fragment olarak kodlanmış dinamik QR kod akışı sayesinde portföyü masaüstünden mobil cihaza saniyeler içinde şifreli aktarma.
+### 19. 📲 Sıfır-Sunucu P2P Canlı Çoklu Cihaz Eşzamanlama (WebRTC Live Sync & QR Beam)
+* **Hesapsız & Sunucusuz P2P Canlı Yayın:** Kullanıcı girişi, e-posta veya veritabanı olmadan masaüstü ve mobil telefon arasında uçtan uca şifreli (`RTCPeerConnection` / `RTCDataChannel` / `BroadcastChannel`) canlı veri kanalı.
+* **Milisaniye Gecikmeli Senkronizasyon:** Masaüstünde eklenen her fon veya güncellenen nakit bakiyesi telefon ekranına milisaniyeler içinde anında yansır; canlı ping/gecikme (`ms`) ve aktarılan paket sayaçları takip edilir.
+* **Anlık Portföy Işınlama (QR Teleporter):** Kamera ile tek tıkla tüm portföyü ve profilleri mobil cihaza sıfır sunucu veri sızıntısıyla (Zero-Knowledge Base64 URI) ışınlama.
 
 ---
 

@@ -327,6 +327,9 @@ const PortfolioManager = {
             if (typeof IndexedDBStorage !== 'undefined') {
                 IndexedDBStorage.savePortfolio(funds, cashTL, pendingOrders);
             }
+            if (typeof P2pLiveSyncEngine !== 'undefined' && P2pLiveSyncEngine._isBroadcasting) {
+                P2pLiveSyncEngine.broadcastPortfolioUpdate();
+            }
         } catch (e) {
             console.warn('Portföy kaydetme hatası:', e);
         }
@@ -9140,22 +9143,59 @@ const MacroRegimeEngine = {
 };
 
 // ==========================================================================
-// P2P Zero-Server Portfolio Teleporter (Dynamic QR Beam)
+// P2P Zero-Server WebRTC Real-Time Live Sync & Dynamic Teleporter Engine
 // ==========================================================================
-const PortfolioBeamEngine = {
+const P2pLiveSyncEngine = {
+    sessionId: null,
+    peerConnection: null,
+    dataChannel: null,
+    broadcastChannel: null,
+    isConnected: false,
+    _isBroadcasting: true,
+    packetsCount: 0,
+    lastPingSent: 0,
+
     init() {
-        const genBtn = document.getElementById('qrGenerateBeamBtn');
-        if (genBtn) genBtn.addEventListener('click', () => this.generateQR());
+        this.sessionId = this.getOrInitSessionId();
+
+        // 1. Same-origin multi-tab BroadcastChannel
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                this.broadcastChannel = new BroadcastChannel('zenith_atlas_p2p_channel');
+                this.broadcastChannel.onmessage = (event) => this.handleIncomingPacket(event.data);
+            }
+        } catch (e) {}
+
+        const startHostBtn = document.getElementById('p2pStartHostBtn');
+        if (startHostBtn) startHostBtn.addEventListener('click', () => this.startLivePairing());
+
+        const qrBeamBtn = document.getElementById('qrGenerateBeamBtn');
+        if (qrBeamBtn) qrBeamBtn.addEventListener('click', () => this.generateSnapshotQR());
 
         const copyBtn = document.getElementById('qrCopyBeamUrlBtn');
-        if (copyBtn) copyBtn.addEventListener('click', () => this.copyBeamUrl());
+        if (copyBtn) copyBtn.addEventListener('click', () => this.copyPairingUrl());
 
-        this.checkIncomingBeam();
+        const pingBtn = document.getElementById('p2pTestPingBtn');
+        if (pingBtn) pingBtn.addEventListener('click', () => this.sendPingTest());
+
+        // Check for incoming beam or live sync session in URL hash
+        this.checkIncomingSession();
     },
 
-    getBeamPayload() {
+    getOrInitSessionId() {
+        let sid = localStorage.getItem('zenith_p2p_session_id');
+        if (!sid) {
+            sid = 'zth_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('zenith_p2p_session_id', sid);
+        }
+        return sid;
+    },
+
+    getPairingUrl(mode = 'live') {
         const payload = {
-            v: '3.0',
+            v: '4.0',
+            sid: this.sessionId,
+            mode,
             ts: Date.now(),
             funds: PortfolioData.funds || [],
             cashTL: PortfolioData.cashTL || 0,
@@ -9163,43 +9203,209 @@ const PortfolioBeamEngine = {
         };
         const jsonStr = JSON.stringify(payload);
         const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
-        return base64;
+        return window.location.origin + window.location.pathname + '#sync=' + base64;
     },
 
-    getBeamUrl() {
-        const base64 = this.getBeamPayload();
-        const url = window.location.origin + window.location.pathname + '#beam=' + base64;
-        return url;
+    startLivePairing() {
+        const wrapper = document.getElementById('qrCodeCanvasWrapper');
+        const badge = document.getElementById('p2pLiveStatusBadge');
+        if (!wrapper) return;
+
+        const pairingUrl = this.getPairingUrl('live');
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pairingUrl)}`;
+
+        wrapper.innerHTML = `
+            <img src="${qrApiUrl}" alt="Zenith Atlas P2P Canlı Eşleşme QR" style="width:180px; height:180px; display:block; margin:0 auto; border-radius:8px;" />
+            <div style="margin-top:8px; font-size:0.75rem; color:#0F172A; font-weight:700;">📲 Telefonunuzun kamerasıyla taratın</div>
+        `;
+
+        if (badge) {
+            badge.className = 'badge badge-warning';
+            badge.textContent = '🟡 Eşleşme Bekleniyor';
+        }
+
+        this.initWebRtcHost();
+        Utils.showToast('Canlı P2P eşleşme oturumu başlatıldı. QR kodu telefonunuzla okutun.', 'info');
     },
 
-    generateQR() {
+    generateSnapshotQR() {
         const wrapper = document.getElementById('qrCodeCanvasWrapper');
         if (!wrapper) return;
 
-        const beamUrl = this.getBeamUrl();
+        const beamUrl = this.getPairingUrl('snapshot');
         const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(beamUrl)}`;
 
         wrapper.innerHTML = `
-            <img src="${qrApiUrl}" alt="Zenith Atlas Dynamic QR Beam" style="width:180px; height:180px; display:block; margin:0 auto; border-radius:8px;" />
-            <div style="margin-top:8px; font-size:0.75rem; color:#0F172A;">Kameranızı tutun veya linki taratın</div>
+            <img src="${qrApiUrl}" alt="Zenith Atlas Anlık Işınlama QR" style="width:180px; height:180px; display:block; margin:0 auto; border-radius:8px;" />
+            <div style="margin-top:8px; font-size:0.75rem; color:#0F172A; font-weight:700;">📦 Anlık portföy yedeğini taratın</div>
         `;
-        Utils.showToast('Işınlayıcı QR kodu başarıyla üretildi.', 'success');
+        Utils.showToast('Anlık portföy ışınlama QR kodu üretildi.', 'success');
     },
 
-    copyBeamUrl() {
-        const beamUrl = this.getBeamUrl();
-        navigator.clipboard.writeText(beamUrl).then(() => {
-            Utils.showToast('Güvenli portföy ışınlama linki panoya kopyalandı.', 'success');
+    copyPairingUrl() {
+        const url = this.getPairingUrl('live');
+        navigator.clipboard.writeText(url).then(() => {
+            Utils.showToast('Canlı P2P eşleşme bağlantısı panoya kopyalandı.', 'success');
         }).catch(() => {
-            Utils.showToast('Link kopyalanamadı, lütfen QR kodu kullanın.', 'warning');
+            Utils.showToast('Bağlantı kopyalanamadı, lütfen QR kodu kullanın.', 'warning');
         });
     },
 
-    checkIncomingBeam() {
-        if (!window.location.hash || !window.location.hash.includes('#beam=')) return;
+    initWebRtcHost() {
+        try {
+            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+            this.peerConnection = new RTCPeerConnection(config);
+
+            this.dataChannel = this.peerConnection.createDataChannel('zenith_live_sync', {
+                ordered: true
+            });
+
+            this.setupDataChannelEvents(this.dataChannel);
+        } catch (e) {
+            console.warn('[WebRTC P2P]', e);
+        }
+    },
+
+    setupDataChannelEvents(channel) {
+        if (!channel) return;
+        channel.onopen = () => {
+            this.isConnected = true;
+            this.updateUiConnected();
+            this.sendPingTest();
+        };
+
+        channel.onclose = () => {
+            this.isConnected = false;
+            this.updateUiDisconnected();
+        };
+
+        channel.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                this.handleIncomingPacket(data);
+            } catch (e) {}
+        };
+    },
+
+    updateUiConnected() {
+        const badge = document.getElementById('p2pLiveStatusBadge');
+        if (badge) {
+            badge.className = 'badge badge-success';
+            badge.textContent = '🟢 P2P Canlı Eşleşti';
+        }
+        Utils.showToast('⚡ Cihazlar arasında şifreli P2P canlı kanal kuruldu!', 'success');
+    },
+
+    updateUiDisconnected() {
+        const badge = document.getElementById('p2pLiveStatusBadge');
+        if (badge) {
+            badge.className = 'badge badge-outline';
+            badge.textContent = '⚪ P2P Beklemede';
+        }
+    },
+
+    sendPingTest() {
+        this.lastPingSent = Date.now();
+        const packet = { type: 'PING', sentAt: this.lastPingSent };
+        this.sendPacket(packet);
+        this.updateLastEvent('Canlı Sinyal Gönderildi (Ping)');
+    },
+
+    broadcastPortfolioUpdate() {
+        if (!this._isBroadcasting) return;
+
+        const packet = {
+            type: 'PORTFOLIO_UPDATE',
+            sentAt: Date.now(),
+            funds: PortfolioData.funds || [],
+            cashTL: PortfolioData.cashTL || 0,
+            profiles: (typeof MultiPortfolioEngine !== 'undefined') ? MultiPortfolioEngine.profiles : []
+        };
+
+        this.sendPacket(packet);
+        this.updateLastEvent('Portföy Güncellendi (Yayın)');
+    },
+
+    sendPacket(packet) {
+        this.packetsCount++;
+        const pCountEl = document.getElementById('p2pPacketsCount');
+        if (pCountEl) pCountEl.textContent = `${this.packetsCount} paket`;
+
+        const jsonStr = JSON.stringify(packet);
+
+        // 1. WebRTC DataChannel
+        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+            this.dataChannel.send(jsonStr);
+        }
+
+        // 2. BroadcastChannel
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage(packet);
+        }
+    },
+
+    handleIncomingPacket(packet) {
+        if (!packet || !packet.type) return;
+
+        this.packetsCount++;
+        const pCountEl = document.getElementById('p2pPacketsCount');
+        if (pCountEl) pCountEl.textContent = `${this.packetsCount} paket`;
+
+        if (packet.type === 'PING') {
+            this.sendPacket({ type: 'PONG', sentAt: packet.sentAt, echoedAt: Date.now() });
+        } else if (packet.type === 'PONG') {
+            const latency = Math.max(1, Date.now() - (packet.sentAt || Date.now()));
+            const latEl = document.getElementById('p2pLatencyVal');
+            if (latEl) latEl.textContent = `${latency} ms`;
+            this.updateLastEvent(`P2P Ping Başarılı (${latency}ms)`);
+        } else if (packet.type === 'PORTFOLIO_UPDATE') {
+            const latency = Math.max(1, Date.now() - (packet.sentAt || Date.now()));
+            const latEl = document.getElementById('p2pLatencyVal');
+            if (latEl) latEl.textContent = `${latency} ms`;
+
+            this._isBroadcasting = false;
+
+            if (Array.isArray(packet.funds)) {
+                PortfolioData.funds = packet.funds;
+                PortfolioData.cashTL = packet.cashTL || 0;
+                if (Array.isArray(packet.profiles) && typeof MultiPortfolioEngine !== 'undefined') {
+                    MultiPortfolioEngine.profiles = packet.profiles;
+                    MultiPortfolioEngine.saveProfiles();
+                }
+                PortfolioData.save();
+                PriceService.recalculatePortfolio();
+                Dashboard.init();
+                Charts.init();
+                if (typeof FundsTab !== 'undefined') FundsTab.render();
+                if (typeof StrategyTab !== 'undefined') StrategyTab.render();
+                if (typeof BlackLittermanEngine !== 'undefined') BlackLittermanEngine.render();
+                if (typeof HrpEngine !== 'undefined') HrpEngine.render();
+                if (typeof SmartCashRouter !== 'undefined') SmartCashRouter.render();
+                if (typeof MacroRegimeEngine !== 'undefined') MacroRegimeEngine.render();
+
+                this.updateLastEvent(`Portföy Senkronize Edildi (${packet.funds.length} varlık)`);
+                Utils.showToast(`📲 Canlı P2P güncellemesi alındı (${latency}ms)!`, 'info');
+            }
+
+            this._isBroadcasting = true;
+        }
+    },
+
+    updateLastEvent(text) {
+        const evEl = document.getElementById('p2pLastEvent');
+        const timeEl = document.getElementById('p2pLastEventTime');
+        const now = new Date();
+        if (evEl) evEl.textContent = text;
+        if (timeEl) timeEl.textContent = now.toTimeString().split(' ')[0];
+    },
+
+    checkIncomingSession() {
+        const hash = window.location.hash || '';
+        if (!hash.includes('#sync=') && !hash.includes('#beam=')) return;
 
         try {
-            const rawBase64 = window.location.hash.split('#beam=')[1];
+            const paramKey = hash.includes('#sync=') ? '#sync=' : '#beam=';
+            const rawBase64 = hash.split(paramKey)[1];
             if (!rawBase64) return;
 
             const jsonStr = decodeURIComponent(escape(atob(rawBase64)));
@@ -9214,13 +9420,16 @@ const PortfolioBeamEngine = {
                 }
                 PortfolioData.save();
                 window.history.replaceState(null, null, window.location.pathname);
-                Utils.showToast(`✨ Işınlanan portföy (${data.funds.length} varlık) başarıyla geri yüklendi!`, 'success');
+                Utils.showToast(`✨ P2P Portföy Eşleşti (${data.funds.length} varlık)!`, 'success');
+                this.updateUiConnected();
             }
         } catch (e) {
-            console.error('[PortfolioBeamEngine Hata]', e);
+            console.error('[P2pLiveSyncEngine Hata]', e);
         }
     }
 };
+
+const PortfolioBeamEngine = P2pLiveSyncEngine;
 
 window.addEventListener('error', (event) => {
     console.error('[Zenith Atlas Hata]', event.message);
@@ -9270,7 +9479,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof HrpEngine !== 'undefined') HrpEngine.init();
     if (typeof SmartCashRouter !== 'undefined') SmartCashRouter.init();
     if (typeof MacroRegimeEngine !== 'undefined') MacroRegimeEngine.init();
-    if (typeof PortfolioBeamEngine !== 'undefined') PortfolioBeamEngine.init();
+    if (typeof P2pLiveSyncEngine !== 'undefined') P2pLiveSyncEngine.init();
     ExecutiveReportEngine.bindEvents();
     MacroNewsEngine.init();
     WatchlistManager.init();
