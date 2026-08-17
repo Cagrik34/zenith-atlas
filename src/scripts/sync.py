@@ -48,11 +48,30 @@ def get_last_business_days():
     start_day = last_bday - datetime.timedelta(days=7)
     return start_day.strftime('%Y-%m-%d'), last_bday.strftime('%Y-%m-%d')
 
-def load_fund_list():
+def load_fund_list(sync_all=False):
     """
-    Önce src/data/prices.json'dan mevcut fon listesini yükler (dinamik portföy).
-    Eğer bulunamazsa hata verir ve kullanıcıyı yönlendirir.
+    Dinamik fon listesini yükler.
+    sync_all=True ise 1.051 fonun tamamını funds_db.json'dan alır.
+    Aksi halde prices.json'da izlenen dinamik portföy fonlarını veya funds_db.json'u okur.
     """
+    if sync_all:
+        db_paths = [
+            PROJECT_ROOT / 'src' / 'data' / 'funds_db.json',
+            PROJECT_ROOT / 'data' / 'funds_db.json'
+        ]
+        for p in db_paths:
+            if p.exists():
+                try:
+                    with open(p, encoding='utf-8') as f:
+                        data = json.load(f)
+                    if isinstance(data, list):
+                        codes = [item.get('code') for item in data if item.get('code')]
+                        if codes:
+                            print(f"[i] funds_db.json veritabanından {len(codes)} TEFAS fonu dinamik olarak yüklendi.")
+                            return codes
+                except Exception as e:
+                    print(f"[!] {p} okunamadı: {e}")
+
     possible_paths = [
         PROJECT_ROOT / 'src' / 'data' / 'prices.json',
         PROJECT_ROOT / 'data' / 'prices.json',
@@ -65,20 +84,29 @@ def load_fund_list():
                     data = json.load(f)
                 codes = list(data.get('prices', {}).keys())
                 if codes:
-                    print(f"[i] {prices_path.name}'dan {len(codes)} fon kodu okundu: {codes}")
+                    print(f"[i] Portföy izleme listesinden {len(codes)} aktif fon kodu dinamik olarak okundu: {codes}")
                     return codes
             except Exception as e:
-                print(f"[!] {prices_path} okunamadi: {e}")
+                print(f"[!] {prices_path} okunamadı: {e}")
 
-    # Fallback: funds_db.json'dan veya kullanıcı girişinden al
-    print("[!] prices.json bulunamadi veya bos.")
-    print("[i] Lutfen once tarayici arayuzunden portfoyu olusturun.")
-    print("[i] Sonra bu scripti tekrar calistirin.")
-    print("[i] Veya asagiya manuel fon kodlarini girin (bos birakin = cikis):")
-    user_input = input("Fon kodlari (virgule ayrin, orn: AIS,AFT,KZL): ").strip()
-    if user_input:
-        codes = [c.strip().upper() for c in user_input.split(',') if c.strip()]
-        return codes
+    # Fallback: funds_db.json veritabanından tüm fonları dinamik oku
+    db_paths = [
+        PROJECT_ROOT / 'src' / 'data' / 'funds_db.json',
+        PROJECT_ROOT / 'data' / 'funds_db.json'
+    ]
+    for p in db_paths:
+        if p.exists():
+            try:
+                with open(p, encoding='utf-8') as f:
+                    data = json.load(f)
+                if isinstance(data, list):
+                    codes = [item.get('code') for item in data if item.get('code')]
+                    if codes:
+                        print(f"[i] funds_db.json veritabanından {len(codes)} TEFAS fonu dinamik olarak yüklendi.")
+                        return codes
+            except Exception as e:
+                print(f"[!] {p} okunamadı: {e}")
+
     return []
 
 def fetch_live_tefas_prices(funds):
@@ -420,16 +448,23 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Örnek Kullanımlar:
-  python src/scripts/sync.py                     # Tüm portföyü ve piyasaları günceller
-  python src/scripts/sync.py --funds AIS,AFT,KZL # Yalnızca belirtilen fonları günceller
-  python src/scripts/sync.py --no-markets        # Yalnızca TEFAS fonlarını günceller
+  python src/scripts/sync.py                     # Dinamik portföy fonlarını ve piyasaları günceller
+  python src/scripts/sync.py --all               # Tüm 1.051 TEFAS fonunu veritabanından günceller
+  python src/scripts/sync.py --funds AFT,MAC,KZL # Belirtilen fonları günceller
+  python src/scripts/sync.py --no-markets        # Yalnızca fon fiyatlarını günceller
         """
     )
     parser.add_argument(
         "--funds", "-f",
         type=str,
         default="",
-        help="Virgülle ayrılmış fon kodları (örn: AIS,AFT,IJC,KZL,MAC,TP2)"
+        help="Virgülle ayrılmış güncellenecek fon kodları (örn: AFT,MAC,KZL)"
+    )
+    parser.add_argument(
+        "--all", "--all-funds",
+        action="store_true",
+        dest="all",
+        help="Tüm 1.051 TEFAS fonunu dinamik olarak senkronize et"
     )
     parser.add_argument(
         "--no-markets",
@@ -584,7 +619,7 @@ def main():
         funds = [c.strip().upper() for c in args.funds.split(',') if c.strip()]
         print(f"[i] Komut satırından {len(funds)} fon kodu alındı: {funds}")
     else:
-        funds = load_fund_list()
+        funds = load_fund_list(sync_all=args.all)
 
     if not funds:
         print("[-] Fon listesi boş. TEFAS fon senkronizasyonu tamamlandı.")
