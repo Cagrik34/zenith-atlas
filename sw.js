@@ -1,10 +1,10 @@
 /**
  * Zenith Atlas - Service Worker (PWA Offline & Cache Engine)
- * Version: 1.0.0
+ * Version: 2.0.0
  * Author: Çağrı Giray Keşan
  */
 
-const CACHE_NAME = 'zenith-atlas-cache-v1';
+const CACHE_NAME = 'zenith-atlas-cache-v2.0.0';
 
 const STATIC_ASSETS = [
     './',

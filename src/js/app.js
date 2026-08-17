@@ -5551,6 +5551,45 @@ const AddFundTab = {
     }
 };
 
+// ==========================================================================
+// DataProvider (Soyutlanmış Veri Sağlayıcı & Failover Yönetim Arayüzü)
+// ==========================================================================
+const DataProvider = {
+    providers: {
+        canliDoviz: { id: 'canliDoviz', name: 'CanlıDöviz Socket.IO', type: 'WebSocket', status: 'connecting', endpoint: 'wss://s.canlidoviz.com' },
+        harem: { id: 'harem', name: 'Harem Altın Kapalıçarşı', type: 'WebSocket', status: 'connecting', endpoint: 'wss://hrmsocketonly.haremaltin.com' },
+        bigpara: { id: 'bigpara', name: 'Bigpara BIST Motoru', type: 'REST', status: 'ready', endpoint: 'https://bigpara.hurriyet.com.tr' },
+        yahoo: { id: 'yahoo', name: 'Yahoo Finance Global API', type: 'REST', status: 'ready', endpoint: 'https://query1.finance.yahoo.com' },
+        offline: { id: 'offline', name: 'Zenith Offline Cache Fallback', type: 'Local', status: 'active', endpoint: 'localStorage / IndexedDB' }
+    },
+
+    updateStatus(providerId, status, details = null) {
+        if (this.providers[providerId]) {
+            this.providers[providerId].status = status;
+            if (details) this.providers[providerId].details = details;
+            this.notifyStatusChange();
+        }
+    },
+
+    notifyStatusChange() {
+        const indicator = document.getElementById('dataProviderHealthBadge');
+        if (indicator) {
+            const hasLive = this.providers.canliDoviz.status === 'connected' || this.providers.harem.status === 'connected';
+            indicator.className = `health-badge ${hasLive ? 'badge-success' : 'badge-warning'}`;
+            indicator.textContent = hasLive ? '● Canlı Veri Akışı' : '● Çevrimdışı / Yerel Mod';
+        }
+    },
+
+    getHealthReport() {
+        return Object.values(this.providers).map(p => ({
+            id: p.id,
+            name: p.name,
+            type: p.type,
+            status: p.status
+        }));
+    }
+};
+
 const MarketService = {
     data: null,
     tickerInterval: null,
@@ -5605,6 +5644,7 @@ const MarketService = {
 
             this.canliDovizSocket.on('connect', () => {
                 console.log('✅ [CanliDoviz.com Canlı WebSocket] s.canlidoviz.com sunucusuna her salise canlı akışla bağlandı!');
+                DataProvider.updateStatus('canliDoviz', 'connected');
                 // Subscribe to all real-time market channels
                 this.canliDovizSocket.emit('us', {
                     t: ['CURRENCY', 'GOLD', 'COIN', 'EMTIA', 'PARITY', 'STOCK'],
@@ -5625,9 +5665,11 @@ const MarketService = {
 
             this.canliDovizSocket.on('connect_error', (err) => {
                 console.warn('[CanliDoviz Socket] Bağlantı beklemede:', err?.message || err);
+                DataProvider.updateStatus('canliDoviz', 'fallback_active');
             });
         } catch (e) {
             console.warn('[CanliDoviz Socket] Başlatılamadı:', e);
+            DataProvider.updateStatus('canliDoviz', 'fallback_active');
         }
     },
 
@@ -5774,6 +5816,7 @@ const MarketService = {
 
             this.haremSocket.on('connect', () => {
                 console.log('✅ [Harem Altın Canlı WebSocket] Yedek soket akışı devrede.');
+                DataProvider.updateStatus('harem', 'connected');
             });
 
             this.haremSocket.on('price_changed', (res) => {
@@ -5781,8 +5824,13 @@ const MarketService = {
                     this.applyHaremLiveUpdate(res.data);
                 }
             });
+
+            this.haremSocket.on('connect_error', () => {
+                DataProvider.updateStatus('harem', 'fallback_active');
+            });
         } catch (e) {
             console.warn('[Harem Altın Socket] Başlatılamadı:', e);
+            DataProvider.updateStatus('harem', 'fallback_active');
         }
     },
 
