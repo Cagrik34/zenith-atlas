@@ -6,7 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![TEFAS Veritabanı](https://img.shields.io/badge/TEFAS-1.051%20Fon-indigo?style=flat-square)](src/data/funds_db.json)
 [![Piyasa Akışı](https://img.shields.io/badge/Canlı%20Veri-WebSocket%20%2B%20Failover-emerald?style=flat-square)](https://canlidoviz.com)
-[![Zenith AI](https://img.shields.io/badge/Zenith%20AI-BYOK%20LLM%20(Claude%2FGPT%2GGemini)-purple?style=flat-square)](index.html)
 [![Mimari](https://img.shields.io/badge/Mimari-İstemci%20Taraflı%20(Zero--Server)-slate?style=flat-square)](index.html)
 
 Zenith Atlas; Borsa İstanbul pay senetleri (BIST), ABD hisse senetleri (NYSE/NASDAQ), TEFAS fonları (1.051 fon), Kapalıçarşı serbest piyasa kıymetli madenleri ve canlı döviz kurlarını tek çatı altında birleştiren kurumsal düzeyde bir finansal analiz, portföy takip ve kantitatif risk simülasyon terminalidir.
