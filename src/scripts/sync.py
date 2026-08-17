@@ -473,20 +473,72 @@ def parse_args():
     )
     return parser.parse_args()
 
+def fetch_live_tcmb_rate():
+    """TCMB resmi web sitesinden (tcmb.gov.tr) güncel 1 hafta repo politika faizini dinamik olarak çeker."""
+    import urllib.request, re, ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    }
+    try:
+        url = 'https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/basin/2026'
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=6, context=ctx) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+            m = re.search(r'politika\s+faizi[^\d]{1,50}(%?\s*(\d{1,2}(?:[\.,]\d{1,2})?))', html, re.I)
+            if m:
+                rate = float(m.group(2).replace(',', '.'))
+                print(f"[+] TCMB Politika Faizi Canlı Çekildi: %{rate:.2f}")
+                return rate
+    except Exception as e:
+        print(f"[-] TCMB canlı veri uyarısı ({e}), güncel 2026 PPK referansı (%37.00) kullanılıyor.")
+    return 37.00
+
+def fetch_live_tuik_inflation():
+    """TÜİK resmi web sitesinden (tuik.gov.tr) güncel yıllık TÜFE enflasyonunu dinamik olarak çeker."""
+    import urllib.request, re, ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    }
+    try:
+        url = 'https://data.tuik.gov.tr'
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=6, context=ctx) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+            m = re.search(r'TÜFE[^\d]{1,50}(%?\s*(\d{1,2}(?:[\.,]\d{1,2})?))', html, re.I)
+            if m:
+                rate = float(m.group(2).replace(',', '.'))
+                print(f"[+] TÜİK Yıllık TÜFE Canlı Çekildi: %{rate:.2f}")
+                return rate
+    except Exception as e:
+        print(f"[-] TÜİK canlı veri uyarısı ({e}), güncel 2026 TÜFE referansı (%31.75) kullanılıyor.")
+    return 31.75
+
 def sync_macro_news(target_dirs):
     """
-    TCMB, SPK, Resmi Gazete ve KAP resmi makroekonomi bültenlerini ve politika faizi
-    verilerini senkronize eder, news.json ve news.js dosyalarını günceller.
+    TCMB, TÜİK, SPK ve Resmi Gazete resmi makroekonomi bültenlerini ve politika faizini
+    canlı web sorgularıyla senkronize eder, news.json ve news.js dosyalarını günceller.
     """
-    print("[*] Makroekonomi & Resmi Politika Bültenleri (TCMB/SPK/KAP) senkronize ediliyor...")
+    print("[*] Makroekonomi & Resmi Politika Bültenleri (TCMB/TÜİK/SPK) canlı senkronize ediliyor...")
     now_iso = datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat()
+    
+    live_tcmb = fetch_live_tcmb_rate()
+    live_tuik = fetch_live_tuik_inflation()
+    live_real = round(live_tcmb - live_tuik, 2)
     
     news_data = {
         "lastUpdate": now_iso,
         "policyIndicators": {
             "tcmbPolicyRate": {
                 "name": "TCMB 1 Hafta Vadeli Repo (Politika Faizi)",
-                "rate": 37.00,
+                "rate": live_tcmb,
                 "change": 0.00,
                 "lastDecisionDate": datetime.date.today().strftime('%Y-%m-%d'),
                 "source": "TCMB (Türkiye Cumhuriyet Merkez Bankası)",
@@ -494,7 +546,7 @@ def sync_macro_news(target_dirs):
             },
             "tuikInflation": {
                 "name": "TÜİK Yıllık TÜFE Enflasyonu (Tüketici Fiyat Endeksi)",
-                "rate": 31.75,
+                "rate": live_tuik,
                 "monthlyChange": 1.85,
                 "period": "Yıllık TÜFE",
                 "source": "TÜİK (Türkiye İstatistik Kurumu)",
@@ -502,9 +554,9 @@ def sync_macro_news(target_dirs):
             },
             "realInterestRate": {
                 "name": "TCMB Net Reel Faiz Düzeyi (Politika Faizi - TÜFE)",
-                "rate": 5.25,
-                "formula": "TCMB Politika Faizi (%37.00) - TÜİK Yıllık TÜFE (%31.75)",
-                "status": "Pozitif Reel Faiz (Sıkı Para Politikası)",
+                "rate": live_real,
+                "formula": f"TCMB Politika Faizi (%{live_tcmb:.2f}) - TÜİK Yıllık TÜFE (%{live_tuik:.2f})",
+                "status": "Pozitif Reel Faiz (Sıkı Para Politikası)" if live_real > 0 else "Negatif Reel Faiz",
                 "source": "TCMB & TÜİK Resmi Verileri",
                 "sourceUrl": "https://www.tcmb.gov.tr"
             },
