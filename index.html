@@ -660,6 +660,197 @@
                     </div>
                 </div>
 
+                <!-- Hierarchical Risk Parity (HRP) & Tail-Risk (CVaR / Omega / Ulcer Index) Section -->
+                <div class="card hrp-card" id="hrpRiskParitySection" style="margin-top: 24px;">
+                    <div class="card-header hrp-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div class="hrp-title-group" style="display:flex; align-items:center; gap:12px;">
+                            <div class="hrp-icon-badge" style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🌳</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Hiyerarşik Risk Paritesi (HRP) & Kuyruk Riski Masası</h3>
+                                <p class="hrp-sub" style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">Marcos Lopez de Prado makine öğrenimi kümeleme ağacı ile kovaryans tersi almadan en sağlam risk paritesi dağılımı.</p>
+                            </div>
+                        </div>
+                        <div class="hrp-header-actions" style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-primary" id="hrpCalculateBtn"><span>⚡</span> HRP Dağılımını Güncelle</button>
+                            <button class="btn btn-sm btn-secondary" id="hrpApplyWeightsBtn"><span>🎯</span> HRP Ağırlıklarını Uygula</button>
+                        </div>
+                    </div>
+
+                    <!-- Tail-Risk KPI Row -->
+                    <div class="hrp-kpi-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; padding:16px 20px; background:rgba(15,23,42,0.3); border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">🚨 CVaR (%99 Expected Shortfall)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#EF4444;" id="hrpCvarVal">-%0,00</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">En kötü %1 kriz gününde ortalama kayıp</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">⚡ Omega Rasyosu (Hurdle %50)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#10B981;" id="hrpOmegaVal">0.00</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">Yukarı potansiyel / aşağı oynaklık oranı</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">📉 Ulcer Index (Çöküş Stresi)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#F59E0B;" id="hrpUlcerVal">0.00</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">Geri çekilme derinlik ve süre şiddeti</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">🛡️ HRP Çeşitlendirme Skoru</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#60A5FA;" id="hrpDiversityScore">0/100</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">Ağaç kümeleme etkin risk dağılımı</div>
+                        </div>
+                    </div>
+
+                    <!-- HRP Allocation Weights Comparison -->
+                    <div style="padding: 20px;">
+                        <h4 style="font-size: 0.92rem; color: var(--accent-primary); margin:0 0 14px 0;">🌳 HRP Kümeleme Ağırlıkları vs. Eşit Dağılım (%1/N)</h4>
+                        <div id="hrpWeightsContainer">
+                            <!-- Dynamic HRP bars -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Cash Router & Zero-Tax Rebalancing Section -->
+                <div class="card smart-router-card" id="smartCashRouterSection" style="margin-top: 24px;">
+                    <div class="card-header router-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div class="router-title-group" style="display:flex; align-items:center; gap:12px;">
+                            <div class="router-icon-badge" style="width:40px; height:40px; border-radius:10px; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🎯</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Akıllı Nakit Yönlendirici & Vergisiz Rebalancing (Smart Cash Router)</h3>
+                                <p class="router-sub" style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">Mevcut varlıkları satıp stopaj ve komisyon ödemeden, taze nakit girişiyle portföyü hedef ağırlığa ulaştıran matematiksel dağıtım.</p>
+                            </div>
+                        </div>
+                        <div class="router-header-actions" style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-primary" id="routerCalculateBtn"><span>⚡</span> Dağıtımı Hesapla</button>
+                            <button class="btn btn-sm btn-secondary" id="routerExecuteOrdersBtn"><span>📥</span> Alım Emirlerini Uygula</button>
+                        </div>
+                    </div>
+
+                    <!-- Inflow Configuration Bar -->
+                    <div style="padding: 16px 20px; background: rgba(15,23,42,0.3); border-bottom:1px solid rgba(255,255,255,0.06); display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <label style="font-size:0.84rem; color:var(--text-secondary); font-weight:600;">Eklenecek Taze Nakit (TL):</label>
+                            <input type="number" id="routerFreshCashInput" class="form-input form-input-sm" value="10000" min="100" step="500" style="width:130px; font-weight:700;">
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-xs btn-ghost" onclick="document.getElementById('routerFreshCashInput').value = '5000'; SmartCashRouter.render();">+₺5.000</button>
+                                <button class="btn btn-xs btn-ghost" onclick="document.getElementById('routerFreshCashInput').value = '10000'; SmartCashRouter.render();">+₺10.000</button>
+                                <button class="btn btn-xs btn-ghost" onclick="document.getElementById('routerFreshCashInput').value = '25000'; SmartCashRouter.render();">+₺25.000</button>
+                                <button class="btn btn-xs btn-ghost" onclick="document.getElementById('routerFreshCashInput').value = String(PortfolioData.cashTL || 10000); SmartCashRouter.render();">Boştaki Nakit</button>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <label style="font-size:0.84rem; color:var(--text-secondary); font-weight:600;">Hedef Strateji:</label>
+                            <select id="routerStrategySelect" class="form-select form-select-sm" style="font-size:0.82rem;" onchange="SmartCashRouter.render()">
+                                <option value="markowitz">🎯 Markowitz Max Sharpe</option>
+                                <option value="bl">🏛️ Black-Litterman Bayesyen</option>
+                                <option value="hrp">🌳 HRP Risk Paritesi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Smart Router Orders Table -->
+                    <div class="table-wrapper" style="padding: 16px 20px;">
+                        <table class="bl-views-table" id="routerOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>Fon Kodu</th>
+                                    <th>Mevcut Değer</th>
+                                    <th>Mevcut Ağırlık</th>
+                                    <th>Hedef Ağırlık</th>
+                                    <th>Önerilen Alım Adedi</th>
+                                    <th>Alım Tutarı (TL)</th>
+                                    <th>Rebalancing Sonrası Ağırlık</th>
+                                </tr>
+                            </thead>
+                            <tbody id="routerOrdersTableBody">
+                                <!-- Populated dynamically by SmartCashRouter -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Macro Regime Detection & Tactical Asset Rotation Section -->
+                <div class="card macro-regime-card" id="macroRegimeSection" style="margin-top: 24px;">
+                    <div class="card-header regime-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div class="regime-title-group" style="display:flex; align-items:center; gap:12px;">
+                            <div class="regime-icon-badge" style="width:40px; height:40px; border-radius:10px; background:rgba(14,165,233,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🧭</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Makroekonomik Rejim Tespiti & Taktiksel Varlık Rotasyonu</h3>
+                                <p class="regime-sub" style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">TCMB reel faiz, enflasyon ve döviz trendlerine göre otomatik rejim tespiti ve kurumsal varlık dağılım rehberi.</p>
+                            </div>
+                        </div>
+                        <div class="regime-header-actions" style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-primary" id="regimeAnalyzeBtn"><span>⚡</span> Makro Rejimi Güncelle</button>
+                        </div>
+                    </div>
+
+                    <!-- Macro Regime State Cards -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; padding:16px 20px; background:rgba(15,23,42,0.3); border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">🏛️ Tespit Edilen Makro Rejim</div>
+                            <div style="font-size:1.05rem; font-weight:700; color:#38BDF8;" id="macroRegimeName">Rejim 2: Sıkı Para & Pozitif Reel Faiz</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);" id="macroRegimeSub">Yüksek getiri ve tahvil kalkanı dönemi</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">📊 TCMB Reel Faiz Düzeyi</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#10B981;" id="macroRealRateVal">+%5.00</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">Politika Faizi (%50) - TÜFE (%45)</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">💱 Kur & Volatilite Durumu</div>
+                            <div style="font-size:1.05rem; font-weight:700; color:#F59E0B;" id="macroFxTrendVal">Dengeli / Kontrollü Bant</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">USD/TRY 50G Ort: Yatay Eğilim</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;">🎯 Taktiksel Risk İştahı</div>
+                            <div style="font-size:1.05rem; font-weight:700; color:#A855F7;" id="macroRiskAppetiteVal">Dengeli & Seçici</div>
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">Rotasyon: Nakit/Borçlanma -> Hisse</div>
+                        </div>
+                    </div>
+
+                    <!-- Tactical Asset Rotation Allocation Matrix -->
+                    <div style="padding: 20px;">
+                        <h4 style="font-size: 0.92rem; color: var(--accent-primary); margin:0 0 14px 0;">🧭 Aktif Rejim İçin Önerilen Model Varlık Rotasyonu</h4>
+                        <div id="macroRotationMatrixContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- P2P Zero-Server Portfolio Teleporter (Dynamic QR Beam) Section -->
+                <div class="card qr-beam-card" id="p2pQrBeamSection" style="margin-top: 24px;">
+                    <div class="card-header qr-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div class="qr-title-group" style="display:flex; align-items:center; gap:12px;">
+                            <div class="qr-icon-badge" style="width:40px; height:40px; border-radius:10px; background:rgba(168,85,247,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">📲</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Sıfır-Sunucu P2P Portföy Işınlayıcı (Dynamic QR Beam)</h3>
+                                <p class="qr-sub" style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">Hiçbir sunucuya veri göndermeden, gzip sıkıştırmalı ve şifrelenmiş dinamik QR kod akışı ile portföyünüzü saniyeler içinde telefona aktarın.</p>
+                            </div>
+                        </div>
+                        <div class="qr-header-actions" style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-primary" id="qrGenerateBeamBtn"><span>⚡</span> Işınlayıcı QR Kodunu Üret</button>
+                            <button class="btn btn-sm btn-secondary" id="qrCopyBeamUrlBtn"><span>📋</span> Güvenli Paylaşım Linkini Kopyala</button>
+                        </div>
+                    </div>
+
+                    <div style="padding: 20px; display:flex; flex-wrap:wrap; gap:24px; align-items:center; justify-content:center;">
+                        <div id="qrCodeContainer" style="background:#FFFFFF; padding:16px; border-radius:12px; display:flex; align-items:center; justify-content:center; min-width:200px; min-height:200px; box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+                            <div id="qrCodeCanvasWrapper" style="text-align:center; color:#0F172A; font-size:0.8rem; font-weight:600;">
+                                <span>📲 QR Kodu Üretmek İçin Butona Basın</span>
+                            </div>
+                        </div>
+                        <div style="flex:1; min-width:280px; max-width:500px;">
+                            <h4 style="font-size:0.95rem; color:var(--text-primary); margin:0 0 8px 0;">🛡️ Sıfır-Bilgi (Zero-Knowledge) İstemci İzolasyonu</h4>
+                            <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5; margin-bottom:12px;">
+                                Portföyünüzdeki tüm fonlar, adetler, maliyetler ve çalışma alanı ayarları tarayıcınızda JSON olarak paketlenir, Base64 formatında URI fragment (#beam=...) olarak encode edilir. Sunucuya 1 bayt bile kişisel veri gitmez.
+                            </p>
+                            <div style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.05); font-size:0.78rem; color:var(--accent-primary);">
+                                <strong>💡 Nasıl Kullanılır?</strong> Telefonunuzun kamerasını QR koda tutun veya linki mobilde açın. Zenith Atlas tüm portföyünüzü anında geri yükleyecektir.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Fund Details Table -->
                 <div class="card table-card">
                     <div class="card-header">

@@ -5873,3 +5873,106 @@ tfoot td {
     border-radius: var(--radius-full, 9999px);
     transition: width 0.4s ease;
 }
+
+/* ==========================================================================
+   Hierarchical Risk Parity (HRP) & Tail-Risk Styles
+   ========================================================================== */
+.hrp-card {
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.hrp-bar-row {
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.hrp-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+}
+
+.hrp-bar-track-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hrp-bar-track {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-full, 9999px);
+    overflow: hidden;
+    position: relative;
+}
+
+.hrp-bar-fill-equal {
+    height: 100%;
+    background: #94A3B8;
+    border-radius: var(--radius-full, 9999px);
+    transition: width 0.4s ease;
+}
+
+.hrp-bar-fill-hrp {
+    height: 100%;
+    background: linear-gradient(90deg, #10B981, #34D399);
+    border-radius: var(--radius-full, 9999px);
+    transition: width 0.4s ease;
+}
+
+/* ==========================================================================
+   Smart Cash Router & Zero-Tax Rebalancing Styles
+   ========================================================================== */
+.smart-router-card {
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Macro Regime Detection & Tactical Rotation Styles
+   ========================================================================== */
+.macro-regime-card {
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.rotation-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.rotation-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 14px;
+}
+
+.rotation-card.active {
+    border-color: rgba(14, 165, 233, 0.4);
+    background: rgba(14, 165, 233, 0.04);
+}
+
+/* ==========================================================================
+   P2P Dynamic QR Beam Styles
+   ========================================================================== */
+.qr-beam-card {
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}

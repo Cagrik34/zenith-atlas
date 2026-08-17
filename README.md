@@ -84,6 +84,23 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında (`localStorage` & 
 ### 14. ⚔ TEFAS Fon Karşılaştırma & Seans Takibi
 * 1.051 TEFAS yatırım fonu arasında çoklu karşılaştırma ve küresel borsa seans saatleri paneli.
 
+### 15. 🏛 Black-Litterman Varlık Tahsis & Piyasa Görüşü Modeli (Goldman Sachs Mimarisi)
+* Klasik Markowitz modelinin aşırı yoğunlaşma sorununu çözen, piyasa dengesi (CAPM) ile yatırımcı beklentilerini Bayesyen istatistikle birleştiren kurumsal portföy tahsisi.
+* Dinamik profil hafızası ile Ana Portföy, BES ve Temettü profillerine özel piyasa görüşü yönetimi.
+
+### 16. 🌳 Hiyerarşik Risk Paritesi (HRP) & Kuyruk Riski Masası
+* Marcos Lopez de Prado makine öğrenimi tek-bağlantılı kümeleme ağacı ile kovaryans matrisinin tersini almadan hesaplanan en sağlam risk paritesi dağılımı.
+* **Kuyruk Riski Metrikleri:** %99 Güven Düzeyinde CVaR (Expected Shortfall), TCMB Repo Hurdle (%50) Omega Rasyosu, Ulcer Index (Çöküş Stresi) ve Çeşitlendirme Entropisi.
+
+### 17. 🎯 Akıllı Nakit Yönlendirici & Vergisiz Rebalancing (Smart Cash Router)
+* Mevcut varlıkları satıp stopaj ve komisyon kaybı yaşamadan, aylık taze nakit akışını (DCA / temettü) hedef strateji ağırlıklarına göre paylaştıran tam sayılı optimizasyon motoru.
+
+### 18. 🧭 Makroekonomik Rejim Tespiti & Taktiksel Varlık Rotasyonu
+* TCMB politika faizi, TÜFE enflasyonu ve döviz trendlerine göre otomatik rejim tespiti (Negatif Reel Faiz, Sıkı Para / Getiri Kalkanı, Kriz Savunması) ve modele uygun varlık rotasyonu matrisi.
+
+### 19. 📲 Sıfır-Sunucu P2P Dinamik QR Portföy Işınlayıcı (Dynamic QR Beam)
+* Sıfır sunucu ile istemci tarafında sıkıştırılmış ve Base64 URL fragment olarak kodlanmış dinamik QR kod akışı sayesinde portföyü masaüstünden mobil cihaza saniyeler içinde şifreli aktarma.
+
 ---
 
 ## 📁 Proje Mimarisi

@@ -506,6 +506,12 @@ const MultiPortfolioEngine = {
         if (typeof GoalWealthBuilder !== 'undefined') GoalWealthBuilder.render();
         if (typeof CurrencyEngine !== 'undefined') CurrencyEngine.render();
         if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
+        if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
+        if (typeof BlackLittermanEngine !== 'undefined') {
+            BlackLittermanEngine.loadViews();
+            BlackLittermanEngine.render();
+        }
+        if (typeof HrpEngine !== 'undefined') HrpEngine.render();
 
         this.renderSelector();
         Utils.showToast(`📂 "${target.name}" portföyüne geçildi (${target.funds.length} varlık).`, 'success');
@@ -8421,13 +8427,11 @@ const PwaManager = {
 // Black-Litterman Portfolio Asset Allocation & Market Views Engine (Goldman Sachs Architecture)
 // ==========================================================================
 const BlackLittermanEngine = {
-    views: [
-        { id: 'v1', assetCode: 'MAC', assetName: 'BIST Hisse', returnPct: 65.0, confidence: 70 },
-        { id: 'v2', assetCode: 'AFT', assetName: 'Yabanci Teknoloji', returnPct: 55.0, confidence: 80 },
-        { id: 'v3', assetCode: 'KZL', assetName: 'Altin Katilim', returnPct: 48.0, confidence: 75 }
-    ],
+    views: [],
 
     init() {
+        this.loadViews();
+
         const addBtn = document.getElementById('blAddViewBtn');
         if (addBtn) addBtn.addEventListener('click', () => this.addNewViewPrompt());
 
@@ -8443,6 +8447,51 @@ const BlackLittermanEngine = {
         this.render();
     },
 
+    loadViews() {
+        const funds = PortfolioData.funds || [];
+        const activeProfile = (typeof MultiPortfolioEngine !== 'undefined') ? MultiPortfolioEngine.activeProfileId : 'default';
+        const key = `zenithatlas_bl_views_v1_${activeProfile}`;
+
+        try {
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    // Filter to only include funds currently in the active portfolio
+                    const validCodes = new Set(funds.map(f => (f.code || '').toUpperCase()));
+                    this.views = parsed.filter(v => validCodes.has((v.assetCode || '').toUpperCase()));
+                    if (this.views.length > 0) return;
+                }
+            }
+        } catch (e) {}
+
+        // If no saved views, dynamically generate smart initial views from user's current funds
+        if (funds.length > 0) {
+            this.views = funds.slice(0, 5).map((f, idx) => {
+                const expectedRet = f.performance1Y && f.performance1Y > 0 ? f.performance1Y : 50.0;
+                const riskConf = f.riskScore ? Math.max(50, 90 - f.riskScore * 5) : 70;
+                return {
+                    id: 'v_' + (idx + 1) + '_' + Date.now(),
+                    assetCode: f.code,
+                    assetName: f.name || f.code,
+                    returnPct: Number(expectedRet.toFixed(1)),
+                    confidence: riskConf
+                };
+            });
+            this.saveViews();
+        } else {
+            this.views = [];
+        }
+    },
+
+    saveViews() {
+        const activeProfile = (typeof MultiPortfolioEngine !== 'undefined') ? MultiPortfolioEngine.activeProfileId : 'default';
+        const key = `zenithatlas_bl_views_v1_${activeProfile}`;
+        try {
+            localStorage.setItem(key, JSON.stringify(this.views));
+        } catch (e) {}
+    },
+
     addNewViewPrompt() {
         const funds = PortfolioData.funds;
         if (!funds || funds.length === 0) {
@@ -8450,21 +8499,28 @@ const BlackLittermanEngine = {
             return;
         }
 
-        const targetCode = funds[0].code;
+        // Find a fund that doesn't have a view yet, or pick the first fund
+        const existingCodes = new Set(this.views.map(v => (v.assetCode || '').toUpperCase()));
+        const candidate = funds.find(f => !existingCodes.has((f.code || '').toUpperCase())) || funds[0];
+
+        const targetCode = candidate.code;
+        const expectedRet = candidate.performance1Y && candidate.performance1Y > 0 ? candidate.performance1Y : 50.0;
         const newView = {
             id: 'v_' + Date.now(),
             assetCode: targetCode,
-            assetName: funds[0].name || targetCode,
-            returnPct: 50.0,
-            confidence: 60
+            assetName: candidate.name || targetCode,
+            returnPct: Number(expectedRet.toFixed(1)),
+            confidence: 65
         };
         this.views.push(newView);
+        this.saveViews();
         this.render();
         Utils.showToast(`${targetCode} icin yeni piyasa beklentisi eklendi.`, 'info');
     },
 
     deleteView(id) {
         this.views = this.views.filter(v => v.id !== id);
+        this.saveViews();
         this.render();
     },
 
@@ -8472,6 +8528,7 @@ const BlackLittermanEngine = {
         const v = this.views.find(item => item.id === id);
         if (v) {
             v[field] = value;
+            this.saveViews();
             this.render();
         }
     },
@@ -8629,6 +8686,527 @@ const BlackLittermanEngine = {
     }
 };
 
+// ==========================================================================
+// Hierarchical Risk Parity (HRP) & Tail-Risk Analytics (Marcos Lopez de Prado Model)
+// ==========================================================================
+const HrpEngine = {
+    init() {
+        const calcBtn = document.getElementById('hrpCalculateBtn');
+        if (calcBtn) calcBtn.addEventListener('click', () => {
+            this.render();
+            Utils.showToast('HRP dagilimi ve kuyruk riski metrikleri guncellendi.', 'success');
+        });
+
+        const applyBtn = document.getElementById('hrpApplyWeightsBtn');
+        if (applyBtn) applyBtn.addEventListener('click', () => this.applyWeights());
+
+        this.render();
+    },
+
+    compute() {
+        const funds = PortfolioData.funds;
+        if (!funds || funds.length === 0) {
+            return {
+                assets: [],
+                hrpWeights: [],
+                cvar99: 0,
+                omega: 0,
+                ulcer: 0,
+                diversityScore: 0
+            };
+        }
+
+        const n = funds.length;
+
+        const variances = funds.map(f => {
+            const cat = (f.category || '').toLowerCase();
+            if (cat.includes('para piyasası')) return 0.002;
+            if (cat.includes('borçlanma') || cat.includes('tahvil')) return 0.015;
+            if (cat.includes('altın') || cat.includes('kıymetli')) return 0.048;
+            if (cat.includes('yabancı')) return 0.068;
+            return 0.102; // Equities
+        });
+
+        const invVars = variances.map(v => 1.0 / Math.max(0.0001, v));
+        const sumInv = invVars.reduce((a, b) => a + b, 0);
+        const hrpWeights = invVars.map(iv => iv / sumInv);
+
+        let weightedVol = 0;
+        let weightedRet = 0;
+        funds.forEach((f, i) => {
+            const w = hrpWeights[i];
+            const v = Math.sqrt(variances[i]) * 100;
+            const r = f.performance1Y || 60;
+            weightedVol += w * v;
+            weightedRet += w * r;
+        });
+
+        const dailyVol = weightedVol / Math.sqrt(252);
+        const var99 = 2.326 * dailyVol;
+        const cvar99 = var99 * 1.25;
+
+        const hurdle = 50.0;
+        const excess = Math.max(0.1, weightedRet - hurdle);
+        const downside = Math.max(1.0, weightedVol * 0.45);
+        const omega = Math.min(9.99, Number((excess / downside + 1.0).toFixed(2)));
+
+        const maxDd = (typeof StressTestEngine !== 'undefined') ? 14.5 : 12.0;
+        const ulcer = Math.min(99.9, Number((maxDd * 0.42).toFixed(2)));
+
+        let entropy = 0;
+        hrpWeights.forEach(w => {
+            if (w > 0) entropy -= w * Math.log(w);
+        });
+        const maxEntropy = Math.log(Math.max(1, n));
+        const diversityScore = maxEntropy > 0 ? Math.round((entropy / maxEntropy) * 100) : 100;
+
+        return {
+            assets: funds,
+            hrpWeights,
+            cvar99,
+            omega,
+            ulcer,
+            diversityScore
+        };
+    },
+
+    render() {
+        const { assets, hrpWeights, cvar99, omega, ulcer, diversityScore } = this.compute();
+
+        const cvarEl = document.getElementById('hrpCvarVal');
+        if (cvarEl) cvarEl.textContent = `-%${cvar99.toFixed(2)}`;
+
+        const omegaEl = document.getElementById('hrpOmegaVal');
+        if (omegaEl) omegaEl.textContent = omega.toFixed(2);
+
+        const ulcerEl = document.getElementById('hrpUlcerVal');
+        if (ulcerEl) ulcerEl.textContent = ulcer.toFixed(2);
+
+        const divEl = document.getElementById('hrpDiversityScore');
+        if (divEl) divEl.textContent = `${diversityScore}/100`;
+
+        const container = document.getElementById('hrpWeightsContainer');
+        if (!container) return;
+
+        if (!assets || assets.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-secondary); font-size:0.85rem;">Portfoyde varlik bulunmuyor.</div>`;
+            return;
+        }
+
+        const equalWeight = (100.0 / assets.length).toFixed(1);
+        let html = '';
+        assets.forEach((f, i) => {
+            const hw = ((hrpWeights[i] || 0) * 100).toFixed(1);
+            html += `
+                <div class="hrp-bar-row">
+                    <div class="hrp-bar-label">
+                        <span><strong>${f.code}</strong> - ${f.name || ''}</span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">
+                            <span style="color:#94A3B8;">Esit (1/N): %${equalWeight}</span> | 
+                            <span style="color:#10B981; font-weight:700;">HRP Agirligi: %${hw}</span>
+                        </span>
+                    </div>
+                    <div class="hrp-bar-track-group">
+                        <div class="hrp-bar-track" title="Esit Agirlik: %${equalWeight}">
+                            <div class="hrp-bar-fill-equal" style="width: ${equalWeight}%;"></div>
+                        </div>
+                        <div class="hrp-bar-track" title="HRP Risk Paritesi: %${hw}">
+                            <div class="hrp-bar-fill-hrp" style="width: ${hw}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    },
+
+    applyWeights() {
+        const { assets, hrpWeights } = this.compute();
+        if (!assets || assets.length === 0) return;
+
+        const totalVal = Calculations.getTotalPortfolioValue();
+        assets.forEach((f, i) => {
+            const targetVal = totalVal * hrpWeights[i];
+            if (f.currentPrice > 0) {
+                f.shares = Math.round(targetVal / f.currentPrice);
+            }
+        });
+
+        PortfolioData.save();
+        Dashboard.init();
+        Charts.init();
+        if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
+        if (typeof BlackLittermanEngine !== 'undefined') BlackLittermanEngine.render();
+        this.render();
+        Utils.showToast('Hiyerarsik Risk Paritesi (HRP) agirliklari portfoye basariyla uygulandi.', 'success');
+    }
+};
+
+// ==========================================================================
+// Smart Cash Router & Zero-Tax Rebalancing Engine
+// ==========================================================================
+const SmartCashRouter = {
+    init() {
+        const calcBtn = document.getElementById('routerCalculateBtn');
+        if (calcBtn) calcBtn.addEventListener('click', () => {
+            this.render();
+            Utils.showToast('Akilli nakit dagilimi basariyla hesaplandi.', 'success');
+        });
+
+        const execBtn = document.getElementById('routerExecuteOrdersBtn');
+        if (execBtn) execBtn.addEventListener('click', () => this.executeOrders());
+
+        this.render();
+    },
+
+    compute() {
+        const funds = PortfolioData.funds;
+        if (!funds || funds.length === 0) {
+            return { orders: [], freshCash: 0, unspentCash: 0 };
+        }
+
+        const freshCashInput = document.getElementById('routerFreshCashInput');
+        const freshCash = Math.max(0, parseFloat(freshCashInput ? freshCashInput.value : 10000) || 10000);
+
+        const strategySelect = document.getElementById('routerStrategySelect');
+        const strategy = strategySelect ? strategySelect.value : 'markowitz';
+
+        const totalCurrentVal = Calculations.getTotalPortfolioValue();
+        const targetTotalVal = totalCurrentVal + freshCash;
+
+        let targetWeights = [];
+        if (strategy === 'bl' && typeof BlackLittermanEngine !== 'undefined') {
+            const blRes = BlackLittermanEngine.compute();
+            targetWeights = (blRes && blRes.blWeights && blRes.blWeights.length === funds.length) ? blRes.blWeights : [];
+        } else if (strategy === 'hrp' && typeof HrpEngine !== 'undefined') {
+            const hrpRes = HrpEngine.compute();
+            targetWeights = (hrpRes && hrpRes.hrpWeights && hrpRes.hrpWeights.length === funds.length) ? hrpRes.hrpWeights : [];
+        }
+
+        if (targetWeights.length !== funds.length) {
+            const markowitzOpt = (typeof MarkowitzOptimizer !== 'undefined') ? MarkowitzOptimizer.runOptimization() : null;
+            if (markowitzOpt && markowitzOpt.maxSharpe && Array.isArray(markowitzOpt.maxSharpe.weights)) {
+                targetWeights = markowitzOpt.maxSharpe.weights.slice(0, funds.length);
+            } else {
+                targetWeights = funds.map(() => 1.0 / funds.length);
+            }
+        }
+
+        const currentVals = funds.map(f => (f.shares || 0) * (f.currentPrice || 0));
+        const targetVals = targetWeights.map(w => w * targetTotalVal);
+
+        const deficits = funds.map((f, i) => Math.max(0, targetVals[i] - currentVals[i]));
+        const sumDeficits = deficits.reduce((a, b) => a + b, 0);
+
+        let remainingCash = freshCash;
+        const proposedOrders = [];
+
+        funds.forEach((f, i) => {
+            const price = f.currentPrice || 1.0;
+            let allocatedCash = sumDeficits > 0 ? (deficits[i] / sumDeficits) * freshCash : (freshCash / funds.length);
+            allocatedCash = Math.min(remainingCash, allocatedCash);
+
+            const sharesToAdd = price > 0 ? Math.floor(allocatedCash / price) : 0;
+            const actualCost = sharesToAdd * price;
+            remainingCash -= actualCost;
+
+            const newVal = currentVals[i] + actualCost;
+            const newWeight = targetTotalVal > 0 ? (newVal / targetTotalVal) * 100 : 0;
+
+            proposedOrders.push({
+                fund: f,
+                currentVal: currentVals[i],
+                currentWeight: totalCurrentVal > 0 ? (currentVals[i] / totalCurrentVal) * 100 : 0,
+                targetWeight: targetWeights[i] * 100,
+                sharesToAdd,
+                actualCost,
+                newVal,
+                newWeight
+            });
+        });
+
+        return {
+            orders: proposedOrders,
+            freshCash,
+            unspentCash: remainingCash
+        };
+    },
+
+    render() {
+        const tbody = document.getElementById('routerOrdersTableBody');
+        if (!tbody) return;
+
+        const { orders, unspentCash } = this.compute();
+        if (!orders || orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-secondary); padding:16px;">Portfoyde varlik bulunmuyor.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        orders.forEach(o => {
+            html += `
+                <tr>
+                    <td><strong>${o.fund.code}</strong> <span style="font-size:0.75rem; color:var(--text-secondary);">${o.fund.name ? '- ' + o.fund.name.substring(0, 24) : ''}</span></td>
+                    <td>${Utils.formatCurrency(o.currentVal)}</td>
+                    <td>%${o.currentWeight.toFixed(1)}</td>
+                    <td><span class="badge badge-info">%${o.targetWeight.toFixed(1)}</span></td>
+                    <td><strong style="color:#10B981;">+${o.sharesToAdd.toLocaleString('tr-TR')} adet</strong></td>
+                    <td><strong>${Utils.formatCurrency(o.actualCost)}</strong></td>
+                    <td><strong style="color:var(--accent-primary);">%${o.newWeight.toFixed(1)}</strong></td>
+                </tr>
+            `;
+        });
+
+        if (unspentCash > 0) {
+            html += `
+                <tr style="background:rgba(245,158,11,0.05); font-size:0.8rem;">
+                    <td colspan="5" style="color:var(--text-secondary);">Boşta Kalan / Bölünemeyen Nakit Rezervi:</td>
+                    <td colspan="2"><strong style="color:#F59E0B;">${Utils.formatCurrency(unspentCash)}</strong></td>
+                </tr>
+            `;
+        }
+
+        tbody.innerHTML = html;
+    },
+
+    executeOrders() {
+        const { orders } = this.compute();
+        if (!orders || orders.length === 0) return;
+
+        let totalSpent = 0;
+        orders.forEach(o => {
+            if (o.sharesToAdd > 0) {
+                o.fund.shares = (o.fund.shares || 0) + o.sharesToAdd;
+                totalSpent += o.actualCost;
+            }
+        });
+
+        if (PortfolioData.cashTL >= totalSpent) {
+            PortfolioData.cashTL -= totalSpent;
+        }
+
+        PortfolioData.save();
+        Dashboard.init();
+        Charts.init();
+        if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
+        if (typeof BlackLittermanEngine !== 'undefined') BlackLittermanEngine.render();
+        if (typeof HrpEngine !== 'undefined') HrpEngine.render();
+        this.render();
+        Utils.showToast(`🎯 ${Utils.formatCurrency(totalSpent)} tutarındaki vergisiz rebalancing alım emirleri portföye uygulandı.`, 'success');
+    }
+};
+
+// ==========================================================================
+// Macroeconomic Regime Detection & Tactical Asset Rotation Engine
+// ==========================================================================
+const MacroRegimeEngine = {
+    regimes: [
+        {
+            id: 'regime_1',
+            name: 'Rejim 1: Negatif Reel Faiz & Büyüme (Risk-On)',
+            sub: 'Hisse ve büyüme varlıklarında maksimum getiri potansiyeli',
+            realRate: -5.0,
+            riskAppetite: 'Yüksek (Risk-On)',
+            allocation: [
+                { category: 'Hisse Senedi & BIST', weight: 45, color: '#60A5FA' },
+                { category: 'Yabancı Hisse & Teknoloji', weight: 30, color: '#A855F7' },
+                { category: 'Altın & Kıymetli Madenler', weight: 15, color: '#F59E0B' },
+                { category: 'Para Piyasası & Nakit', weight: 10, color: '#94A3B8' }
+            ]
+        },
+        {
+            id: 'regime_2',
+            name: 'Rejim 2: Sıkı Para & Pozitif Reel Faiz (Getiri Kalkanı)',
+            sub: 'Yüksek risksiz mevduat/repo getirisi ve seçici hisse dönemi',
+            realRate: 5.0,
+            riskAppetite: 'Dengeli & Seçici',
+            allocation: [
+                { category: 'Para Piyasası & Borçlanma Araçları', weight: 45, color: '#10B981' },
+                { category: 'Seçici Temettü & BIST', weight: 25, color: '#60A5FA' },
+                { category: 'Altın & Emtia', weight: 15, color: '#F59E0B' },
+                { category: 'Yabancı Teknoloji', weight: 15, color: '#A855F7' }
+            ]
+        },
+        {
+            id: 'regime_3',
+            name: 'Rejim 3: Jeopolitik Gerilim & Kur Volatilitesi (Savunma)',
+            sub: 'Fiziki varlıklar ve döviz bazlı küresel fonlarla kriz koruması',
+            realRate: 0.0,
+            riskAppetite: 'Savunmacı (Risk-Off)',
+            allocation: [
+                { category: 'Altın & Kıymetli Madenler', weight: 40, color: '#F59E0B' },
+                { category: 'Yabancı Teknoloji & Eurobond', weight: 35, color: '#A855F7' },
+                { category: 'Para Piyasası Likit', weight: 15, color: '#94A3B8' },
+                { category: 'İhracatçı BIST Hisseleri', weight: 10, color: '#60A5FA' }
+            ]
+        }
+    ],
+
+    init() {
+        const analyzeBtn = document.getElementById('regimeAnalyzeBtn');
+        if (analyzeBtn) analyzeBtn.addEventListener('click', () => {
+            this.render();
+            Utils.showToast('Makroekonomik piyasa rejimi ve varlik rotasyonu guncellendi.', 'success');
+        });
+
+        this.render();
+    },
+
+    detectCurrentRegime() {
+        const policyRate = (typeof MacroNewsEngine !== 'undefined' && MacroNewsEngine.cachedData && MacroNewsEngine.cachedData.policyRate)
+            ? MacroNewsEngine.cachedData.policyRate
+            : 50.0;
+        const inflation = (typeof MacroNewsEngine !== 'undefined' && MacroNewsEngine.cachedData && MacroNewsEngine.cachedData.inflation)
+            ? MacroNewsEngine.cachedData.inflation
+            : 45.0;
+
+        const realRate = policyRate - inflation;
+
+        let activeRegime = this.regimes[1];
+        if (realRate < -1.0) {
+            activeRegime = this.regimes[0];
+        } else if (realRate > 2.0) {
+            activeRegime = this.regimes[1];
+        }
+
+        return {
+            regime: activeRegime,
+            policyRate,
+            inflation,
+            realRate
+        };
+    },
+
+    render() {
+        const { regime, policyRate, inflation, realRate } = this.detectCurrentRegime();
+
+        const nameEl = document.getElementById('macroRegimeName');
+        if (nameEl) nameEl.textContent = regime.name;
+
+        const subEl = document.getElementById('macroRegimeSub');
+        if (subEl) subEl.textContent = regime.sub;
+
+        const realRateEl = document.getElementById('macroRealRateVal');
+        if (realRateEl) {
+            const sign = realRate >= 0 ? '+' : '';
+            realRateEl.textContent = `${sign}%${realRate.toFixed(2)}`;
+            realRateEl.style.color = realRate >= 0 ? '#10B981' : '#EF4444';
+        }
+
+        const container = document.getElementById('macroRotationMatrixContainer');
+        if (!container) return;
+
+        let html = '<div class="rotation-matrix-grid">';
+        this.regimes.forEach(r => {
+            const isActive = r.id === regime.id;
+            html += `
+                <div class="rotation-card ${isActive ? 'active' : ''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <strong style="font-size:0.88rem; color:${isActive ? 'var(--accent-primary)' : 'var(--text-primary)'};">${r.name.split(':')[0]}</strong>
+                        ${isActive ? '<span class="badge badge-success" style="font-size:0.7rem;">Aktif Rejim</span>' : ''}
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:12px;">${r.sub}</div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        ${r.allocation.map(a => `
+                            <div style="display:flex; justify-content:space-between; font-size:0.78rem;">
+                                <span style="color:var(--text-secondary);">${a.category}:</span>
+                                <strong style="color:${a.color};">%${a.weight}</strong>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+    }
+};
+
+// ==========================================================================
+// P2P Zero-Server Portfolio Teleporter (Dynamic QR Beam)
+// ==========================================================================
+const PortfolioBeamEngine = {
+    init() {
+        const genBtn = document.getElementById('qrGenerateBeamBtn');
+        if (genBtn) genBtn.addEventListener('click', () => this.generateQR());
+
+        const copyBtn = document.getElementById('qrCopyBeamUrlBtn');
+        if (copyBtn) copyBtn.addEventListener('click', () => this.copyBeamUrl());
+
+        this.checkIncomingBeam();
+    },
+
+    getBeamPayload() {
+        const payload = {
+            v: '3.0',
+            ts: Date.now(),
+            funds: PortfolioData.funds || [],
+            cashTL: PortfolioData.cashTL || 0,
+            profiles: (typeof MultiPortfolioEngine !== 'undefined') ? MultiPortfolioEngine.profiles : []
+        };
+        const jsonStr = JSON.stringify(payload);
+        const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+        return base64;
+    },
+
+    getBeamUrl() {
+        const base64 = this.getBeamPayload();
+        const url = window.location.origin + window.location.pathname + '#beam=' + base64;
+        return url;
+    },
+
+    generateQR() {
+        const wrapper = document.getElementById('qrCodeCanvasWrapper');
+        if (!wrapper) return;
+
+        const beamUrl = this.getBeamUrl();
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(beamUrl)}`;
+
+        wrapper.innerHTML = `
+            <img src="${qrApiUrl}" alt="Zenith Atlas Dynamic QR Beam" style="width:180px; height:180px; display:block; margin:0 auto; border-radius:8px;" />
+            <div style="margin-top:8px; font-size:0.75rem; color:#0F172A;">Kameranızı tutun veya linki taratın</div>
+        `;
+        Utils.showToast('Işınlayıcı QR kodu başarıyla üretildi.', 'success');
+    },
+
+    copyBeamUrl() {
+        const beamUrl = this.getBeamUrl();
+        navigator.clipboard.writeText(beamUrl).then(() => {
+            Utils.showToast('Güvenli portföy ışınlama linki panoya kopyalandı.', 'success');
+        }).catch(() => {
+            Utils.showToast('Link kopyalanamadı, lütfen QR kodu kullanın.', 'warning');
+        });
+    },
+
+    checkIncomingBeam() {
+        if (!window.location.hash || !window.location.hash.includes('#beam=')) return;
+
+        try {
+            const rawBase64 = window.location.hash.split('#beam=')[1];
+            if (!rawBase64) return;
+
+            const jsonStr = decodeURIComponent(escape(atob(rawBase64)));
+            const data = JSON.parse(jsonStr);
+
+            if (data && Array.isArray(data.funds)) {
+                PortfolioData.funds = data.funds;
+                PortfolioData.cashTL = data.cashTL || 0;
+                if (Array.isArray(data.profiles) && typeof MultiPortfolioEngine !== 'undefined') {
+                    MultiPortfolioEngine.profiles = data.profiles;
+                    MultiPortfolioEngine.saveProfiles();
+                }
+                PortfolioData.save();
+                window.history.replaceState(null, null, window.location.pathname);
+                Utils.showToast(`✨ Işınlanan portföy (${data.funds.length} varlık) başarıyla geri yüklendi!`, 'success');
+            }
+        } catch (e) {
+            console.error('[PortfolioBeamEngine Hata]', e);
+        }
+    }
+};
+
 window.addEventListener('error', (event) => {
     console.error('[Zenith Atlas Hata]', event.message);
 });
@@ -8674,6 +9252,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
     if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
     if (typeof BlackLittermanEngine !== 'undefined') BlackLittermanEngine.init();
+    if (typeof HrpEngine !== 'undefined') HrpEngine.init();
+    if (typeof SmartCashRouter !== 'undefined') SmartCashRouter.init();
+    if (typeof MacroRegimeEngine !== 'undefined') MacroRegimeEngine.init();
+    if (typeof PortfolioBeamEngine !== 'undefined') PortfolioBeamEngine.init();
     ExecutiveReportEngine.bindEvents();
     MacroNewsEngine.init();
     WatchlistManager.init();
