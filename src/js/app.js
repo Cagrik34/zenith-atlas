@@ -424,6 +424,222 @@ const PortfolioData = (() => {
     };
 })();
 
+// ==========================================================================
+// MultiPortfolioEngine (Çoklu Portföy & BES / Emeklilik Yönetim Masası)
+// ==========================================================================
+const MultiPortfolioEngine = {
+    profiles: [],
+    activeProfileId: 'default',
+
+    init() {
+        this.loadProfiles();
+        this.renderSelector();
+        this.bindEvents();
+    },
+
+    loadProfiles() {
+        try {
+            const raw = localStorage.getItem('zenithatlas_profiles_v1');
+            const activeId = localStorage.getItem('zenithatlas_active_profile_v1') || 'default';
+            if (raw) {
+                this.profiles = JSON.parse(raw);
+            }
+            if (!Array.isArray(this.profiles) || this.profiles.length === 0) {
+                this.profiles = [
+                    { id: 'default', name: '🏢 Ana Portföy', icon: '🏢', isBes: false, funds: PortfolioData.funds || [], cashTL: PortfolioData.cashTL || 0, pendingOrders: PortfolioData.pendingOrders || [] },
+                    { id: 'bes', name: '🛡 BES & Emeklilik', icon: '🛡', isBes: true, funds: [], cashTL: 0, pendingOrders: [] }
+                ];
+                this.saveProfiles();
+            }
+            this.activeProfileId = activeId;
+        } catch (e) {
+            console.warn('Profiles load error:', e);
+        }
+    },
+
+    saveProfiles() {
+        try {
+            const cur = this.profiles.find(p => p.id === this.activeProfileId);
+            if (cur) {
+                cur.funds = PortfolioData.funds;
+                cur.cashTL = PortfolioData.cashTL;
+                cur.pendingOrders = PortfolioData.pendingOrders;
+            }
+            localStorage.setItem('zenithatlas_profiles_v1', JSON.stringify(this.profiles));
+            localStorage.setItem('zenithatlas_active_profile_v1', this.activeProfileId);
+        } catch (e) {}
+    },
+
+    switchProfile(profileId) {
+        if (profileId === this.activeProfileId) return;
+        this.saveProfiles();
+
+        const target = this.profiles.find(p => p.id === profileId);
+        if (!target) return;
+
+        this.activeProfileId = profileId;
+        PortfolioData.funds = target.funds || [];
+        PortfolioData.cashTL = target.cashTL || 0;
+        PortfolioData.pendingOrders = target.pendingOrders || [];
+
+        PortfolioManager.save(PortfolioData.funds, PortfolioData.cashTL, PortfolioData.pendingOrders);
+        PriceService.recalculatePortfolio();
+
+        const emptyEl = document.getElementById('dashboardEmptyState');
+        const activeEl = document.getElementById('dashboardActiveView');
+        if (PortfolioData.funds.length === 0 && PortfolioData.cashTL === 0) {
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            if (activeEl) activeEl.classList.add('hidden');
+        } else {
+            if (emptyEl) emptyEl.classList.add('hidden');
+            if (activeEl) activeEl.classList.remove('hidden');
+        }
+
+        Dashboard.init();
+        Charts.init();
+        if (typeof FundsTab !== 'undefined') FundsTab.render();
+        if (typeof StrategyTab !== 'undefined') StrategyTab.render();
+        if (typeof PlanTab !== 'undefined') PlanTab.render();
+        if (typeof AddFundTab !== 'undefined') AddFundTab.renderManagedFunds();
+        if (typeof ZenithIntelligence !== 'undefined') ZenithIntelligence.render();
+        if (typeof TaxOptimizer !== 'undefined') TaxOptimizer.render();
+        if (typeof GoalWealthBuilder !== 'undefined') GoalWealthBuilder.render();
+        if (typeof CurrencyEngine !== 'undefined') CurrencyEngine.render();
+        if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
+
+        this.renderSelector();
+        Utils.showToast(`📂 "${target.name}" portföyüne geçildi (${target.funds.length} varlık).`, 'success');
+    },
+
+    createProfile(name, icon = '💼', isBes = false) {
+        if (!name || !name.trim()) return false;
+        const newId = 'prof_' + Date.now();
+        const newProfile = {
+            id: newId,
+            name: name.trim(),
+            icon: icon || (isBes ? '🛡' : '💼'),
+            isBes: Boolean(isBes),
+            funds: [],
+            cashTL: 0,
+            pendingOrders: []
+        };
+        this.profiles.push(newProfile);
+        this.saveProfiles();
+        this.switchProfile(newId);
+        return true;
+    },
+
+    getConsolidatedTotal() {
+        let total = 0;
+        this.profiles.forEach(p => {
+            if (p.id === this.activeProfileId) {
+                total += Calculations.getTotalPortfolioValue();
+            } else {
+                const fVal = (p.funds || []).reduce((s, f) => s + ((f.shares || 0) * (f.currentPrice || 0)), 0);
+                total += fVal + (p.cashTL || 0);
+            }
+        });
+        return total;
+    },
+
+    renderSelector() {
+        const container = document.getElementById('portfolioProfileSwitcherContainer');
+        if (!container) return;
+
+        const consolidated = this.getConsolidatedTotal();
+        let html = `
+            <div class="profile-switcher-wrapper">
+                <div class="profile-pills-row">
+        `;
+
+        this.profiles.forEach(p => {
+            const isActive = p.id === this.activeProfileId;
+            const count = (p.id === this.activeProfileId) ? PortfolioData.funds.length : (p.funds || []).length;
+            html += `
+                <button class="profile-pill-btn ${isActive ? 'active' : ''}" data-profile-id="${p.id}" title="${Utils.escapeHtml(p.name)}">
+                    <span class="profile-pill-icon">${p.icon || '💼'}</span>
+                    <span class="profile-pill-name">${Utils.escapeHtml(p.name)}</span>
+                    <span class="profile-pill-badge">${count}</span>
+                </button>
+            `;
+        });
+
+        html += `
+                    <button class="profile-pill-add-btn" id="openCreateProfileModalBtn" title="Yeni Portföy / BES Hesabı Ekle">
+                        <span>➕</span> Yeni Portföy
+                    </button>
+                </div>
+                <div class="profile-consolidated-badge" title="Tüm Portföylerinizin Konsolide Toplam Büyüklüğü">
+                    <span class="consolidated-label">Konsolide Net Varlık:</span>
+                    <strong class="consolidated-val">${Utils.formatCurrency(consolidated)}</strong>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        container.querySelectorAll('.profile-pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-profile-id');
+                if (id) this.switchProfile(id);
+            });
+        });
+
+        const addBtn = document.getElementById('openCreateProfileModalBtn');
+        if (addBtn && !addBtn._bound) {
+            addBtn._bound = true;
+            addBtn.addEventListener('click', () => this.openCreateModal());
+        }
+    },
+
+    openCreateModal() {
+        const modal = document.getElementById('createProfileModal');
+        if (modal) modal.classList.add('active');
+    },
+
+    closeCreateModal() {
+        const modal = document.getElementById('createProfileModal');
+        if (modal) modal.classList.remove('active');
+    },
+
+    bindEvents() {
+        const closeBtn = document.getElementById('closeCreateProfileModal');
+        const dismissBtn = document.getElementById('dismissCreateProfileModal');
+        const saveBtn = document.getElementById('saveNewProfileBtn');
+
+        if (closeBtn && !closeBtn._bound) {
+            closeBtn._bound = true;
+            closeBtn.addEventListener('click', () => this.closeCreateModal());
+        }
+        if (dismissBtn && !dismissBtn._bound) {
+            dismissBtn._bound = true;
+            dismissBtn.addEventListener('click', () => this.closeCreateModal());
+        }
+
+        if (saveBtn && !saveBtn._bound) {
+            saveBtn._bound = true;
+            saveBtn.addEventListener('click', () => {
+                const nameInput = document.getElementById('newProfileNameInput');
+                const iconInput = document.getElementById('newProfileIconSelect');
+                const isBesInput = document.getElementById('newProfileIsBesCheck');
+
+                const name = nameInput ? nameInput.value.trim() : '';
+                const icon = iconInput ? iconInput.value : '💼';
+                const isBes = isBesInput ? isBesInput.checked : false;
+
+                if (!name) {
+                    Utils.showToast('Lütfen bir portföy adı girin.', 'warning');
+                    return;
+                }
+
+                this.createProfile(name, icon, isBes);
+                this.closeCreateModal();
+                if (nameInput) nameInput.value = '';
+            });
+        }
+    }
+};
+
 const Utils = {
     escapeHtml(str) {
         if (str === null || str === undefined) return '';
@@ -599,8 +815,8 @@ const Utils = {
         if (!container) return;
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-        toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${Utils.escapeHtml(String(message))}</span>`;
+        const icons = { success: '✅', error: '❌', warning: '⚠', info: '💡' };
+        toast.innerHTML = `<span>${icons[type] || '💡'}</span><span>${Utils.escapeHtml(String(message))}</span>`;
         container.appendChild(toast);
         setTimeout(() => {
             toast.classList.add('toast-exit');
@@ -631,7 +847,7 @@ const Utils = {
                 statusText: 'Hafta Sonu (Piyasalar Kapalı)',
                 badgeClass: 'badge-warning',
                 shortBadge: '🟡 Hafta Sonu (Cuma Kapanışı)',
-                toastMessage: 'ℹ️ Hafta Sonu: Piyasalar kapalıdır. Son iş günü olan 14.08.2026 Cuma resmi TEFAS & TCMB kapanış verileri geçerlidir.',
+                toastMessage: '💡 Hafta Sonu: Piyasalar kapalıdır. Son iş günü olan 14.08.2026 Cuma resmi TEFAS & TCMB kapanış verileri geçerlidir.',
                 headerStatus: 'TEFAS & TCMB (Cuma Kapanış)'
             };
         }
@@ -653,7 +869,7 @@ const Utils = {
                 statusText: 'Seans Kapalı (Gün Sonu)',
                 badgeClass: 'badge-secondary',
                 shortBadge: '⚪ Seans Dışı (Kapanış)',
-                toastMessage: 'ℹ️ Seans Kapalı: Gün sonu resmi TEFAS & TCMB kapanış verileri doğrulanmıştır.',
+                toastMessage: '💡 Seans Kapalı: Gün sonu resmi TEFAS & TCMB kapanış verileri doğrulanmıştır.',
                 headerStatus: 'TEFAS (Gün Sonu Kapanış)'
             };
         }
@@ -1095,6 +1311,9 @@ const Dashboard = {
         if (typeof MarkowitzOptimizer !== 'undefined') {
             MarkowitzOptimizer.render();
         }
+        if (typeof FxAttributionEngine !== 'undefined') {
+            FxAttributionEngine.render();
+        }
         if (typeof DividendYieldEngine !== 'undefined') {
             DividendYieldEngine.render();
         }
@@ -1411,7 +1630,7 @@ const Dashboard = {
                         <div>
                             <div class="pending-fund" style="font-weight:700; font-size:0.95rem;">${order.title}</div>
                             <div class="pending-type" style="color:var(--text-secondary); margin-top:2px;">
-                                ${order.typeLabel} • <span style="color:var(--accent-primary);">${order.valorText}</span>
+                                ${order.typeLabel} - <span style="color:var(--accent-primary);">${order.valorText}</span>
                             </div>
                             <div style="font-size:0.75rem; color:var(--text-tertiary); margin-top:4px;">
                                 💡 <em>${order.targetAction}</em>
@@ -1523,7 +1742,7 @@ const WorkspaceManager = {
             'goal-planner': 'FIRE & Varlık Hedefi Planlayıcı',
             'dividend-matrix': 'Temettü & Pasif Gelir Masası'
         };
-        Utils.showToast(`🖥️ Çalışma Alanı: ${nameMap[ws]} aktif edildi.`, 'info');
+        Utils.showToast(`🖥 Çalışma Alanı: ${nameMap[ws]} aktif edildi.`, 'info');
     },
 
     applyWorkspace(ws) {
@@ -1677,7 +1896,7 @@ const Charts = {
                                     const value = ds.data[i];
                                     const pct = totalVal > 0 ? ((value / totalVal) * 100).toFixed(1) : '0.0';
                                     return {
-                                        text: `${label}  •  ₺${value.toFixed(0)}  (%${pct})`,
+                                        text: `${label}  -  ₺${value.toFixed(0)}  (%${pct})`,
                                         fillStyle: colors[i],
                                         strokeStyle: colors[i],
                                         index: i
@@ -2358,9 +2577,9 @@ const StressTestEngine = {
         let score = 5.0 + (defensiveRatio * 4.5) - (vol > 25 ? (vol - 25) * 0.08 : 0);
         score = Math.max(2.0, Math.min(9.8, score));
 
-        let tag = '🛡️ Yüksek Kalkan';
-        if (score < 4.5) tag = '⚠️ Yüksek Volatilite';
-        else if (score < 7.0) tag = '⚖️ Dengeli Direnç';
+        let tag = '🛡 Yüksek Kalkan';
+        if (score < 4.5) tag = '⚠ Yüksek Volatilite';
+        else if (score < 7.0) tag = '⚖ Dengeli Direnç';
 
         return { score: Number(score.toFixed(1)), tag };
     },
@@ -2897,7 +3116,7 @@ const MarkowitzOptimizer = {
                         order: 1
                     },
                     {
-                        label: '🛡️ Minimum Varyans',
+                        label: '🛡 Minimum Varyans',
                         data: [{ x: Number(data.minVariance.volatility.toFixed(2)), y: Number(data.minVariance.expectedReturn.toFixed(2)) }],
                         backgroundColor: '#10B981',
                         borderColor: '#FFFFFF',
@@ -2915,7 +3134,7 @@ const MarkowitzOptimizer = {
                     x: {
                         title: {
                             display: true,
-                            text: 'Yıllık Risk / Volatilite (σ %)',
+                            text: 'Yıllık Risk / Volatilite (Sigma %)',
                             color: '#94A3B8',
                             font: { family: "'JetBrains Mono', monospace", size: 11 }
                         },
@@ -2995,7 +3214,7 @@ const MarkowitzOptimizer = {
 
             let actionBadge = '';
             if (Math.abs(delta) < 1.5) {
-                actionBadge = '<span class="badge" style="background:rgba(255,255,255,0.06); color:#94A3B8;">⚖️ Dengede</span>';
+                actionBadge = '<span class="badge" style="background:rgba(255,255,255,0.06); color:#94A3B8;">⚖ Dengede</span>';
             } else if (delta > 0) {
                 actionBadge = `<span class="badge" style="background:rgba(6,182,212,0.15); color:#06B6D4;">+ %${delta.toFixed(1)} Artır</span>`;
             } else {
@@ -3076,6 +3295,147 @@ const MarkowitzOptimizer = {
 
                 Utils.showToast('💎 Maksimum Sharpe optimal ağırlıkları portföy stratejinize aktarıldı!', 'success');
             });
+        }
+    }
+};
+
+// ==========================================================================
+// FxAttributionEngine (Kur Kazancı vs. Reel Varlık Getirisi Ayrıştırma Masası)
+// ==========================================================================
+const FxAttributionEngine = {
+    // Reference official USD/TRY 1-year rate (~38.5%)
+    USD_ANNUAL_RETURN: 0.385,
+
+    init() {
+        this.render();
+    },
+
+    render() {
+        const body = document.getElementById('fxAttributionTableBody');
+        const sensitivityEl = document.getElementById('fxAttSensitivityVal');
+        const totalFxEl = document.getElementById('fxTotalGainTL');
+        const totalFxPctEl = document.getElementById('fxTotalGainPct');
+        const totalRealEl = document.getElementById('fxTotalRealAssetGainTL');
+        const totalRealPctEl = document.getElementById('fxTotalRealAssetGainPct');
+        const ratioEl = document.getElementById('fxRatioDisplay');
+
+        if (!body) return;
+
+        if (!PortfolioData.funds || PortfolioData.funds.length === 0) {
+            body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-tertiary);">Portföyünüzde fon bulunmuyor.</td></tr>';
+            if (sensitivityEl) sensitivityEl.textContent = '%0';
+            if (totalFxEl) totalFxEl.textContent = '₺0,00';
+            if (totalRealEl) totalRealEl.textContent = '₺0,00';
+            if (ratioEl) ratioEl.textContent = '- / -';
+            return;
+        }
+
+        let totalPortfolioVal = Calculations.getTotalPortfolioValue();
+        let totalFxGainTL = 0;
+        let totalRealGainTL = 0;
+        let foreignWeightSum = 0;
+
+        let rowsHtml = '';
+
+        PortfolioData.funds.forEach(fund => {
+            const shares = fund.shares || 0;
+            const avgCost = fund.avgCost || 0;
+            const curPrice = fund.currentPrice || avgCost || 0;
+            const val = shares * curPrice;
+            const costVal = shares * avgCost;
+            const profitTL = val - costVal;
+            const retPct = costVal > 0 ? (profitTL / costVal) : 0;
+            const weight = totalPortfolioVal > 0 ? (val / totalPortfolioVal) : 0;
+
+            const cat = (fund.category || '').toLowerCase();
+            const name = (fund.name || '').toLowerCase();
+            const code = (fund.code || '').toUpperCase();
+
+            const isForeign = cat.includes('yabancı') || name.includes('yabancı') || name.includes('teknoloji') || name.includes('nasdaq') || name.includes('amerika') || name.includes('eurobond') || ['AFT', 'YAY', 'IJC', 'TGE', 'GBG', 'TFI', 'DVX'].includes(code);
+            const isGold = cat.includes('kıymetli') || cat.includes('altın') || name.includes('altın') || name.includes('gümüş') || ['KZL', 'GGK', 'GTA', 'MKG'].includes(code);
+
+            let fxPortionPct = 0;
+            let realPortionPct = 0;
+            let fxGainTL = 0;
+            let realGainTL = 0;
+
+            if (isForeign || isGold) {
+                foreignWeightSum += weight;
+                // Decompose total return into FX component vs Real Asset alpha
+                const fxRate = this.USD_ANNUAL_RETURN;
+                const totalMultiplier = 1 + retPct;
+                const realMultiplier = totalMultiplier / (1 + fxRate);
+                const realRate = realMultiplier - 1;
+
+                if (retPct !== 0) {
+                    const absSum = Math.abs(fxRate) + Math.abs(realRate);
+                    const fxWeight = absSum > 0 ? (Math.abs(fxRate) / absSum) : 0.5;
+                    const realWeight = absSum > 0 ? (Math.abs(realRate) / absSum) : 0.5;
+
+                    fxGainTL = profitTL * fxWeight;
+                    realGainTL = profitTL * realWeight;
+                    fxPortionPct = fxRate;
+                    realPortionPct = realRate;
+                }
+            } else {
+                // Domestic asset -> 100% real domestic asset gain, 0% FX gain
+                fxGainTL = 0;
+                realGainTL = profitTL;
+                fxPortionPct = 0;
+                realPortionPct = retPct;
+            }
+
+            totalFxGainTL += fxGainTL;
+            totalRealGainTL += realGainTL;
+
+            const fxBarWidth = Math.min(100, Math.max(0, (fxGainTL / (Math.abs(profitTL) || 1)) * 100));
+            const realBarWidth = 100 - fxBarWidth;
+
+            rowsHtml += `
+                <tr>
+                    <td>
+                        <strong style="color:var(--text-primary); font-size:0.9rem;">${fund.code}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${Utils.escapeHtml(fund.shortName || fund.name)}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${isForeign ? 'badge-primary' : (isGold ? 'badge-warning' : 'badge-neutral')}">${Utils.escapeHtml(fund.category || 'Fon')}</span>
+                    </td>
+                    <td>
+                        <strong class="${profitTL >= 0 ? 'text-success' : 'text-danger'}">${Utils.formatCurrency(profitTL)}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${profitTL >= 0 ? '+' : ''}%${(retPct * 100).toFixed(2)}</div>
+                    </td>
+                    <td>
+                        <span style="color:#60A5FA; font-weight:600;">${Utils.formatCurrency(fxGainTL)}</span>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${isForeign || isGold ? '+%' + (fxPortionPct * 100).toFixed(1) + ' Kur' : '%0 Kur'}</div>
+                    </td>
+                    <td>
+                        <span style="color:#34D399; font-weight:600;">${Utils.formatCurrency(realGainTL)}</span>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${realGainTL >= 0 ? '+' : ''}%${(realPortionPct * 100).toFixed(1)} Reel</div>
+                    </td>
+                    <td>
+                        <div style="display:flex; height:8px; border-radius:4px; overflow:hidden; background:rgba(255,255,255,0.06); width:120px;">
+                            <div style="width:${fxBarWidth}%; background:#3B82F6;" title="Kur Katkısı: %${fxBarWidth.toFixed(0)}"></div>
+                            <div style="width:${realBarWidth}%; background:#10B981;" title="Reel Varlık Katkısı: %${realBarWidth.toFixed(0)}"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        body.innerHTML = rowsHtml;
+
+        if (sensitivityEl) sensitivityEl.textContent = `%${(foreignWeightSum * 100).toFixed(1)}`;
+        if (totalFxEl) totalFxEl.textContent = Utils.formatCurrency(totalFxGainTL);
+        if (totalRealEl) totalRealEl.textContent = Utils.formatCurrency(totalRealGainTL);
+        
+        const totalProfit = totalFxGainTL + totalRealGainTL;
+        if (totalFxPctEl) totalFxPctEl.textContent = totalProfit !== 0 ? `%${((totalFxGainTL / Math.abs(totalProfit)) * 100).toFixed(1)} Toplam Kar İçindeki Payı` : '%0 Kur Etkisi';
+        if (totalRealPctEl) totalRealPctEl.textContent = totalProfit !== 0 ? `%${((totalRealGainTL / Math.abs(totalProfit)) * 100).toFixed(1)} Toplam Kar İçindeki Payı` : '%0 Reel Etki';
+        
+        if (ratioEl && totalProfit !== 0) {
+            const fxShare = Math.min(100, Math.max(0, (totalFxGainTL / Math.abs(totalProfit)) * 100));
+            const realShare = 100 - fxShare;
+            ratioEl.textContent = `%${fxShare.toFixed(0)} Kur / %${realShare.toFixed(0)} Alfa`;
         }
     }
 };
@@ -3291,7 +3651,7 @@ const FundComparator = {
         if (codes.length < 2) {
             container.innerHTML = `
                 <div style="text-align:center; padding:20px; color:var(--text-secondary); font-size:0.85rem;">
-                    ⚔️ Karşılaştırma yapmak için lütfen en az 2 fon seçin.
+                    ⚔ Karşılaştırma yapmak için lütfen en az 2 fon seçin.
                 </div>
             `;
             return;
@@ -3372,7 +3732,7 @@ const FundComparator = {
                         </tr>
                         <tr>
                             <td><strong>Yıllık Yönetim Ücreti</strong></td>
-                            ${fundDetails.map(f => `<td class="${f.fee === minFee ? 'compare-winner-cell' : ''}">%${(f.fee || 0).toFixed(2)} ${f.fee === minFee ? '🏷️ En Düşük' : ''}</td>`).join('')}
+                            ${fundDetails.map(f => `<td class="${f.fee === minFee ? 'compare-winner-cell' : ''}">%${(f.fee || 0).toFixed(2)} ${f.fee === minFee ? '🏷 En Düşük' : ''}</td>`).join('')}
                         </tr>
                         <tr>
                             <td><strong>Stopaj Vergi Durumu</strong></td>
@@ -3550,10 +3910,10 @@ const StrategyTab = {
         const gold = targets['Altın Katılım & Enflasyon Kalkanı']?.current || 0;
         const bist = targets['Vergisiz BIST Alfa']?.current || 0;
 
-        if (liquid >= 40) return { title: '🛡️ Likit Kalkan & Alım Odaklı', summary: 'Yüksek nakit ve likit rezerviyle olası piyasa düzeltmelerinde alım gücünü maksimize eden savunmacı yapı.' };
+        if (liquid >= 40) return { title: '🛡 Likit Kalkan & Alım Odaklı', summary: 'Yüksek nakit ve likit rezerviyle olası piyasa düzeltmelerinde alım gücünü maksimize eden savunmacı yapı.' };
         if (tech + bist >= 50) return { title: '🚀 Yüksek Büyüme & Hisse Odaklı', summary: 'Yerli ve küresel hisse senedi ağırlığıyla uzun vadeli reel sermaye büyümesini hedefleyen dinamik mimari.' };
         if (gold >= 30) return { title: '🥇 Enflasyon & Kıymetli Maden Kalkanı', summary: 'Altın ve değerli maden ağırlığıyla kur şoklarına ve enflasyona karşı yüksek koruma sağlayan yapı.' };
-        return { title: '⚖️ Dengeli & Çoklu Varlık Büyümesi', summary: 'Likit, küresel büyüme, enflasyon kalkanı ve hisse alfa arasında dengelenmiş optimum portföy mimarisi.' };
+        return { title: '⚖ Dengeli & Çoklu Varlık Büyümesi', summary: 'Likit, küresel büyüme, enflasyon kalkanı ve hisse alfa arasında dengelenmiş optimum portföy mimarisi.' };
     },
 
     render() {
@@ -3706,7 +4066,7 @@ const StrategyTab = {
                 </div>
 
                 <div class="order-matrix-panel">
-                    <h4 style="font-size:0.88rem; color:var(--text-primary); margin-bottom:8px;">⏱️ T+X Valör Akıllı İcra Sıralaması</h4>
+                    <h4 style="font-size:0.88rem; color:var(--text-primary); margin-bottom:8px;">⏱ T+X Valör Akıllı İcra Sıralaması</h4>
                     <p style="font-size:0.75rem; color:var(--text-secondary);">Satış yapılan fonların nakdi hesaba geçtikçe (T+1 / T+2), alış emirleri sırayla devreye girer:</p>
                     <div class="order-matrix-timeline">
                         <div class="matrix-day-card">
@@ -4035,7 +4395,7 @@ const PlanTab = {
 
             <div class="card">
                 <div class="card-header">
-                    <h3>⏱️ Portföy Fonları Valör ve İşlem Saatleri Tablosu</h3>
+                    <h3>⏱ Portföy Fonları Valör ve İşlem Saatleri Tablosu</h3>
                 </div>
                 <div class="valor-calendar-grid">
                     ${funds.map(fund => `
@@ -4068,10 +4428,16 @@ const PlanTab = {
 
 const ZenithIntelligence = {
     initialized: false,
+    byokConfig: {
+        provider: 'anthropic',
+        apiKey: '',
+        model: 'claude-3-5-sonnet-20241022'
+    },
 
     init() {
         if (this.initialized) return;
         this.initHardware();
+        this.loadByokConfig();
 
         const btn = document.getElementById('generateAiReportBtn');
         if (btn) {
@@ -4081,6 +4447,44 @@ const ZenithIntelligence = {
         if (neuralBtn) {
             neuralBtn.addEventListener('click', () => this.generateReport('neural'));
         }
+        const llmBtn = document.getElementById('generateLlmReportBtn');
+        if (llmBtn) {
+            llmBtn.addEventListener('click', () => this.generateLlmReport());
+        }
+        const byokSettingsBtn = document.getElementById('openByokSettingsBtn');
+        if (byokSettingsBtn) {
+            byokSettingsBtn.addEventListener('click', () => this.openByokModal());
+        }
+        const closeByokBtn = document.getElementById('closeByokSettingsModal');
+        if (closeByokBtn) {
+            closeByokBtn.addEventListener('click', () => this.closeByokModal());
+        }
+        const dismissByokBtn = document.getElementById('dismissByokSettingsModal');
+        if (dismissByokBtn) {
+            dismissByokBtn.addEventListener('click', () => this.closeByokModal());
+        }
+        const saveByokBtn = document.getElementById('saveByokSettingsBtn');
+        if (saveByokBtn) {
+            saveByokBtn.addEventListener('click', () => this.saveByokSettingsFromModal());
+        }
+        const clearByokBtn = document.getElementById('clearByokKeyBtn');
+        if (clearByokBtn) {
+            clearByokBtn.addEventListener('click', () => this.clearByokKey());
+        }
+        const providerSelect = document.getElementById('byokProviderSelect');
+        if (providerSelect) {
+            providerSelect.addEventListener('change', (e) => {
+                const modelInput = document.getElementById('byokModelInput');
+                if (modelInput) {
+                    if (e.target.value === 'anthropic') modelInput.value = 'claude-3-5-sonnet-20241022';
+                    else if (e.target.value === 'openai') modelInput.value = 'gpt-4o';
+                    else if (e.target.value === 'gemini') modelInput.value = 'gemini-1.5-flash';
+                    else if (e.target.value === 'groq') modelInput.value = 'llama-3.3-70b-versatile';
+                    else if (e.target.value === 'deepseek') modelInput.value = 'deepseek-chat';
+                }
+            });
+        }
+
         const copyBtn = document.getElementById('copyAiReportBtn');
         if (copyBtn) {
             copyBtn.addEventListener('click', () => this.copyReport());
@@ -4121,6 +4525,231 @@ const ZenithIntelligence = {
         }
 
         this.initialized = true;
+    },
+
+    loadByokConfig() {
+        try {
+            const saved = localStorage.getItem('zenith_byok_config_v1');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                this.byokConfig = { ...this.byokConfig, ...parsed };
+            }
+        } catch (e) {}
+    },
+
+    saveByokConfig() {
+        try {
+            localStorage.setItem('zenith_byok_config_v1', JSON.stringify(this.byokConfig));
+        } catch (e) {}
+    },
+
+    openByokModal() {
+        this.loadByokConfig();
+        const modal = document.getElementById('byokSettingsModal');
+        const providerSel = document.getElementById('byokProviderSelect');
+        const keyInput = document.getElementById('byokApiKeyInput');
+        const modelInput = document.getElementById('byokModelInput');
+
+        if (providerSel) providerSel.value = this.byokConfig.provider || 'anthropic';
+        if (keyInput) keyInput.value = this.byokConfig.apiKey || '';
+        if (modelInput) modelInput.value = this.byokConfig.model || 'claude-3-5-sonnet-20241022';
+
+        if (modal) modal.classList.add('active');
+    },
+
+    closeByokModal() {
+        const modal = document.getElementById('byokSettingsModal');
+        if (modal) modal.classList.remove('active');
+    },
+
+    saveByokSettingsFromModal() {
+        const providerSel = document.getElementById('byokProviderSelect');
+        const keyInput = document.getElementById('byokApiKeyInput');
+        const modelInput = document.getElementById('byokModelInput');
+
+        const provider = providerSel ? providerSel.value : 'anthropic';
+        const apiKey = keyInput ? keyInput.value.trim() : '';
+        const model = modelInput ? modelInput.value.trim() : 'claude-3-5-sonnet-20241022';
+
+        this.byokConfig = { provider, apiKey, model };
+        this.saveByokConfig();
+        this.closeByokModal();
+        Utils.showToast(`🔒 ${provider.toUpperCase()} (${model}) API anahtarı güvenle yerel hafızaya kaydedildi.`, 'success');
+    },
+
+    clearByokKey() {
+        this.byokConfig = { provider: 'anthropic', apiKey: '', model: 'claude-3-5-sonnet-20241022' };
+        localStorage.removeItem('zenith_byok_config_v1');
+        const keyInput = document.getElementById('byokApiKeyInput');
+        if (keyInput) keyInput.value = '';
+        this.closeByokModal();
+        Utils.showToast('Yapay zeka API anahtarı silindi.', 'info');
+    },
+
+    async generateLlmReport() {
+        this.loadByokConfig();
+        if (!this.byokConfig.apiKey || !this.byokConfig.apiKey.trim()) {
+            this.openByokModal();
+            Utils.showToast('Lütfen önce bir yapay zeka API anahtarı (Claude, GPT, Gemini, Groq) girin.', 'info');
+            return;
+        }
+
+        const contentEl = document.getElementById('aiReportContent');
+        if (!contentEl) return;
+
+        contentEl.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 12px; animation: pulse 1.5s infinite;">🤖</div>
+                <h4 style="color: var(--text-primary); margin-bottom: 8px;">Zenith LLM Analisti Çalışıyor...</h4>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Portföyünüzün 1.051 TEFAS fonu, Sharpe rasyosu, 2026 stopaj yükümlülükleri ve FX atıfı ${this.byokConfig.provider.toUpperCase()} (${this.byokConfig.model}) modeline iletiliyor.</p>
+            </div>
+        `;
+
+        try {
+            const promptText = this.buildPromptContext();
+            const responseText = await this.callLlmApi(promptText);
+            this.renderLlmReport(responseText);
+            Utils.showToast('✅ Canlı LLM portföy analizi tamamlandı.', 'success');
+        } catch (err) {
+            console.error('LLM API Error:', err);
+            contentEl.innerHTML = `
+                <div style="padding: 20px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-radius: var(--radius-md);">
+                    <h4 style="color: #EF4444; margin-bottom: 8px;">❌ Yapay Zeka Bağlantı Hatası</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">${Utils.escapeHtml(err.message || 'API anahtarı veya model yanıt vermedi.')}</p>
+                    <button class="btn btn-sm btn-primary" onclick="ZenithIntelligence.generateReport('quant')">⚡ Yerel Quant Analizini Göster</button>
+                </div>
+            `;
+            Utils.showToast('Yapay zeka yanıt veremedi. Yerel analiz kullanılabilir.', 'error');
+        }
+    },
+
+    buildPromptContext() {
+        const totalVal = Calculations.getTotalPortfolioValue();
+        const totalCost = Calculations.getTotalCost();
+        const totalProfit = Calculations.getTotalReturn();
+        const profitPct = Calculations.getTotalReturnPercent();
+        const cashTL = PortfolioData.cashTL;
+        const funds = PortfolioData.funds;
+
+        let fundList = funds.map(f => {
+            const val = f.shares * f.currentPrice;
+            const weight = totalVal > 0 ? ((val / totalVal) * 100).toFixed(1) : 0;
+            return `- ${f.code} (${f.name}) | Kategori: ${f.category} | Ağırlık: %${weight} | Tutar: ${Utils.formatCurrency(val)} | Stopaj: ${f.tax || '%7.5'}`;
+        }).join('\n');
+
+        return `Sen üst düzey bir Kantitatif Portföy Yöneticisi ve Finansal Baş Danışmansın (Chief Investment Officer).
+Aşağıda Türkiye TEFAS fon piyasasında işlem gören bir yatırımcının canlı portföy verileri bulunmaktadır.
+
+=== PORTFÖY ÖZETİ ===
+- Toplam Portföy Değeri: ${Utils.formatCurrency(totalVal)}
+- Toplam Maliyet: ${Utils.formatCurrency(totalCost)}
+- Kar / Zarar: ${Utils.formatCurrency(totalProfit)} (%${profitPct.toFixed(2)})
+- Boşta Bekleyen TL Nakit: ${Utils.formatCurrency(cashTL)}
+
+=== MEVCUT FON DAĞILIMI ===
+${fundList || 'Fon bulunmuyor.'}
+
+=== GÖREVİN ===
+Lütfen bu portföyü aşağıdaki 4 ana başlık altında profesyonelce, net ve aksiyon odaklı bir yönetici notu (Executive Memo) şeklinde analiz et:
+1. 🎯 Portföy Sağlık Skoru (100 üzerinden puanla) & Genel Varlık Dağılımı Değerlendirmesi
+2. ⚡ 2026 Resmi Stopaj ve Vergi Optimizasyonu (GVK Geçici 67. Madde %0 Hisse Senedi Muafiyeti ve %7.5-%10 fon stopaj kalkanı)
+3. 🛡 Risk, Likidite & Kur Hassasiyeti (Dolar/Kur Etkisi vs Reel Alfa Büyümesi)
+4. 🚀 30-90 Günlük Taktiksel Rebalancing ve Kademeli Alım (DCA) Önerileri
+
+Yanıtını Türkçe, profesyonel, temiz markdown formatında başlıklar ve maddelerle sun.`;
+    },
+
+    async callLlmApi(prompt) {
+        const { provider, apiKey, model } = this.byokConfig;
+
+        if (provider === 'anthropic') {
+            const res = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                    'anthropic-dangerous-direct-browser-access': 'true'
+                },
+                body: JSON.stringify({
+                    model: model || 'claude-3-5-sonnet-20241022',
+                    max_tokens: 2000,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+            if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                throw new Error(errJson.error?.message || `Anthropic API Hatası (${res.status})`);
+            }
+            const data = await res.json();
+            return data.content?.[0]?.text || 'Yanıt alınamadı.';
+        } else if (provider === 'openai' || provider === 'groq' || provider === 'deepseek') {
+            let endpoint = 'https://api.openai.com/v1/chat/completions';
+            if (provider === 'groq') endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+            if (provider === 'deepseek') endpoint = 'https://api.deepseek.com/chat/completions';
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model || (provider === 'groq' ? 'llama-3.3-70b-versatile' : (provider === 'deepseek' ? 'deepseek-chat' : 'gpt-4o')),
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+            if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                throw new Error(errJson.error?.message || `API Hatası (${res.status})`);
+            }
+            const data = await res.json();
+            return data.choices?.[0]?.message?.content || 'Yanıt alınamadı.';
+        } else if (provider === 'gemini') {
+            const geminiModel = model || 'gemini-1.5-flash';
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+            if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                throw new Error(errJson.error?.message || `Gemini API Hatası (${res.status})`);
+            }
+            const data = await res.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Yanıt alınamadı.';
+        }
+
+        throw new Error('Desteklenmeyen sağlayıcı seçildi.');
+    },
+
+    renderLlmReport(markdownText) {
+        const contentEl = document.getElementById('aiReportContent');
+        if (!contentEl) return;
+
+        let formatted = markdownText
+            .replace(/^### (.*$)/gim, '<h4 style="color:var(--text-primary); margin:14px 0 6px 0; font-size:1.05rem;">$1</h4>')
+            .replace(/^## (.*$)/gim, '<h3 style="color:var(--accent-primary); margin:18px 0 8px 0; font-size:1.15rem; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:4px;">$1</h3>')
+            .replace(/^# (.*$)/gim, '<h2 style="color:var(--text-primary); margin:20px 0 10px 0;">$1</h2>')
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            .replace(/^\- (.*$)/gim, '<li style="margin-left:20px; margin-bottom:4px; line-height:1.5;">$1</li>')
+            .replace(/\n\n/gim, '<br><br>');
+
+        contentEl.innerHTML = `
+            <div class="llm-report-wrapper" style="padding: 10px 5px; color: var(--text-primary); font-size: 0.9rem; line-height: 1.6;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.25); border-radius:var(--radius-md); padding:10px 14px; margin-bottom:18px;">
+                    <div style="font-size:0.82rem; color:var(--text-secondary);">
+                        🤖 <strong>Model:</strong> ${this.byokConfig.provider.toUpperCase()} - <code>${this.byokConfig.model}</code>
+                    </div>
+                    <span class="badge badge-success">Canlı LLM Çıktısı</span>
+                </div>
+                ${formatted}
+            </div>
+        `;
     },
 
     initHardware() {
@@ -4172,17 +4801,17 @@ const ZenithIntelligence = {
             : `Portföyün likidite payı %${liquidPct} seviyesindedir. Piyasa dalgalanmalarında nakit esnekliğini korumak ve düşüşlerde alım gücü sağlamak için para piyasası payı dengelenebilir.`;
 
         const p2Text = parseFloat(globalTechPct) >= 15
-            ? `Portföydeki %${globalTechPct} büyüklüğündeki küresel teknoloji ve yarı iletken varlıkları (AFT, IJC), yapay zekâ mega-trendinin sağladığı asimetrik büyümeden pay alırken, döviz bazlı varlık yapısıyla TL'deki değer değişimlerine karşı doğal bir kur kalkanı oluşturmaktadır.`
+            ? `Portföydeki %${globalTechPct} büyüklüğündeki küresel teknoloji ve yarı iletken varlıkları (AFT, IJC), yapay zeka mega-trendinin sağladığı asimetrik büyümeden pay alırken, döviz bazlı varlık yapısıyla TL'deki değer değişimlerine karşı doğal bir kur kalkanı oluşturmaktadır.`
             : `Küresel büyüme ve teknoloji payı %${globalTechPct} düzeyindedir. Dolar bazlı küresel teknoloji devlerine kademeli dağıtım küresel getiri potansiyelini artırabilir.`;
 
         const p3Text = parseFloat(goldPct) >= 5
             ? `Fiziki altına dayalı %${goldPct} payındaki kıymetli maden pozisyonunuz (KZL), jeopolitik krizler ve iç enflasyon karşısında portföyün negatif korelasyonlu 'Kriz Kalkanı' görevini başarıyla üstlenmektedir.`
             : `Altın ve emtia payı %${goldPct} düzeyindedir. Enflasyon ve küresel jeopolitik risklere karşı dengeleyici altın fonları değerlendirilebilir.`;
 
-        const p4Text = `30-90 Günlük Eylem Planı: Likit havuzda (%${liquidPct}) biriken kâr payları, BIST ve küresel teknoloji endekslerindeki %3-%5 üzeri teknik düzeltmelerde 3 parçalı DCA (Kademeli Maliyetleme) stratejisiyle hisse/büyüme fonlarına aktarılabilir.`;
+        const p4Text = `30-90 Günlük Eylem Planı: Likit havuzda (%${liquidPct}) biriken kar payları, BIST ve küresel teknoloji endekslerindeki %3-%5 üzeri teknik düzeltmelerde 3 parçalı DCA (Kademeli Maliyetleme) stratejisiyle hisse/büyüme fonlarına aktarılabilir.`;
 
         return [
-            { title: '1. 🏛️ Makroekonomik Faiz & Likidite Korelasyonu', text: p1Text },
+            { title: '1. 🏛 Makroekonomik Faiz & Likidite Korelasyonu', text: p1Text },
             { title: '2. 🌐 Küresel Büyüme & Teknoloji Trendleri (Döviz Hedge)', text: p2Text },
             { title: '3. 🥇 Jeopolitik Risk & Enflasyon Kalkanı', text: p3Text },
             { title: '4. 🎯 Taktiksel Rebalancing & Kademeli Alım (DCA) Yol Haritası', text: p4Text }
@@ -4204,7 +4833,7 @@ const ZenithIntelligence = {
                 liquidityPct: 0,
                 weightedRisk: 0,
                 hedgePct: 0,
-                recommendations: ['Portföyünüze fon ekleyerek yapay zekâ analizini başlatabilirsiniz.']
+                recommendations: ['Portföyünüze fon ekleyerek yapay zeka analizini başlatabilirsiniz.']
             };
         }
 
@@ -4274,7 +4903,7 @@ const ZenithIntelligence = {
         }
 
         if (hhi > 3500) {
-            recommendations.push(`⚠️ **Yoğunlaşma Uyarısı:** Varlıklarınız az sayıda fonda yoğunlaşmış (HHI: ${hhi}). Riski dağıtmak adına farklı varlık sınıflarına pay verilebilir.`);
+            recommendations.push(`⚠ **Yoğunlaşma Uyarısı:** Varlıklarınız az sayıda fonda yoğunlaşmış (HHI: ${hhi}). Riski dağıtmak adına farklı varlık sınıflarına pay verilebilir.`);
         }
 
         if (recommendations.length === 0) {
@@ -4427,7 +5056,7 @@ const ZenithIntelligence = {
                                     <span>🧠</span>
                                     <span>Tarayıcı İçi Sinirsel Değerlendirme & Makro Projeksiyon</span>
                                 </div>
-                                <span class="ai-neural-badge">WebGPU • %100 Yerel</span>
+                                <span class="ai-neural-badge">WebGPU - %100 Yerel</span>
                             </div>
                             <div class="ai-neural-body" id="neuralStreamBody">
                                 ${neuralPillars.map(p => `
@@ -4444,10 +5073,10 @@ const ZenithIntelligence = {
                 contentEl.innerHTML = `
                     <div class="ai-report-body">
                         <div class="ai-report-meta">
-                            <span>🗓️ Rapor Tarihi: ${Utils.getTimestamp()}</span>
+                            <span>🗓 Rapor Tarihi: ${Utils.getTimestamp()}</span>
                             <span>📊 Pozisyon: ${funds.length} Fon + Nakit</span>
                             <span>🏆 Sağlık Skoru: ${m.healthScore}/100</span>
-                            <span>⚙️ Motor: ${mode === 'neural' ? 'Dual Intelligence (Quant + WebGPU)' : 'Quant Engine (Deterministik)'}</span>
+                            <span>⚙ Motor: ${mode === 'neural' ? 'Dual Intelligence (Quant + WebGPU)' : 'Quant Engine (Deterministik)'}</span>
                         </div>
 
                         <div class="ai-section">
@@ -4545,12 +5174,12 @@ const ZenithIntelligence = {
         const today = new Date().toISOString().slice(0, 10);
 
         let reportTxt = `================================================================================\n`;
-        reportTxt += `🌌 ZENITH ATLAS - YAPAY ZEKÂ PORTFÖY & RİSK ANALİZ RAPORU\n`;
+        reportTxt += `🌌 ZENITH ATLAS - YAPAY ZEKA PORTFÖY & RİSK ANALİZ RAPORU\n`;
         reportTxt += `================================================================================\n`;
         reportTxt += `Rapor Tarihi         : ${Utils.getTimestamp()}\n`;
         reportTxt += `Toplam Portföy Değeri: ${Utils.formatCurrency(totalVal)}\n`;
         reportTxt += `Toplam Maliyet       : ${Utils.formatCurrency(totalCost)}\n`;
-        reportTxt += `Net Kâr/Zarar        : ${netPnL >= 0 ? '+' : ''}${Utils.formatCurrency(netPnL)} (%${pnlPct.toFixed(2)})\n`;
+        reportTxt += `Net Kar/Zarar        : ${netPnL >= 0 ? '+' : ''}${Utils.formatCurrency(netPnL)} (%${pnlPct.toFixed(2)})\n`;
         reportTxt += `Portföy Sağlık Puanı : ${m.healthScore}/100 (${m.healthRating})\n`;
         reportTxt += `Ağırlıklı Risk Düzeyi: ${m.weightedRisk} / 7.0 (SPK Skalası)\n`;
         reportTxt += `Anlık Likidite (T+0) : %${m.liquidityPct}\n`;
@@ -4570,7 +5199,7 @@ const ZenithIntelligence = {
         reportTxt += `💡 STRATEJİK & TAKTİKSEL ÖNERİLER\n`;
         reportTxt += `--------------------------------------------------------------------------------\n`;
         m.recommendations.forEach(r => {
-            reportTxt += `• ${r.replace(/\*\*/g, '')}\n`;
+            reportTxt += `- ${r.replace(/\*\*/g, '')}\n`;
         });
 
         const neuralPillars = this.synthesizeNeuralPillars(m, totalVal, funds);
@@ -4582,7 +5211,7 @@ const ZenithIntelligence = {
         });
 
         reportTxt += `================================================================================\n`;
-        reportTxt += `Zenith Atlas © 2026 • Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.\n`;
+        reportTxt += `Zenith Atlas (c) 2026 - Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.\n`;
         reportTxt += `Veri Kaynakları: TEFAS (Takasbank) & canlipiyasalar.haremaltin.com\n`;
 
         Utils.showToast('📥 TXT raporu indirmesi başlatılıyor...', 'info');
@@ -4657,7 +5286,7 @@ const ZenithIntelligence = {
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Zenith Atlas - Yapay Zekâ Analiz Raporu</title>
+    <title>Zenith Atlas - Yapay Zeka Analiz Raporu</title>
     <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F172A; margin: 0; padding: 20px; font-size: 13px; line-height: 1.5; background: #FFF; }
@@ -4701,7 +5330,7 @@ const ZenithIntelligence = {
             <div class="card-val">${Utils.formatCurrency(totalVal)}</div>
         </div>
         <div class="card">
-            <div class="card-title">Net Kâr / Zarar</div>
+            <div class="card-title">Net Kar / Zarar</div>
             <div class="card-val" style="color:${netPnL >= 0 ? '#10B981' : '#EF4444'};">${netPnL >= 0 ? '+' : ''}${Utils.formatCurrency(netPnL)}</div>
         </div>
         <div class="card">
@@ -4746,7 +5375,7 @@ const ZenithIntelligence = {
     </div>
 
     <div class="footer">
-        Zenith Atlas © 2026 • Bilgilendirme amaçlıdır, yatırım tavsiyesi niteliği taşımaz. • TEFAS (Takasbank) Resmi Verileri
+        Zenith Atlas (c) 2026 - Bilgilendirme amaçlıdır, yatırım tavsiyesi niteliği taşımaz. - TEFAS (Takasbank) Resmi Verileri
     </div>
 
     <script>
@@ -4883,7 +5512,7 @@ const ExcelExport = {
         });
 
         aiData.push([]);
-        aiData.push(['YAPAY ZEKÂ STRATEJİK TAVSİYELERİ']);
+        aiData.push(['YAPAY ZEKA STRATEJİK TAVSİYELERİ']);
         quant.recommendations.forEach((r, idx) => {
             aiData.push([`${idx + 1}. ${this.sanitize(r.replace(/\*\*/g, ''))}`]);
         });
@@ -4897,7 +5526,7 @@ const ExcelExport = {
 
         const wsAI = XLSX.utils.aoa_to_sheet(aiData);
         wsAI['!cols'] = [{ wch: 42 }, { wch: 85 }, { wch: 20 }, { wch: 18 }, { wch: 45 }];
-        XLSX.utils.book_append_sheet(wb, wsAI, 'Yapay Zekâ Analizi');
+        XLSX.utils.book_append_sheet(wb, wsAI, 'Yapay Zeka Analizi');
 
         const today = new Date().toISOString().slice(0, 10);
         Utils.showToast('📊 Excel raporu indirmesi başlatılıyor...', 'info');
@@ -5289,7 +5918,7 @@ const AddFundTab = {
             'Hisse Senedi Yoğun': '📈',
             'Hisse Senedi': '📈',
             'Yabancı Hisse': '🌐',
-            'Değişken Fon': '⚖️',
+            'Değişken Fon': '⚖',
             'Serbest Fon': '🎲',
             'Serbest (Döviz)': '💵',
             'Borçlanma Araçları': '📄',
@@ -5390,12 +6019,12 @@ const AddFundTab = {
                     <span class="managed-fund-code" style="color:${fund.color || 'var(--accent-primary)'}">${fund.code}</span>
                     <div class="managed-fund-info">
                         <div class="managed-fund-name">${fund.name}</div>
-                        <div class="managed-fund-position">${Utils.formatNumber(fund.shares)} pay · Ort.₺${fund.avgCost.toFixed(4)}</div>
+                        <div class="managed-fund-position">${Utils.formatNumber(fund.shares)} pay - Ort.₺${fund.avgCost.toFixed(4)}</div>
                     </div>
                     <span class="managed-fund-value ${pnlClass}">${Utils.formatCurrency(value)}</span>
                     <div class="managed-fund-actions">
-                        <button class="btn btn-ghost btn-sm edit-fund-btn" data-code="${fund.code}" title="Düzenle">✏️</button>
-                        <button class="btn btn-danger btn-sm remove-fund-btn" data-code="${fund.code}" title="Sil">🗑️</button>
+                        <button class="btn btn-ghost btn-sm edit-fund-btn" data-code="${fund.code}" title="Düzenle">✏</button>
+                        <button class="btn btn-danger btn-sm remove-fund-btn" data-code="${fund.code}" title="Sil">🗑</button>
                     </div>
                 </div>
             `;
@@ -6199,7 +6828,7 @@ const TaxOptimizer = {
                 rateText: '%0 (Tam Muafiyet)',
                 isExempt: true,
                 badgeClass: 'badge-success',
-                badgeText: '🛡️ %0 Stopaj Kalkanı',
+                badgeText: '🛡 %0 Stopaj Kalkanı',
                 desc: '193 Sayılı GVK Geçici 67. Madde uyarınca hisse senedi yoğun fon kazançlarından %0 stopaj kesilir.'
             };
         }
@@ -6210,7 +6839,7 @@ const TaxOptimizer = {
                 rateText: '%10 Stopaj',
                 isExempt: false,
                 badgeClass: 'badge-warning',
-                badgeText: '⚠️ %10 Kesinti',
+                badgeText: '⚠ %10 Kesinti',
                 desc: '9075 Sayılı CBK uyarınca TL Para Piyasası ve Borçlanma fonlarında %10 stopaj uygulanır.'
             };
         }
@@ -6221,7 +6850,7 @@ const TaxOptimizer = {
                 rateText: '%10 Stopaj',
                 isExempt: false,
                 badgeClass: 'badge-warning',
-                badgeText: '⚠️ %10 Kesinti',
+                badgeText: '⚠ %10 Kesinti',
                 desc: '9075 Sayılı CBK uyarınca kıymetli madenler fonlarında %10 stopaj kesintisi uygulanır.'
             };
         }
@@ -6231,7 +6860,7 @@ const TaxOptimizer = {
             rateText: '%10 Stopaj',
             isExempt: false,
             badgeClass: 'badge-secondary',
-            badgeText: '⚠️ %10 Kesinti',
+            badgeText: '⚠ %10 Kesinti',
             desc: 'Standart yatırım fonlarında 9075 Sayılı CBK uyarınca %10 stopaj kesintisi uygulanır.'
         };
     },
@@ -6535,7 +7164,7 @@ const AlertsEngine = {
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span class="badge ${a.triggered ? 'badge-success' : 'badge-purple'}">${a.triggered ? 'Tetiklendi' : 'Dinleniyor'}</span>
-                        <button class="btn btn-ghost btn-sm remove-alert-btn" data-id="${a.id}">🗑️</button>
+                        <button class="btn btn-ghost btn-sm remove-alert-btn" data-id="${a.id}">🗑</button>
                     </div>
                 </div>
             `;
@@ -6659,7 +7288,7 @@ const GoalWealthBuilder = {
         const pBar = document.getElementById('goalProgressBar');
 
         if (timeText) {
-            timeText.textContent = res.years > 0 ? `⏱️ ${res.years} Yıl ${res.remainingMonths} Ay` : `⏱️ ${res.months} Ay`;
+            timeText.textContent = res.years > 0 ? `⏱ ${res.years} Yıl ${res.remainingMonths} Ay` : `⏱ ${res.months} Ay`;
         }
         if (dateText) {
             dateText.textContent = `Tahmini Hedef Tarihi: ${res.targetDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`;
@@ -7113,7 +7742,7 @@ const ExecutiveReportEngine = {
                 <!-- Tax & Legal Disclaimer -->
                 <div style="margin-top:20px; padding:12px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.75rem; color:var(--text-secondary); line-height:1.5;">
                     <strong>Vergi & Stopaj Durumu:</strong> Portföyün %${taxAnalysis.exemptRatio.toFixed(1)} kadarı Hisse Senedi Yoğun Fon mevzuatı kapsamında %0 stopaj muafiyetine tabidir. Tahmini net realize edilebilir kazanç ₺${taxAnalysis.totalNetProfit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} seviyesindedir.<br>
-                    <strong>Yasal Uyarı:</strong> Bu bülten yatırım tavsiyesi içermez. Kamuya açık resmî Takasbank TEFAS, Borsa İstanbul ve TCMB verileriyle hazırlanmıştır.
+                    <strong>Yasal Uyarı:</strong> Bu bülten yatırım tavsiyesi içermez. Kamuya açık resmi Takasbank TEFAS, Borsa İstanbul ve TCMB verileriyle hazırlanmıştır.
                 </div>
             </div>
         `;
@@ -7153,7 +7782,7 @@ const ExecutiveReportEngine = {
 };
 
 // ==========================================================================
-// 6. MacroNewsEngine (TCMB, SPK, KAP & Makroekonomi Resmî Bülten Motoru)
+// 6. MacroNewsEngine (TCMB, SPK, KAP & Makroekonomi Resmi Bülten Motoru)
 // ==========================================================================
 const MacroNewsEngine = {
     data: (typeof window !== 'undefined' && window.ZENITH_MACRO_NEWS) ? window.ZENITH_MACRO_NEWS : null,
@@ -7204,7 +7833,7 @@ const MacroNewsEngine = {
                         title: 'TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti',
                         summary: 'Para Politikası Kurulu, politika faizi olan bir hafta vadeli repo ihale faiz oranının %50 düzeyinde sabit tutulmasına karar vermiştir.',
                         date: '17.08.2026',
-                        source: 'TCMB Resmî Duyuru',
+                        source: 'TCMB Resmi Duyuru',
                         sourceUrl: 'https://www.tcmb.gov.tr',
                         badge: 'badge-primary',
                         impact: 'high',
@@ -7245,15 +7874,15 @@ const MacroNewsEngine = {
                 <div class="macro-news-title">
                     <span class="macro-icon">📢</span>
                     <h3>Öne Çıkan Gelişmeler & Makroekonomi Bülteni</h3>
-                    <span class="macro-sync-badge"><span class="dot"></span>Resmî Kurum Senkronizasyonu</span>
+                    <span class="macro-sync-badge"><span class="dot"></span>Resmi Kurum Senkronizasyonu</span>
                 </div>
                 <div class="macro-indicators-strip">
-                    <a href="${tcmbUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="TCMB Resmî Sayfasına Git">
-                        <span class="chip-label">🏛️ TCMB Politika Faizi:</span>
+                    <a href="${tcmbUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="TCMB Resmi Sayfasına Git">
+                        <span class="chip-label">🏛 TCMB Politika Faizi:</span>
                         <span class="chip-val">%${tcmbRate.toFixed(2)}</span>
                         <span class="chip-arrow">↗</span>
                     </a>
-                    <a href="${spkTaxUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="Resmî Gazete Stopaj Kararına Git">
+                    <a href="${spkTaxUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="Resmi Gazete Stopaj Kararına Git">
                         <span class="chip-label">📜 Fon Stopajı:</span>
                         <span class="chip-val">%${generalTax.toFixed(0)} / %${equityTax.toFixed(0)} (Hisse)</span>
                         <span class="chip-arrow">↗</span>
@@ -7264,7 +7893,7 @@ const MacroNewsEngine = {
             <!-- Filter tabs -->
             <div class="macro-filter-bar">
                 <button class="macro-pill ${this.activeCategory === 'all' ? 'active' : ''}" data-cat="all">Tümü</button>
-                <button class="macro-pill ${this.activeCategory === 'tcmb' ? 'active' : ''}" data-cat="tcmb">🏛️ TCMB</button>
+                <button class="macro-pill ${this.activeCategory === 'tcmb' ? 'active' : ''}" data-cat="tcmb">🏛 TCMB</button>
                 <button class="macro-pill ${this.activeCategory === 'spk' ? 'active' : ''}" data-cat="spk">📜 SPK & Vergi</button>
                 <button class="macro-pill ${this.activeCategory === 'kap' ? 'active' : ''}" data-cat="kap">🏢 KAP & BIST</button>
                 <button class="macro-pill ${this.activeCategory === 'global' ? 'active' : ''}" data-cat="global">🌐 Küresel Makro</button>
@@ -7279,7 +7908,7 @@ const MacroNewsEngine = {
         } else {
             filtered.forEach(item => {
                 html += `
-                    <a href="${Utils.escapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="macro-news-card" title="Resmî Kaynağı İncele (${Utils.escapeHtml(item.source)})">
+                    <a href="${Utils.escapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="macro-news-card" title="Resmi Kaynağı İncele (${Utils.escapeHtml(item.source)})">
                         <div class="macro-card-top">
                             <span class="badge ${item.badge || 'badge-primary'}">${Utils.escapeHtml(item.categoryLabel || 'Bülten')}</span>
                             <span class="macro-card-date">${Utils.escapeHtml(item.date || '')}</span>
@@ -7288,8 +7917,8 @@ const MacroNewsEngine = {
                         <h4 class="macro-card-title">${Utils.escapeHtml(item.title)}</h4>
                         <p class="macro-card-summary">${Utils.escapeHtml(item.summary)}</p>
                         <div class="macro-card-footer">
-                            <span class="macro-card-source">🏛️ ${Utils.escapeHtml(item.source)}</span>
-                            <span class="macro-card-link">Resmî Kaynağa Git ↗</span>
+                            <span class="macro-card-source">🏛 ${Utils.escapeHtml(item.source)}</span>
+                            <span class="macro-card-link">Resmi Kaynağa Git ↗</span>
                         </div>
                     </a>
                 `;
@@ -7509,7 +8138,7 @@ const MarketSessionsEngine = {
             },
             {
                 id: 'tefas',
-                flag: '🏛️',
+                flag: '🏛',
                 name: 'TEFAS Fon Piyasası',
                 subName: 'Takasbank & SPK Yatırım Fonları',
                 hours: 'Hafta içi 09:00 - 13:30 (Aynı Gün Valör)',
@@ -7527,7 +8156,7 @@ const MarketSessionsEngine = {
                 status: usStatus,
                 countdown: usCountdown,
                 badgeClass: usBadgeClass,
-                note: 'Midas kullanıcıları için hafta içi 24 saat işlem imkânı; ana borsa seansı 16:30-23:00 arasıdır.'
+                note: 'Midas kullanıcıları için hafta içi 24 saat işlem imkanı; ana borsa seansı 16:30-23:00 arasıdır.'
             },
             {
                 id: 'gold',
@@ -7574,7 +8203,7 @@ const MarketSessionsEngine = {
                         <span class="market-session-status-badge ${s.badgeClass}">${s.status.includes('🟢') ? '🟢 Açık' : s.status.includes('⚡') ? '⚡ Pre-Market' : '🌙 Kapalı'}</span>
                     </div>
                     <div class="market-session-countdown">
-                        ⏱️ ${Utils.escapeHtml(s.countdown)}
+                        ⏱ ${Utils.escapeHtml(s.countdown)}
                     </div>
                     <div class="market-session-hours">
                         <strong>İşlem Saatleri:</strong> ${Utils.escapeHtml(s.hours)}
@@ -7677,16 +8306,16 @@ const TerminalTicker = {
 
         if (bist && bist.badgeClass === 'open') {
             dotClass = 'ticker-pulse-dot';
-            summaryText = `📈 BIST: 🟢 Açık (${bist.countdown.replace('Kapanışa (18:00): ', '')}) • 🏛️ TEFAS: ${tefas.badgeClass === 'open' ? '🟢 Açık' : '🌙 T+1'} • 🇺🇸 ABD: ${us.badgeClass === 'open' ? '🟢 Açık' : us.badgeClass === 'premarket' ? '⚡ Pre-Market' : '⏳ 16:30'}`;
+            summaryText = `📈 BIST: 🟢 Açık (${bist.countdown.replace('Kapanışa (18:00): ', '')}) - 🏛 TEFAS: ${tefas.badgeClass === 'open' ? '🟢 Açık' : '🌙 T+1'} - 🇺🇸 ABD: ${us.badgeClass === 'open' ? '🟢 Açık' : us.badgeClass === 'premarket' ? '⚡ Pre-Market' : '⏳ 16:30'}`;
         } else if (us && us.badgeClass === 'open') {
             dotClass = 'ticker-pulse-dot';
-            summaryText = `🇺🇸 ABD (Midas): 🟢 Açık (${us.countdown.replace('Kapanışa (23:00): ', '')}) • 📈 BIST: 🌙 Kapalı • 🏛️ TEFAS: 🌙 T+1`;
+            summaryText = `🇺🇸 ABD (Midas): 🟢 Açık (${us.countdown.replace('Kapanışa (23:00): ', '')}) - 📈 BIST: 🌙 Kapalı - 🏛 TEFAS: 🌙 T+1`;
         } else if (tefas && tefas.badgeClass === 'open') {
             dotClass = 'ticker-pulse-dot';
-            summaryText = `🏛️ TEFAS: 🟢 Açık (${tefas.countdown.replace('T+0 Kapanışına (13:30): ', '')}) • 📈 BIST: ${bist.status.includes('🟢') ? '🟢 Açık' : '⏳ 10:00'} • 🇺🇸 ABD: ⏳ 16:30`;
+            summaryText = `🏛 TEFAS: 🟢 Açık (${tefas.countdown.replace('T+0 Kapanışına (13:30): ', '')}) - 📈 BIST: ${bist.status.includes('🟢') ? '🟢 Açık' : '⏳ 10:00'} - 🇺🇸 ABD: ⏳ 16:30`;
         } else {
             dotClass = 'ticker-pulse-dot warning';
-            summaryText = `🌙 TEFAS: T+1 İcrası • 📈 BIST: ${bist.status.includes('🟢') ? '🟢 Açık' : '🌙 Kapalı'} • 🇺🇸 ABD: ${us.status.includes('🟢') ? '🟢 Açık' : us.status.includes('⚡') ? '⚡ Pre-Market' : '⏳ 16:30 Açılış'}`;
+            summaryText = `🌙 TEFAS: T+1 İcrası - 📈 BIST: ${bist.status.includes('🟢') ? '🟢 Açık' : '🌙 Kapalı'} - 🇺🇸 ABD: ${us.status.includes('🟢') ? '🟢 Açık' : us.status.includes('⚡') ? '⚡ Pre-Market' : '⏳ 16:30 Açılış'}`;
         }
 
         textEl.textContent = summaryText;
@@ -7821,6 +8450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    MultiPortfolioEngine.init();
     Dashboard.init();
     Charts.init();
     Navigation.init();
@@ -7830,6 +8460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     AlertsEngine.init();
     GoalWealthBuilder.init();
     if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
+    if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
     ExecutiveReportEngine.bindEvents();
     MacroNewsEngine.init();
     WatchlistManager.init();

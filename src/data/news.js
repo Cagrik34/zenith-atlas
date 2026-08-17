@@ -1,4 +1,4 @@
-// Zenith Atlas - Makroekonomi & Resmî Politika Bültenleri Çevrimdışı Verisi
+// Zenith Atlas - Makroekonomi & Resmi Politika Bültenleri Çevrimdışı Verisi
 window.ZENITH_MACRO_NEWS = {
   "lastUpdate": "2026-08-17T16:03:36.073604+03:00",
   "policyIndicators": {
@@ -15,8 +15,8 @@ window.ZENITH_MACRO_NEWS = {
       "generalRate": 10.0,
       "equityRate": 0.0,
       "fxRate": 10.0,
-      "decree": "9075 Sayılı Cumhurbaşkanı Kararı (Resmî Gazete)",
-      "source": "Gelir İdaresi Başkanlığı / Resmî Gazete",
+      "decree": "9075 Sayılı Cumhurbaşkanı Kararı (Resmi Gazete)",
+      "source": "Gelir İdaresi Başkanlığı / Resmi Gazete",
       "sourceUrl": "https://www.resmigazete.gov.tr"
     },
     "bistCircuitBreaker": {
@@ -41,7 +41,7 @@ window.ZENITH_MACRO_NEWS = {
       "title": "TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti",
       "summary": "Para Politikası Kurulu, politika faizi olan bir hafta vadeli repo ihale faiz oranının %50 düzeyinde sabit tutulmasına karar vermiştir. Kurul, enflasyon beklentileri ve fiyatlama davranışlarını yakından izlemektedir.",
       "date": "17.08.2026",
-      "source": "TCMB Resmî Duyuru",
+      "source": "TCMB Resmi Duyuru",
       "sourceUrl": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin/2026",
       "badge": "badge-primary",
       "impact": "high",
@@ -54,7 +54,7 @@ window.ZENITH_MACRO_NEWS = {
       "title": "Yatırım Fonlarında Stopaj Oranları ve Teşvik Düzenlemeleri",
       "summary": "9075 Sayılı Cumhurbaşkanı Kararı uyarınca TL para piyasası, katılım ve borçlanma fonlarında stopaj oranı %10 uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
       "date": "17.08.2026",
-      "source": "Resmî Gazete & GİB",
+      "source": "Resmi Gazete & GİB",
       "sourceUrl": "https://www.resmigazete.gov.tr",
       "badge": "badge-success",
       "impact": "high",

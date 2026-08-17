@@ -31,49 +31,57 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında saklar; harici bir
 
 ## 🎯 Temel Modüller & Fonksiyonlar
 
-### 1. 📐 Modern Portföy Teorisi & Markowitz Etkin Sınır (Efficient Frontier)
+### 1. 💼 Çoklu Portföy & BES / Emeklilik Yönetim Masası (Multi-Portfolio Profiles)
+* **Bağımsız Profil Yönetimi:** `[ 🏢 Ana Portföy ]`, `[ 🛡 BES & Emeklilik Fonları ]`, `[ 💵 Temettü Portföyü ]` ve `[ 🚀 Kısa Vadeli Al-Sat ]` gibi sınırsız bağımsız portföy oluşturma ve tek tıkla anında geçiş.
+* **Konsolide Net Varlık Konsolu:** Tüm portföylerin toplam piyasa değerini ve bağımsız nakit havuzlarını birleşik konsolide özette izleme.
+
+### 2. 💱 Kur Kazancı vs. Reel Varlık Getirisi Ayrıştırma Masası (FX Attribution Engine)
+* **Brinson-Fachler Multiplicative Attribution:** Yabancı hisse/teknoloji fonları (`AFT`, `YAY`, `IJC`) ve kıymetli maden fonlarında (`KZL`, `GGK`) toplam karın ne kadarının **Dolar (USD/TRY) kur artışından**, ne kadarının **varlığın kendi reel getirisinden (Alfa)** kaynaklandığını ₺ ve % bazında ayrıştırır.
+* **Görsel Katkı Çubukları:** Dolar/Kur hassasiyeti oranı (%) ve portföyün döviz kalkanı gücünü netleştirir.
+
+### 3. 🧠 Zenith AI - BYOK (Bring Your Own Key) LLM Analisti & Quant Raporlama Motoru
+* **%100 Gizli İstemci Taraflı BYOK:** Kullanıcının kendi **Anthropic (Claude 3.5 Sonnet)**, **OpenAI (GPT-4o)**, **Google Gemini (Gemini 1.5 Pro)**, **Groq** veya **DeepSeek** API anahtarını yerel tarayıcısında şifreli saklayarak doğrudan resmi AI uç noktalarına bağlanma.
+* **Kantitatif Prompt Sentezi:** Portföyün 1.051 TEFAS fon ağırlığı, 2026 stopaj yükümlülükleri, Sharpe rasyosu ve kriz stres testi sonuçlarını toparlayıp tek tıkla kurumsal düzeyde Chief Investment Officer (CIO) Yönetici Notu üretir.
+* **Yerel Heuristic Fallback:** API anahtarı olmadan da anında çalışan yerel donanım hızlandırmalı deterministik analiz motoru.
+
+### 4. 🔌 Soyutlanmış DataProvider & Otomatik WebSocket Failover Mimarisi
+* **Modüler Veri Arayüzü:** CanlıDöviz Socket.IO, Harem Altın Kapalıçarşı WebSocket, Bigpara BIST motoru ve Yahoo Finance servislerini tek bir `DataProvider` arayüzü arkasında birleştirir.
+* **Kesintisiz Çevrimdışı Geçiş:** Bağlantı kopmalarında arayüzü dondurmadan otomatik retry backoff ve statik yerel veri katmanına (`markets.js`, `prices.js`) şeffaf geçiş sağlar.
+
+### 5. 📐 Modern Portföy Teorisi & Markowitz Etkin Sınır (Efficient Frontier)
 * **Kovaryans Matrisi & Simplex Örnekleme:** 1.500 Monte Carlo Dirichlet simülasyonu ile portföyün risk-getiri uzayındaki tüm olası ağırlık kombinasyonlarını tarar.
 * **Maksimum Sharpe & Minimum Varyans:** %50 risksiz faiz oranı (TCMB repo göstergesi) referans alınarak teğet portföy (Max Sharpe) ve en düşük oynaklıklı portföy (Min Variance) ağırlıklarını analitik olarak hesaplar ve tek tıkla uygulama imkanı sunar.
 
-### 2. 📉 Tarihsel Kriz & Geriye Dönük Backtest Simülatörü
+### 6. 📉 Tarihsel Kriz & Geriye Dönük Backtest Simülatörü
 * **Gerçek Kriz Senaryoları:** 2020 Küresel Pandemi, 2021 Türk Lirası Kur Şoku, 2022 Jeopolitik & Emtia Şoku, 2023-2024 %50 Faiz & Parasal Sıkılaşma, 2018 Döviz Sıçraması.
 * **Kantitatif Stres Metrikleri:** Portföyün geçmiş kriz pencerelerindeki maksimum dip çöküşü (Max Drawdown), krizden toparlanma süresi (İş Günü), BIST 100 / Gram Altın / USD karşılaştırmalı getiri yörüngesi ve varlık bazlı şok kalkanı analizi.
 
-### 3. 💵 Akıllı Temettü & Pasif Gelir Nakit Akışı Matrisi
+### 7. 💵 Akıllı Temettü & Pasif Gelir Nakit Akışı Matrisi
 * **12 Aylık Dağıtım Takvimi:** Türk sermaye piyasaları ve fon dağıtım ritimlerine (Mart-Nisan temettü sezonu, üçer aylık kuponlar) göre aylık pasif nakit projeksiyonu.
 * **Ağırlıklı Temettü Verimi & DRIP:** Portföyün ağırlıklı temettü verimi (%), aylık ortalama pasif maaş ve temettülerin yeniden yatırıma yönlendirilmesi (DRIP - Dividend Reinvestment Plan) durumunda 10 yıllık ek bileşik sermaye katkısı.
 
-### 4. 📲 Progressive Web App (PWA) & Çevrimdışı Native Terminal
-* **Offline-First Mimari:** `sw.js` Service Worker önbelleklemesi ile internet bağlantısı kesildiğinde veya uçuş modunda dahi tüm analitik motorlar, 1.051 TEFAS fon veritabanı ve portföy hesaplamaları yerel olarak çalışır.
+### 8. 📲 Progressive Web App (PWA) & Çevrimdışı Native Terminal (v2.0)
+* **Offline-First Mimari:** `sw.js` Service Worker önbelleklemesi (`zenith-atlas-cache-v2.0.0`) ile internet bağlantısı kesildiğinde dahi tüm analitik motorlar, 1.051 TEFAS fon veritabanı ve portföy hesaplamaları yerel olarak çalışır.
 * **Masaüstü & Mobil Kurulum:** `manifest.webmanifest` desteğiyle Windows, macOS, Linux, iOS ve Android cihazlara bağımsız bir masaüstü/mobil uygulama olarak yüklenebilir.
 
-### 5. 💱 Çoklu Para Birimi & Reel Değerleme Motoru
+### 9. 💱 Çoklu Para Birimi & Reel Değerleme Motoru
 * **Desteklenen Birimler:** `TRY`, `USD`, `EUR`, `Gram Altın`.
-* Portföy büyüklüğünü, kâr/zarar durumunu ve varlık dağılımını döviz ve fiziki altın bazında anlık olarak hesaplar; portföyün reel satın alma gücünü izler.
+* Portföy büyüklüğünü, kar/zarar durumunu ve varlık dağılımını döviz ve fiziki altın bazında anlık olarak hesaplar; portföyün reel satın alma gücünü izler.
 
-### 6. ⚡ Stopaj ve Vergi Optimizasyonu Modülü
-* Güncel sermaye piyasası ve fon vergi mevzuatına uygun brüt/net getiri analizi.
-* Hisse senedi yoğun fonlar ve BIST hisselerinde geçerli %0 stopaj muafiyetinin net getiriye katkısını simüle eder ve portföy bazında vergi yükünü hesaplar.
+### 10. ⚡ Stopaj ve Vergi Optimizasyonu Modülü (2026 9075 Sayılı Karar Uyumlu)
+* 2026 resmi fon stopaj oranları (%7.5 / %10) ve GVK Geçici 67. Madde kapsamındaki %0 hisse senedi muafiyetiyle net getiri analizi.
 
-### 7. 🎯 Hedef Odaklı Varlık & Finansal Planlama Simülatörü
-* Düzenli birikim, beklenen bileşik getiri (CAGR) ve enflasyon düzeltmesi içeren hedef projeksiyon modelleri.
-* Finansal özgürlük (FIRE), gayrimenkul ve birikim hedefleri için tahmini vade ve sermaye eğrisi hesaplamaları.
+### 11. 🎯 Hedef Odaklı Varlık & Finansal Planlama Simülatörü
+* Düzenli birikim, beklenen bileşik getiri (CAGR) ve enflasyon düzeltmesi içeren FIRE ve gayrimenkul hedef projeksiyon modelleri.
 
-### 8. 🔔 Eşik & Fiyat Uyarı Sistemi
-* Canlı piyasa akışına entegre fiyat, getiri ve portföy eşik alarmları.
-* Hedef kur/fiyat seviyeleri ve günlük hareket sınırları için Web Audio API ve tarayıcı masaüstü bildirimleri desteği.
+### 12. 🔔 Eşik & Fiyat Uyarı Sistemi
+* Canlı piyasa akışına entegre fiyat, getiri ve portföy eşik alarmları (Web Audio API ve tarayıcı bildirimleri).
 
-### 9. 🖨️ Yönetici Portföy Özeti & A4/PDF Çıktısı
-* Varlık dağılımı, risk metrikleri (Sharpe, Sortino, VaR, Beta) ve performans tablolarını içeren, standart A4 yazdırma ve PDF aktarımına uygun kurumsal raporlama.
+### 13. 🖨 Yönetici Portföy Özeti & A4/PDF Çıktısı
+* Varlık dağılımı, risk metrikleri (Sharpe, Sortino, VaR, Beta) ve performans tablolarını içeren kurumsal raporlama.
 
-### 10. ⏱️ Piyasa ve Seans Takibi
-* Borsa İstanbul, TEFAS Fon İşlem Saatleri, ABD Borsaları (NYSE/NASDAQ), Serbest Piyasa ve Kripto piyasalarının seans açılış/kapanış zamanlarını gösteren dinamik durum göstergesi.
-
-### 11. ⚔️ TEFAS Fon Karşılaştırma Modülü
-* 1.051 TEFAS yatırım fonu arasından seçilen fonları fiyat, 1 yıllık getiri, yönetim ücreti, stopaj oranı, valör süresi ve risk kategorisi kriterlerine göre yan yana karşılaştırma.
-
-### 12. 📢 Makroekonomik Göstergeler & Resmî Bülten Paneli
-* TCMB Politika Faizi, SPK düzenlemeleri ve resmî duyuruları kaynak bağlantılarıyla birlikte gösteren makroekonomik bilgi paneli.
+### 14. ⚔ TEFAS Fon Karşılaştırma & Seans Takibi
+* 1.051 TEFAS yatırım fonu arasında çoklu karşılaştırma ve küresel borsa seans saatleri paneli.
 
 ---
 
@@ -117,7 +125,7 @@ Zenith-Atlas/
 
 ---
 
-## 🛡️ Güvenlik ve Gizlilik Prensipleri
+## 🛡 Güvenlik ve Gizlilik Prensipleri
 
 * **İstemci Taraflı Gizlilik (Zero Data Transmission):** Tüm portföy ve işlem verileri yalnızca kullanıcının yerel tarayıcısında (`localStorage`) tutulur; herhangi bir uzak sunucuya aktarılmaz.
 * **Content Security Policy (CSP):** Yalnızca tanımlı ve güvenli CDN/API kaynaklarına izin veren kısıtlayıcı güvenlik başlıkları.
@@ -127,7 +135,7 @@ Zenith-Atlas/
 
 ---
 
-## 👨‍💻 Geliştirici
+## 👨💻 Geliştirici
 
 **Çağrı Giray Keşan**  
 *Frontend-Heavy Full-Stack Engineer | AI Intern @ Microsoft*  

@@ -128,7 +128,7 @@
     },
     "harem": {
       "title": "Kapalıçarşı & Harem Altın",
-      "sourceLabel": "🏛️ Kaynak: canlipiyasalar.haremaltin.com Canlı Akış",
+      "sourceLabel": "🏛 Kaynak: canlipiyasalar.haremaltin.com Canlı Akış",
       "items": {
         "GA": {
           "key": "GA",
@@ -210,7 +210,7 @@
         },
         "YENI_ATA": {
           "key": "YENI_ATA",
-          "flag": "🎖️",
+          "flag": "🎖",
           "code": "Yeni Ata",
           "name": "Yeni Ata / Cumhuriyet",
           "buying": 44819.337085,

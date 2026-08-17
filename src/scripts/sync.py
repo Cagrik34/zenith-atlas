@@ -342,7 +342,7 @@ def fetch_and_update_real_markets(target_dirs):
         'ESKI_CEYREK': { 'key': 'ESKI_CEYREK', 'flag': '🪙', 'code': 'Eski Çeyrek', 'name': 'Eski Çeyrek Altın', 'buying': ce_b, 'selling': ce_s, 'rate': ce_s, 'changePct': ce_c, 'decimals': 2, 'unit': '₺/adet', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
         'YARIM_YENI': { 'key': 'YARIM_YENI', 'flag': '🌗', 'code': 'Yeni Yarım', 'name': 'Yeni Yarım Altın', 'buying': yy_b, 'selling': yy_s, 'rate': yy_s, 'changePct': yy_c, 'decimals': 2, 'unit': '₺/adet', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
         'YENI_TAM': { 'key': 'YENI_TAM', 'flag': '🌕', 'code': 'Yeni Tam', 'name': 'Yeni Tam / Ziynet', 'buying': ty_b, 'selling': ty_s, 'rate': ty_s, 'changePct': ty_c, 'decimals': 2, 'unit': '₺/adet', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
-        'YENI_ATA': { 'key': 'YENI_ATA', 'flag': '🎖️', 'code': 'Yeni Ata', 'name': 'Yeni Ata / Cumhuriyet', 'buying': ay_b, 'selling': ay_s, 'rate': ay_s, 'changePct': ay_c, 'decimals': 2, 'unit': '₺/adet', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
+        'YENI_ATA': { 'key': 'YENI_ATA', 'flag': '🎖', 'code': 'Yeni Ata', 'name': 'Yeni Ata / Cumhuriyet', 'buying': ay_b, 'selling': ay_s, 'rate': ay_s, 'changePct': ay_c, 'decimals': 2, 'unit': '₺/adet', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
         'BILEZIK22': { 'key': 'BILEZIK22', 'flag': '💍', 'code': '22 Ayar', 'name': '22 Ayar Bilezik', 'buying': b22_b, 'selling': b22_s, 'rate': b22_s, 'changePct': b22_c, 'decimals': 2, 'unit': '₺/gr', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
         'AYAR14': { 'key': 'AYAR14', 'flag': '💍', 'code': '14 Ayar', 'name': '14 Ayar Altın', 'buying': a14_b, 'selling': a14_s, 'rate': a14_s, 'changePct': a14_c, 'decimals': 2, 'unit': '₺/gr', 'source': 'canlidoviz.com / Harem Altın Canlı Akış' },
         'ONS': { 'key': 'ONS', 'flag': '🏆', 'code': 'Ons Altın', 'name': 'Spot Ons Altın', 'buying': ons_b, 'selling': ons_s, 'rate': ons_s, 'changePct': ons_c, 'decimals': 2, 'unit': '$/oz', 'source': 'Spot Uluslararası Piyasa' },
@@ -391,7 +391,7 @@ def fetch_and_update_real_markets(target_dirs):
         'lastUpdate': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
         'categories': {
             'featured': { 'title': 'Özet & Öne Çıkanlar', 'sourceLabel': '⭐ Canlı Çoklu Piyasa Akışı', 'items': featured_items },
-            'harem': { 'title': 'Kapalıçarşı & Harem Altın', 'sourceLabel': '🏛️ Kaynak: canlipiyasalar.haremaltin.com Canlı Akış', 'items': harem_items },
+            'harem': { 'title': 'Kapalıçarşı & Harem Altın', 'sourceLabel': '🏛 Kaynak: canlipiyasalar.haremaltin.com Canlı Akış', 'items': harem_items },
             'bigpara': { 'title': 'Bigpara & Döviz', 'sourceLabel': '🌐 Kaynak: Bigpara / Bankalararası Döviz Piyasası', 'items': bigpara_items },
             'bist': {
                 'title': 'Borsa İstanbul (BIST)',
@@ -440,10 +440,10 @@ def parse_args():
 
 def sync_macro_news(target_dirs):
     """
-    TCMB, SPK, Resmî Gazete ve KAP resmî makroekonomi bültenlerini ve politika faizi
+    TCMB, SPK, Resmi Gazete ve KAP resmi makroekonomi bültenlerini ve politika faizi
     verilerini senkronize eder, news.json ve news.js dosyalarını günceller.
     """
-    print("[*] Makroekonomi & Resmî Politika Bültenleri (TCMB/SPK/KAP) senkronize ediliyor...")
+    print("[*] Makroekonomi & Resmi Politika Bültenleri (TCMB/SPK/KAP) senkronize ediliyor...")
     now_iso = datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat()
     
     news_data = {
@@ -462,8 +462,8 @@ def sync_macro_news(target_dirs):
                 "generalRate": 7.50,
                 "equityRate": 0.00,
                 "fxRate": 10.00,
-                "decree": "Cumhurbaşkanı Kararı (Resmî Gazete)",
-                "source": "Gelir İdaresi Başkanlığı / Resmî Gazete",
+                "decree": "Cumhurbaşkanı Kararı (Resmi Gazete)",
+                "source": "Gelir İdaresi Başkanlığı / Resmi Gazete",
                 "sourceUrl": "https://www.resmigazete.gov.tr"
             },
             "bistCircuitBreaker": {
@@ -488,7 +488,7 @@ def sync_macro_news(target_dirs):
                 "title": "TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti",
                 "summary": "Para Politikası Kurulu, politika faizi olan bir hafta vadeli repo ihale faiz oranının %50 düzeyinde sabit tutulmasına karar vermiştir. Kurul, enflasyon beklentileri ve fiyatlama davranışlarını yakından izlemektedir.",
                 "date": datetime.date.today().strftime('%d.%m.%Y'),
-                "source": "TCMB Resmî Duyuru",
+                "source": "TCMB Resmi Duyuru",
                 "sourceUrl": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin/2026",
                 "badge": "badge-primary",
                 "impact": "high",
@@ -501,7 +501,7 @@ def sync_macro_news(target_dirs):
                 "title": "Yatırım Fonlarında Stopaj Oranları ve Teşvik Düzenlemeleri",
                 "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında stopaj oranı %7,5 olarak uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
                 "date": datetime.date.today().strftime('%d.%m.%Y'),
-                "source": "Resmî Gazete & GİB",
+                "source": "Resmi Gazete & GİB",
                 "sourceUrl": "https://www.resmigazete.gov.tr",
                 "badge": "badge-success",
                 "impact": "high",
@@ -544,7 +544,7 @@ def sync_macro_news(target_dirs):
             
             js_file = d / 'news.js'
             with open(js_file, 'w', encoding='utf-8') as f:
-                f.write(f"// Zenith Atlas - Makroekonomi & Resmî Politika Bültenleri Çevrimdışı Verisi\nwindow.ZENITH_MACRO_NEWS = {json.dumps(news_data, ensure_ascii=False, indent=2)};\n")
+                f.write(f"// Zenith Atlas - Makroekonomi & Resmi Politika Bültenleri Çevrimdışı Verisi\nwindow.ZENITH_MACRO_NEWS = {json.dumps(news_data, ensure_ascii=False, indent=2)};\n")
             print(f"[+] {json_file.name} ve {js_file.name} başarıyla güncellendi.")
         except Exception as e:
             print(f"[!] Makro bülten kaydetme hatası ({d}): {e}")

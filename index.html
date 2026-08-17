@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.socket.io https://cdn.jsdelivr.net https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' wss://s.canlidoviz.com https://s.canlidoviz.com https://canlidoviz.com https://a.canlidoviz.com wss://hrmsocketonly.haremaltin.com https://finans.truncgil.com https://query1.finance.yahoo.com https://canlipiyasalar.haremaltin.com; img-src 'self' data: https:; object-src 'none'; base-uri 'self';">
-    <meta name="description" content="Zenith Atlas - Evrensel Çoklu Varlık Portföy Yönetimi, Canlı Saliselik Piyasa Akışı ve Finansal Zekâ Terminali (Hisse, Fon, Altın, Döviz, Kripto)">
+    <meta name="description" content="Zenith Atlas - Evrensel Çoklu Varlık Portföy Yönetimi, Canlı Saliselik Piyasa Akışı ve Finansal Zeka Terminali (Hisse, Fon, Altın, Döviz, Kripto)">
     <meta name="theme-color" content="#0F172A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Zenith Atlas">
-    <title>Zenith Atlas - Evrensel Çoklu Varlık & Finansal Zekâ Terminali</title>
+    <title>Zenith Atlas - Evrensel Çoklu Varlık & Finansal Zeka Terminali</title>
     
     <!-- Open Graph / Meta -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Zenith Atlas - Evrensel Çoklu Varlık & Finansal Zekâ Terminali">
+    <meta property="og:title" content="Zenith Atlas - Evrensel Çoklu Varlık & Finansal Zeka Terminali">
     <meta property="og:description" content="Hisse Senetleri (BIST/US), 1.051 Yatırım Fonu, Kapalıçarşı Altın/Gümüş ve Döviz piyasalarını tek çatı altında birleştiren kurumsal finans terminali.">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Zenith Atlas - Evrensel Finansal Terminal">
-    <meta name="twitter:description" content="Çoklu varlık portföy yönetimi, canlı saliselik WebSocket akışı ve kurumsal finansal zekâ motoru.">
+    <meta name="twitter:description" content="Çoklu varlık portföy yönetimi, canlı saliselik WebSocket akışı ve kurumsal finansal zeka motoru.">
     <meta name="keywords" content="zenith atlas, finans terminali, portföy yönetimi, hisse senedi, borsa istanbul, tefas fonları, altın, döviz, monte carlo, quant analizi">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -80,7 +80,7 @@
                     <span>🔔</span> <span class="alerts-badge-count" id="alertsActiveBadge" style="display:none;">0</span>
                 </button>
                 <button class="btn btn-ghost" id="openExecutiveReportBtn" title="Tek Tıkla Kurumsal Yatırımcı Bülteni & A4 PDF">
-                    <span>🖨️</span> Rapor
+                    <span>🖨</span> Rapor
                 </button>
                 <button class="btn btn-ghost" id="refreshPrices" title="Fiyatları Güncelle">
                     <span>🔄</span> Güncelle
@@ -122,7 +122,7 @@
                             <span>⭐</span> Özet / Öne Çıkanlar
                         </button>
                         <button class="market-tab-pill" data-category="harem">
-                            <span>🏛️</span> Kapalıçarşı (Harem Altın)
+                            <span>🏛</span> Kapalıçarşı (Harem Altın)
                         </button>
                         <button class="market-tab-pill" data-category="bigpara">
                             <span>🌐</span> Bigpara & Döviz
@@ -172,10 +172,13 @@
 
                 <!-- Active Dashboard View (shown when portfolio has funds) -->
                 <div id="dashboardActiveView">
+                    <!-- Portfolio Profile Switcher (Multi-Portfolio & BES Workspace) -->
+                    <div class="portfolio-profile-switcher-container" id="portfolioProfileSwitcherContainer"></div>
+
                     <!-- Terminal Workspace Switcher Bar -->
                     <div class="workspace-switcher-bar" id="workspaceSwitcherBar">
                         <div class="workspace-title">
-                            <span class="workspace-icon">🖥️</span>
+                            <span class="workspace-icon">🖥</span>
                             <span class="workspace-label">Çalışma Alanı:</span>
                         </div>
                         <div class="workspace-pills-group" id="workspacePillsGroup">
@@ -186,7 +189,7 @@
                                 <span>🧮</span> Quant & Risk
                             </button>
                             <button class="ws-pill-btn" data-workspace="settlement-desk" id="ws-btn-settlement-desk">
-                                <span>⏱️</span> Nakit & Valör
+                                <span>⏱</span> Nakit & Valör
                             </button>
                             <button class="ws-pill-btn" data-workspace="tax-lab" id="ws-btn-tax-lab">
                                 <span>⚡</span> Stopaj & Net Kazanç
@@ -252,7 +255,7 @@
                         </div>
                     </div>
                     <div class="card summary-card card-glow-orange" id="card-riskScore">
-                        <div class="card-icon">🛡️</div>
+                        <div class="card-icon">🛡</div>
                         <div class="card-content">
                             <span class="card-label">Portföy Risk Skoru</span>
                             <span class="card-value" id="riskScoreDisplay">0/7</span>
@@ -321,7 +324,7 @@
                 <div class="charts-grid">
                     <div class="card chart-card">
                         <div class="card-header">
-                            <h3>⚖️ Maliyet vs Güncel Fiyat</h3>
+                            <h3>⚖ Maliyet vs Güncel Fiyat</h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="costVsCurrentChart"></canvas>
@@ -329,7 +332,7 @@
                     </div>
                     <div class="card chart-card">
                         <div class="card-header">
-                            <h3>🛡️ Risk Dağılımı</h3>
+                            <h3>🛡 Risk Dağılımı</h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="riskChart"></canvas>
@@ -378,7 +381,7 @@
                             </div>
                         </div>
                         <div class="mc-kpi-card mc-kpi-var">
-                            <div class="mc-kpi-icon">🛡️</div>
+                            <div class="mc-kpi-icon">🛡</div>
                             <div class="mc-kpi-info">
                                 <span class="mc-kpi-label">Parametrik VaR (%95 Güven)</span>
                                 <span class="mc-kpi-val" id="mcVarDisplay">₺0,00</span>
@@ -428,7 +431,7 @@
                         <div class="stress-overall-badge" id="stressResilienceBadge">
                             <span class="resilience-label">Genel Şok Direnci</span>
                             <span class="resilience-score" id="stressScoreDisplay">8.4 / 10</span>
-                            <span class="resilience-tag" id="stressTagDisplay">🛡️ Yüksek Kalkan</span>
+                            <span class="resilience-tag" id="stressTagDisplay">🛡 Yüksek Kalkan</span>
                         </div>
                     </div>
 
@@ -491,7 +494,7 @@
                                     <strong id="mkCurrentReturn">%0,0</strong>
                                 </div>
                                 <div class="mk-metric-row">
-                                    <span>Yıllık Volatilite (σ):</span>
+                                    <span>Yıllık Volatilite (Sigma):</span>
                                     <strong id="mkCurrentVol">%0,0</strong>
                                 </div>
                                 <div class="mk-metric-row">
@@ -511,7 +514,7 @@
                                     <strong id="mkOptimalReturn" class="text-cyan">%0,0</strong>
                                 </div>
                                 <div class="mk-metric-row">
-                                    <span>Yıllık Volatilite (σ):</span>
+                                    <span>Yıllık Volatilite (Sigma):</span>
                                     <strong id="mkOptimalVol" class="text-cyan">%0,0</strong>
                                 </div>
                                 <div class="mk-metric-row">
@@ -523,7 +526,7 @@
 
                         <div class="markowitz-kpi-card kpi-minvar">
                             <div class="mk-kpi-header">
-                                <span class="mk-badge badge-minvar">🛡️ Minimum Varyans (En Düşük Risk)</span>
+                                <span class="mk-badge badge-minvar">🛡 Minimum Varyans (En Düşük Risk)</span>
                             </div>
                             <div class="mk-kpi-metrics">
                                 <div class="mk-metric-row">
@@ -531,7 +534,7 @@
                                     <strong id="mkMinVolReturn" class="text-emerald">%0,0</strong>
                                 </div>
                                 <div class="mk-metric-row">
-                                    <span>Yıllık Volatilite (σ):</span>
+                                    <span>Yıllık Volatilite (Sigma):</span>
                                     <strong id="mkMinVolVol" class="text-emerald">%0,0</strong>
                                 </div>
                                 <div class="mk-metric-row">
@@ -550,6 +553,60 @@
                     <!-- Optimal Weights Table & Comparison -->
                     <div class="markowitz-weights-container" id="markowitzWeightsContainer">
                         <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <!-- Performance Attribution & FX vs Asset Alpha Decomposition Section -->
+                <div class="card fx-attribution-card" id="fxAttributionSection">
+                    <div class="card-header fx-att-header">
+                        <div class="fx-att-title-group">
+                            <div class="fx-att-icon-badge">💱</div>
+                            <div>
+                                <h3>Kur Kazancı vs. Reel Varlık Getirisi Ayrıştırma Masası (FX Attribution Engine)</h3>
+                                <p class="fx-att-sub">Yabancı hisse ve emtia fonlarında toplam karın ne kadarının Dolar (USD/TRY) kurundan, ne kadarının varlığın reel getirisinden (Alfa) kaynaklandığını ayrıştırır.</p>
+                            </div>
+                        </div>
+                        <div class="fx-att-badge" id="fxAttPortfolioBadge">
+                            <span>🌍 Dolar / Kur Hassasiyeti: </span><strong id="fxAttSensitivityVal">%0</strong>
+                        </div>
+                    </div>
+
+                    <!-- FX Attribution KPI Row -->
+                    <div class="fx-att-kpi-grid">
+                        <div class="fx-att-kpi-card">
+                            <div class="fx-kpi-title">💵 Toplam Portföy Kur Katkısı</div>
+                            <div class="fx-kpi-val" id="fxTotalGainTL">₺0,00</div>
+                            <div class="fx-kpi-sub" id="fxTotalGainPct">+%0,00 Dolar/Döviz Etkisi</div>
+                        </div>
+                        <div class="fx-att-kpi-card">
+                            <div class="fx-kpi-title">🚀 Toplam Portföy Reel Varlık Katkısı (Alfa)</div>
+                            <div class="fx-kpi-val" id="fxTotalRealAssetGainTL">₺0,00</div>
+                            <div class="fx-kpi-sub" id="fxTotalRealAssetGainPct">+%0,00 Reel Piyasa Artışı</div>
+                        </div>
+                        <div class="fx-att-kpi-card">
+                            <div class="fx-kpi-title">⚖ Kur vs. Reel Varlık Oranı</div>
+                            <div class="fx-kpi-val" id="fxRatioDisplay">%50 / %50</div>
+                            <div class="fx-kpi-sub">Döviz Kalkanı / Reel Büyüme</div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Attribution Table -->
+                    <div class="table-wrapper fx-att-table-container">
+                        <table class="fx-att-table" id="fxAttributionTable">
+                            <thead>
+                                <tr>
+                                    <th>Fon Kodu & Varlık</th>
+                                    <th>Kategori</th>
+                                    <th>Toplam Kar / Zarar</th>
+                                    <th>Kur Katkısı (USD/TRY)</th>
+                                    <th>Reel Varlık Katkısı (Alfa)</th>
+                                    <th>Ayrıştırma Dağılımı</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fxAttributionTableBody">
+                                <!-- Dynamically rendered -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -587,7 +644,7 @@
                     <!-- Valör Info (Hidden by default) -->
                     <div class="valor-info hidden" id="valorInfoPanel">
                         <div class="card-header" style="margin-top:16px;">
-                            <h4>⏱️ Valör Süreleri ve Detaylar</h4>
+                            <h4>⏱ Valör Süreleri ve Detaylar</h4>
                         </div>
                         <div class="table-wrapper">
                             <table id="valorTable">
@@ -615,7 +672,7 @@
                 <div class="card valor-timeline-card" id="valorTimelineCard">
                     <div class="card-header timeline-header">
                         <div class="timeline-header-title">
-                            <div class="timeline-icon-badge">⏱️</div>
+                            <div class="timeline-icon-badge">⏱</div>
                             <div>
                                 <h3>Görsel Valör & Nakit Akışı Zaman Çizelgesi</h3>
                                 <p class="timeline-header-sub">Emirlerin gerçekleşme günleri, T+X takas süreci ve net serbest nakit projeksiyonu</p>
@@ -670,13 +727,13 @@
                             <h3>⚡ Stopaj & Net Getiri Optimizasyon Laboratuvarı</h3>
                             <span class="badge badge-success" id="taxShieldBadge">%0 Stopaj Kalkanı Aktif</span>
                         </div>
-                        <span class="card-subtitle-note">2026 Resmî Vergi Mevzuatı: Hisse senedi yoğun fonlar %0 stopaj muafiyetine tabidir.</span>
+                        <span class="card-subtitle-note">2026 Resmi Vergi Mevzuatı: Hisse senedi yoğun fonlar %0 stopaj muafiyetine tabidir.</span>
                     </div>
 
                     <!-- Tax KPI Summary Grid -->
                     <div class="tax-kpi-grid">
                         <div class="tax-kpi-card">
-                            <span class="tax-kpi-label">Toplam Brüt Kâr</span>
+                            <span class="tax-kpi-label">Toplam Brüt Kar</span>
                             <span class="tax-kpi-val" id="taxGrossProfitVal">₺0,00</span>
                             <span class="tax-kpi-sub">Vergi öncesi getiri</span>
                         </div>
@@ -686,7 +743,7 @@
                             <span class="tax-kpi-sub" id="taxEffectiveRateSub">Ort. Stopaj: %0,0</span>
                         </div>
                         <div class="tax-kpi-card success">
-                            <span class="tax-kpi-label">Net Ele Geçen Kâr</span>
+                            <span class="tax-kpi-label">Net Ele Geçen Kar</span>
                             <span class="tax-kpi-val" id="taxNetProfitVal">₺0,00</span>
                             <span class="tax-kpi-sub">Net realize edilebilir getiri</span>
                         </div>
@@ -705,7 +762,7 @@
                                     <th>Varlık / Fon</th>
                                     <th>Kategori</th>
                                     <th>Stopaj Oranı</th>
-                                    <th>Brüt Kâr/Zarar</th>
+                                    <th>Brüt Kar/Zarar</th>
                                     <th>Vergi Kesintisi</th>
                                     <th>Net Ele Geçen</th>
                                     <th>Durum / Kalkan</th>
@@ -740,7 +797,7 @@
                             <span>🏠</span> Ev Peşinatı (₺2.5M)
                         </button>
                         <button class="goal-preset-btn" data-target="10000000" data-name="Finansal Özgürlük (FIRE)">
-                            <span>🏖️</span> FIRE Özgürlük (₺10M)
+                            <span>🏖</span> FIRE Özgürlük (₺10M)
                         </button>
                         <button class="goal-preset-btn" data-target="1500000" data-name="Yeni Araç">
                             <span>🚗</span> Yeni Araç (₺1.5M)
@@ -773,7 +830,7 @@
                     <!-- Goal Results KPI & Progress Banner -->
                     <div class="goal-result-banner" id="goalResultBanner">
                         <div class="goal-result-left">
-                            <div class="goal-result-time" id="goalTimeText">⏱️ 1 Yıl 8 Ay</div>
+                            <div class="goal-result-time" id="goalTimeText">⏱ 1 Yıl 8 Ay</div>
                             <div class="goal-result-date" id="goalDateText">Tahmini Ulaşma Tarihi: Nisan 2028</div>
                         </div>
                         <div class="goal-progress-wrapper">
@@ -870,7 +927,7 @@
                 <div class="card compare-card" id="fundCompareCard">
                     <div class="card-header">
                         <div class="header-with-badge">
-                            <h3>⚔️ Fon Karşılaştırma Masası (Head-to-Head)</h3>
+                            <h3>⚔ Fon Karşılaştırma Masası (Head-to-Head)</h3>
                             <span class="badge badge-info">2-3 Fon Karşılaştırma</span>
                         </div>
                         <div class="compare-controls" id="compareControls">
@@ -921,10 +978,10 @@
                                 <span>🎯</span> <strong>Akıllı Tarama (Screener):</strong>
                             </div>
                             <div class="screener-chips-group" id="screenerChipsGroup">
-                                <button class="screener-chip" data-preset="tax-free">🛡️ %0 Stopaj Muaf</button>
+                                <button class="screener-chip" data-preset="tax-free">🛡 %0 Stopaj Muaf</button>
                                 <button class="screener-chip" data-preset="high-alpha">🚀 Yüksek Getiri (1Y > %70)</button>
                                 <button class="screener-chip" data-preset="liquid-t0">💧 T+0 Likit</button>
-                                <button class="screener-chip" data-preset="low-fee">🏷️ Düşük Ücret (< %1.5)</button>
+                                <button class="screener-chip" data-preset="low-fee">🏷 Düşük Ücret (< %1.5)</button>
                                 <button class="screener-chip" data-preset="global-tech">🌐 Global Teknoloji</button>
                             </div>
                             <div class="screener-sort-wrapper">
@@ -1011,7 +1068,7 @@
                             <div style="display:flex; gap:6px;">
                                 <button class="btn btn-sm btn-ghost" id="exportBackupBtn" title="Portföyü JSON Olarak Yedekle">💾 Yedekle</button>
                                 <button class="btn btn-sm btn-ghost" id="importBackupBtn" title="JSON Yedeğini İçe Aktar">📂 Yedeği Yükle</button>
-                                <button class="btn btn-sm btn-ghost" id="clearAllFundsBtn" title="Tüm portföyü sıfırla">🗑️ Sıfırla</button>
+                                <button class="btn btn-sm btn-ghost" id="clearAllFundsBtn" title="Tüm portföyü sıfırla">🗑 Sıfırla</button>
                             </div>
                         </div>
                         <div id="managedFundsList">
@@ -1040,7 +1097,7 @@
                                 <span class="ai-hardware-tag" id="aiHardwareStatus">⚡ WebGPU & Quant Engine</span>
                             </div>
                             <h2>Akıllı Portföy & Risk Analisti</h2>
-                            <p>Deterministik finansal modelleme (Quant Core) ve tarayıcı içi yapay zekâ senteziyle portföyünüzü derinlemesine değerlendirin.</p>
+                            <p>Deterministik finansal modelleme (Quant Core) ve tarayıcı içi yapay zeka senteziyle portföyünüzü derinlemesine değerlendirin.</p>
                         </div>
                         <div class="ai-header-actions">
                             <button class="btn btn-primary" id="generateAiReportBtn" title="Hızlı Deterministik Finansal Analiz">
@@ -1048,6 +1105,12 @@
                             </button>
                             <button class="btn btn-secondary" id="generateDeepNeuralBtn" title="Tarayıcı İçi Donanım Hızlandırmalı Sinirsel Makro Değerlendirme">
                                 <span>🧠</span> Derin Sinirsel Analiz (WebGPU)
+                            </button>
+                            <button class="btn btn-primary" id="generateLlmReportBtn" style="background: linear-gradient(135deg, #8B5CF6, #EC4899); border:none;" title="Canlı Claude 3.5 Sonnet / GPT-4o ile Derin Rapor Üret">
+                                <span>🤖</span> Canlı LLM Analisti (BYOK)
+                            </button>
+                            <button class="btn btn-ghost" id="openByokSettingsBtn" title="Kendi Claude / GPT / Gemini API Anahtarını Bağla">
+                                <span>⚙</span> BYOK Ayarları
                             </button>
                         </div>
                     </div>
@@ -1085,8 +1148,8 @@
 
                 <footer class="app-footer">
             <div class="footer-left">
-                <span>Zenith Atlas © 2026</span>
-                <span class="footer-separator">•</span>
+                <span>Zenith Atlas (c) 2026</span>
+                <span class="footer-separator">-</span>
                 <span class="footer-disclaimer">Bu uygulama yatırım tavsiyesi niteliği taşımaz. Veriler yalnızca bilgi amaçlıdır.</span>
             </div>
             <div class="footer-right">
@@ -1117,7 +1180,7 @@
                 <button class="modal-close" id="closeAiDownloadModal">✕</button>
             </div>
             <div class="modal-body">
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">Yapay zekâ analiz raporunu hangi formatta kaydetmek istersiniz?</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">Yapay zeka analiz raporunu hangi formatta kaydetmek istersiniz?</p>
                 <div class="download-format-options">
                     <button class="format-choice-btn" id="downloadPdfChoice">
                         <span class="format-icon">📄</span>
@@ -1153,7 +1216,7 @@
         <div class="modal modal-lg">
             <div class="modal-header">
                 <div class="modal-title-group">
-                    <span class="modal-icon">⏱️</span>
+                    <span class="modal-icon">⏱</span>
                     <h3>Piyasa & Borsa Seans Saatleri Hub</h3>
                 </div>
                 <button class="modal-close" id="closeMarketSessionsModal">&times;</button>
@@ -1164,7 +1227,7 @@
                 </div>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="modal-footer-note" style="font-size:0.75rem; color:var(--text-tertiary);">⚡ Takasbank TEFAS, Borsa İstanbul (BIST), NYSE/NASDAQ (Midas) ve Kapalıçarşı resmî seans kurallarıyla tam senkronizedir.</span>
+                <span class="modal-footer-note" style="font-size:0.75rem; color:var(--text-tertiary);">⚡ Takasbank TEFAS, Borsa İstanbul (BIST), NYSE/NASDAQ (Midas) ve Kapalıçarşı resmi seans kurallarıyla tam senkronizedir.</span>
                 <button class="btn btn-secondary" id="dismissMarketSessionsModal">Kapat</button>
             </div>
         </div>
@@ -1245,7 +1308,7 @@
         <div class="modal modal-lg" style="max-width: 860px;">
             <div class="modal-header">
                 <div class="modal-title-group">
-                    <span class="modal-icon">🖨️</span>
+                    <span class="modal-icon">🖨</span>
                     <h3>Kurumsal Yatırımcı Bülteni & Yönetici Özeti</h3>
                 </div>
                 <button class="modal-close" id="closeExecutiveReportModal">&times;</button>
@@ -1255,7 +1318,7 @@
             </div>
             <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
                 <button class="btn btn-primary" id="printExecutivePdfBtn">
-                    <span>🖨️</span> Yazdır / PDF Olarak Kaydet (A4)
+                    <span>🖨</span> Yazdır / PDF Olarak Kaydet (A4)
                 </button>
                 <button class="btn btn-secondary" id="dismissExecutiveReportModal">Kapat</button>
             </div>
@@ -1297,6 +1360,97 @@
             </div>
             <div class="modal-footer" style="display: flex; justify-content: flex-end;">
                 <button class="btn btn-ghost" id="importModalCancelBtn">Vazgeç</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Portfolio / BES Profile Modal -->
+    <div class="modal-overlay" id="createProfileModal">
+        <div class="modal modal-md" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">💼</span>
+                    <h3>Yeni Portföy / BES Hesabı Oluştur</h3>
+                </div>
+                <button class="modal-close" id="closeCreateProfileModal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" for="newProfileNameInput">Portföy / Hesap Adı</label>
+                    <input type="text" id="newProfileNameInput" class="form-input" placeholder="Örn: BES & Emeklilik Fonları, Temettü Portföyüm" maxlength="40">
+                </div>
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label class="form-label" for="newProfileIconSelect">İkon / Simge</label>
+                        <select id="newProfileIconSelect" class="form-select">
+                            <option value="💼">💼 Standart Portföy</option>
+                            <option value="🛡">🛡 BES / Emeklilik</option>
+                            <option value="💵">💵 Temettü & Gelir</option>
+                            <option value="🚀">🚀 Büyüme & Teknoloji</option>
+                            <option value="🥇">🥇 Altın & Emtia</option>
+                            <option value="⚡">⚡ Kısa Vade Al-Sat</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; justify-content: center; padding-top: 14px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer;">
+                            <input type="checkbox" id="newProfileIsBesCheck" style="width: 18px; height: 18px; accent-color: var(--accent-primary);">
+                            <span>BES Hesabı Olarak İşaretle</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="background: rgba(99, 102, 241, 0.06); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-md); padding: 12px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                    💡 Yeni portföy oluşturulduğunda tamamen bağımsız bir varlık tablosuna, nakit havuzuna ve Markowitz risk optimizasyonuna sahip olur.
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-ghost" id="dismissCreateProfileModal">Vazgeç</button>
+                <button class="btn btn-primary" id="saveNewProfileBtn"><span>➕</span> Portföyü Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zenith AI BYOK (Bring Your Own Key) Settings Modal -->
+    <div class="modal-overlay" id="byokSettingsModal">
+        <div class="modal modal-md" style="max-width: 520px;">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">🤖</span>
+                    <h3>Zenith AI - BYOK Model & API Ayarları</h3>
+                </div>
+                <button class="modal-close" id="closeByokSettingsModal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
+                    🔒 <strong>%100 İstemci Taraflı Gizlilik:</strong> API anahtarınız hiçbir sunucuya gönderilmez; yalnızca kendi tarayıcınızın yerel hafızasında saklanır. Tüm analiz istekleri doğrudan tarayıcınızdan resmi yapay zeka sağlayıcısına şifreli HTTPS ile iletilir.
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="byokProviderSelect">Yapay Zeka Sağlayıcısı</label>
+                    <select id="byokProviderSelect" class="form-select">
+                        <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Haiku)</option>
+                        <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+                        <option value="gemini">Google Gemini (Gemini 1.5 Pro / Flash)</option>
+                        <option value="groq">Groq (Llama 3.3 70B - Ultra Hızlı)</option>
+                        <option value="deepseek">DeepSeek (DeepSeek-V3 / R1)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="byokApiKeyInput">API Anahtarı (API Key)</label>
+                    <input type="password" id="byokApiKeyInput" class="form-input" placeholder="sk-ant-... veya sk-proj-..." autocomplete="off">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" for="byokModelInput">Model Tanımı</label>
+                    <input type="text" id="byokModelInput" class="form-input" placeholder="claude-3-5-sonnet-20241022">
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn btn-ghost text-danger" id="clearByokKeyBtn" style="font-size: 0.8rem;">Anahtarı Sil</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-ghost" id="dismissByokSettingsModal">Vazgeç</button>
+                    <button class="btn btn-primary" id="saveByokSettingsBtn">💾 Kaydet & Aktifleştir</button>
+                </div>
             </div>
         </div>
     </div>

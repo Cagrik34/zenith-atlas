@@ -682,7 +682,120 @@ h4 { font-size: 1rem; font-weight: 600; }
 
 /* ==========================================================================
    Terminal Workspace Switcher & View Modes Styles
+/* ==========================================================================
+   Multi-Portfolio & BES Workspace Profiles Styles
    ========================================================================== */
+
+.portfolio-profile-switcher-container {
+    margin-bottom: var(--space-md);
+}
+
+.profile-switcher-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: rgba(99, 102, 241, 0.04);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: var(--radius-lg);
+    padding: 8px 14px;
+}
+
+.profile-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.profile-pill-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-full, 9999px);
+    padding: 5px 12px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.profile-pill-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.profile-pill-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+    border-color: rgba(99, 102, 241, 0.5);
+    color: #FFFFFF;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+}
+
+.profile-pill-icon {
+    font-size: 0.95rem;
+}
+
+.profile-pill-badge {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+.profile-pill-btn.active .profile-pill-badge {
+    background: var(--accent-primary);
+    color: #FFFFFF;
+}
+
+.profile-pill-add-btn {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full, 9999px);
+    padding: 5px 12px;
+    color: var(--text-tertiary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.profile-pill-add-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.profile-consolidated-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-full, 9999px);
+    padding: 4px 12px;
+}
+
+.consolidated-label {
+    color: var(--text-secondary);
+}
+
+.consolidated-val {
+    color: var(--success);
+    font-family: var(--font-mono, monospace);
+    font-weight: 700;
+}
 
 .workspace-switcher-bar {
     display: flex;
@@ -5563,6 +5676,120 @@ tfoot td {
 
 .text-purple {
     color: #A855F7 !important;
+}
+
+/* ==========================================================================
+   FX Attribution Engine Styles (Kur vs. Reel Varlık Ayrıştırması)
+   ========================================================================== */
+
+.fx-attribution-card {
+    margin-bottom: var(--space-xl);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.fx-att-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.fx-att-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fx-att-icon-badge {
+    font-size: 1.5rem;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: var(--radius-md);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fx-att-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.fx-att-badge {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: var(--radius-full, 9999px);
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.fx-att-badge strong {
+    color: #60A5FA;
+}
+
+.fx-att-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-md);
+    margin: var(--space-md) 0 var(--space-lg) 0;
+}
+
+.fx-att-kpi-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fx-kpi-title {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.fx-kpi-val {
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-family: var(--font-mono, monospace);
+    color: var(--text-primary);
+}
+
+.fx-kpi-sub {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+.fx-att-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+}
+
+.fx-att-table th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fx-att-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+
+.fx-att-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
 }
 
 
