@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.socket.io https://cdn.jsdelivr.net https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' wss://s.canlidoviz.com https://s.canlidoviz.com https://canlidoviz.com https://a.canlidoviz.com wss://hrmsocketonly.haremaltin.com https://finans.truncgil.com https://query1.finance.yahoo.com https://canlipiyasalar.haremaltin.com; img-src 'self' data: https:; object-src 'none'; base-uri 'self';">
+    <meta name="description" content="Zenith Atlas - Evrensel Çoklu Varlık Portföy Yönetimi, Canlı Saliselik Piyasa Akışı ve Finansal Zekâ Terminali (Hisse, Fon, Altın, Döviz, Kripto)">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zenith Atlas">
+    <title>Zenith Atlas – Evrensel Çoklu Varlık & Finansal Zekâ Terminali</title>
+    
+    <!-- Open Graph / Meta -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Zenith Atlas – Evrensel Çoklu Varlık & Finansal Zekâ Terminali">
+    <meta property="og:description" content="Hisse Senetleri (BIST/US), 1.051 Yatırım Fonu, Kapalıçarşı Altın/Gümüş ve Döviz piyasalarını tek çatı altında birleştiren kurumsal finans terminali.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Zenith Atlas – Evrensel Finansal Terminal">
+    <meta name="twitter:description" content="Çoklu varlık portföy yönetimi, canlı saliselik WebSocket akışı ve kurumsal finansal zekâ motoru.">
+    <meta name="keywords" content="zenith atlas, finans terminali, portföy yönetimi, hisse senedi, borsa istanbul, tefas fonları, altın, döviz, monte carlo, quant analizi">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
+</head>
+<body>
+    <div class="app" id="app">
+                <header class="app-header" id="appHeader">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <span>🌌</span>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Zenith <span class="gradient-text">Atlas</span></h1>
+                        <span class="strategy-badge" id="strategyBadgeHeader">TEFAS Terminal</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="header-nav" id="mainNav">
+                <button class="nav-btn active" data-tab="dashboard" id="nav-dashboard">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <button class="nav-btn" data-tab="funds" id="nav-funds">
+                    <span class="nav-icon">💼</span>
+                    <span class="nav-label">Fonlar</span>
+                </button>
+                <button class="nav-btn" data-tab="add-fund" id="nav-add-fund">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-label">Fon Ekle</span>
+                </button>
+                <button class="nav-btn" data-tab="strategy" id="nav-strategy">
+                    <span class="nav-icon">🎯</span>
+                    <span class="nav-label">Strateji</span>
+                </button>
+                <button class="nav-btn" data-tab="plan" id="nav-plan">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">Uygulama Planı</span>
+                </button>
+                <button class="nav-btn" data-tab="ai" id="nav-ai">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-label">Zenith AI</span>
+                </button>
+            </nav>
+            <div class="header-actions">
+                <div class="last-update" id="lastUpdate">
+                    <span class="pulse-dot"></span>
+                    <span class="update-text">Güncelleniyor...</span>
+                </div>
+                <button class="btn btn-ghost" id="openAlertsBtn" title="Akıllı Fiyat & Portföy Alarmları">
+                    <span>🔔</span> <span class="alerts-badge-count" id="alertsActiveBadge" style="display:none;">0</span>
+                </button>
+                <button class="btn btn-ghost" id="openExecutiveReportBtn" title="Tek Tıkla Kurumsal Yatırımcı Bülteni & A4 PDF">
+                    <span>🖨️</span> Rapor
+                </button>
+                <button class="btn btn-ghost" id="refreshPrices" title="Fiyatları Güncelle">
+                    <span>🔄</span> Güncelle
+                </button>
+                <button class="btn btn-primary" id="exportExcel" title="Excel Olarak İndir">
+                    <span>📥</span> Excel
+                </button>
+            </div>
+        </header>
+
+        <!-- Global Terminal Ticker & Multi-Exchange Session Countdown Bar -->
+        <div class="terminal-ticker-bar" id="terminalTickerBar">
+            <div class="ticker-countdown-badge" id="tefasCountdownBadge" title="Tüm Borsa & Piyasa Seans Saatleri Tablosunu Görüntüle">
+                <span class="ticker-pulse-dot" id="tickerPulseDot"></span>
+                <span class="ticker-countdown-text" id="tefasCountdownText">⏰ Piyasalar: Hesaplanıyor...</span>
+                <span class="ticker-badge-arrow">▾</span>
+            </div>
+            <div class="ticker-track-wrapper">
+                <div class="ticker-track" id="tickerTrack">
+                    <!-- Populated dynamically by TerminalTicker module -->
+                </div>
+            </div>
+        </div>
+
+        <main class="app-main">
+
+                        <section id="tab-dashboard" class="tab-content active">
+                                <div class="market-section" id="marketSection">
+                    <div class="market-header">
+                        <div class="market-header-title">
+                            <span class="market-live-dot"></span>
+                            <h4>🌍 Canlı Piyasalar</h4>
+                            <span class="market-source-tag" id="marketSourceTag">⭐ Canlı Çoklu Piyasa Akışı</span>
+                        </div>
+                        <div class="market-date-tag" id="marketDateDisplay">Canlı Piyasa Verisi</div>
+                    </div>
+                                        <div class="market-tabs-bar" id="marketTabsBar">
+                        <button class="market-tab-pill active" data-category="featured">
+                            <span>⭐</span> Özet / Öne Çıkanlar
+                        </button>
+                        <button class="market-tab-pill" data-category="harem">
+                            <span>🏛️</span> Kapalıçarşı (Harem Altın)
+                        </button>
+                        <button class="market-tab-pill" data-category="bigpara">
+                            <span>🌐</span> Bigpara & Döviz
+                        </button>
+                        <button class="market-tab-pill" data-category="bist">
+                            <span>📈</span> Borsa İstanbul (BIST)
+                        </button>
+                    </div>
+                    <div class="market-cards-grid" id="marketCardsGrid">
+                    </div>
+                </div>
+
+                <!-- Macro News & Official Policy Bulletin Panel (Always Prominently Visible at Top) -->
+                <div id="macroNewsContainer" class="macro-news-panel card" style="margin-top:20px; margin-bottom:24px;"></div>
+
+                <div id="dashboardEmptyState" class="portfolio-empty-state hidden">
+                    <div class="portfolio-empty-icon">📊</div>
+                    <h2 class="portfolio-empty-title">Portföyünüzü Oluşturun</h2>
+                    <p class="portfolio-empty-subtitle">
+                        Zenith Atlas, 1.051 TEFAS fonu arasından arama yapmanıza ve
+                        kendi portföyünüzü sıfırdan kurmanıza olanak tanır.
+                    </p>
+                    <div class="portfolio-empty-steps">
+                        <div class="empty-step">
+                            <span class="empty-step-num">1</span>
+                            <span class="empty-step-text">🔍 <strong>Fon Ara</strong><br>Fon kodu veya adı ile TEFAS veritabanında arayın</span>
+                        </div>
+                        <div class="empty-step">
+                            <span class="empty-step-num">2</span>
+                            <span class="empty-step-text">💼 <strong>Pozisyon Gir</strong><br>Pay adedini ve ortalama alış maliyetinizi girin</span>
+                        </div>
+                        <div class="empty-step">
+                            <span class="empty-step-num">3</span>
+                            <span class="empty-step-text">📈 <strong>Takip Et</strong><br>Dashboard'da canlı performansınızı görün</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+                        <button class="portfolio-empty-cta" id="emptyStateCta" onclick="Navigation.switchTab('add-fund')">
+                            ➕ İlk Fonunuzu Ekleyin
+                        </button>
+                        <button class="portfolio-empty-cta" id="emptyStateImportBtn" onclick="PortfolioBackup.triggerImport()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);">
+                            📂 Portföy Yedeği Yükle (JSON)
+                        </button>
+                    </div>
+                    <input type="file" id="portfolioBackupFileInput" accept=".json" style="display:none;" onchange="PortfolioBackup.handleFileSelect(event)">
+                </div>
+
+                <!-- Active Dashboard View (shown when portfolio has funds) -->
+                <div id="dashboardActiveView">
+                    <!-- Terminal Workspace Switcher Bar -->
+                    <div class="workspace-switcher-bar" id="workspaceSwitcherBar">
+                        <div class="workspace-title">
+                            <span class="workspace-icon">🖥️</span>
+                            <span class="workspace-label">Çalışma Alanı:</span>
+                        </div>
+                        <div class="workspace-pills-group" id="workspacePillsGroup">
+                            <button class="ws-pill-btn active" data-workspace="overview" id="ws-btn-overview">
+                                <span>📊</span> Genel Bakış
+                            </button>
+                            <button class="ws-pill-btn" data-workspace="risk-lab" id="ws-btn-risk-lab">
+                                <span>🧮</span> Quant & Risk
+                            </button>
+                            <button class="ws-pill-btn" data-workspace="settlement-desk" id="ws-btn-settlement-desk">
+                                <span>⏱️</span> Nakit & Valör
+                            </button>
+                            <button class="ws-pill-btn" data-workspace="tax-lab" id="ws-btn-tax-lab">
+                                <span>⚡</span> Stopaj & Net Kazanç
+                            </button>
+                            <button class="ws-pill-btn" data-workspace="goal-planner" id="ws-btn-goal-planner">
+                                <span>🎯</span> FIRE & Varlık Hedefi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Currency Real-Value Selector Bar -->
+                    <div class="currency-selector-bar" id="currencySelectorBar">
+                        <div class="currency-label-group">
+                            <span class="currency-icon">💱</span>
+                            <span class="currency-label">Reel Varlık / Para Birimi:</span>
+                        </div>
+                        <div class="currency-pills-group">
+                            <button class="currency-pill active" data-currency="TRY" id="curr-btn-TRY">
+                                <span>₺</span> TRY
+                            </button>
+                            <button class="currency-pill" data-currency="USD" id="curr-btn-USD">
+                                <span>$</span> USD
+                            </button>
+                            <button class="currency-pill" data-currency="EUR" id="curr-btn-EUR">
+                                <span>€</span> EUR
+                            </button>
+                            <button class="currency-pill" data-currency="GA" id="curr-btn-GA">
+                                <span>🥇</span> Altın (gr)
+                            </button>
+                        </div>
+                        <div class="currency-rate-hint" id="currencyRateHint">
+                            1 USD = ₺47,85 | 1 gr Altın = ₺6.745
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="summary-cards" id="summaryCards">
+                    <div class="card summary-card card-glow-purple" id="card-totalValue">
+                        <div class="card-icon">💰</div>
+                        <div class="card-content">
+                            <span class="card-label">Toplam Portföy Değeri</span>
+                            <span class="card-value" id="totalValueDisplay">₺0,00</span>
+                            <span class="card-sub" id="totalSharesDisplay">0 fon</span>
+                        </div>
+                    </div>
+                    <div class="card summary-card card-glow-green" id="card-dailyPnL">
+                        <div class="card-icon">📊</div>
+                        <div class="card-content">
+                            <span class="card-label">Günlük Kar/Zarar</span>
+                            <span class="card-value" id="dailyPnLDisplay">₺0,00</span>
+                            <span class="card-sub" id="dailyPnLPercent">%0,00</span>
+                        </div>
+                    </div>
+                    <div class="card summary-card card-glow-blue" id="card-totalReturn">
+                        <div class="card-icon">📈</div>
+                        <div class="card-content">
+                            <span class="card-label">Toplam Getiri</span>
+                            <span class="card-value" id="totalReturnDisplay">₺0,00</span>
+                            <span class="card-sub" id="totalReturnPercent">%0,00</span>
+                        </div>
+                    </div>
+                    <div class="card summary-card card-glow-orange" id="card-riskScore">
+                        <div class="card-icon">🛡️</div>
+                        <div class="card-content">
+                            <span class="card-label">Portföy Risk Skoru</span>
+                            <span class="card-value" id="riskScoreDisplay">0/7</span>
+                            <span class="card-sub" id="riskScoreLabel">Hesaplanıyor</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quant Ratios Grid -->
+                <div class="quant-ratios-grid" id="quantRatiosGrid">
+                    <div class="quant-ratio-card" id="qr-sharpe">
+                        <div class="qr-icon">📐</div>
+                        <div class="qr-content">
+                            <span class="qr-label">Sharpe Oranı</span>
+                            <span class="qr-value" id="sharpeRatioDisplay">—</span>
+                            <span class="qr-sub" id="sharpeRatioSub">Risk-Getiri Verimi</span>
+                        </div>
+                    </div>
+                    <div class="quant-ratio-card" id="qr-drawdown">
+                        <div class="qr-icon">📉</div>
+                        <div class="qr-content">
+                            <span class="qr-label">Max Drawdown</span>
+                            <span class="qr-value" id="maxDrawdownDisplay">—</span>
+                            <span class="qr-sub" id="maxDrawdownSub">En Kötü Durum Kaybı</span>
+                        </div>
+                    </div>
+                    <div class="quant-ratio-card" id="qr-bist-beta">
+                        <div class="qr-icon">🇹🇷</div>
+                        <div class="qr-content">
+                            <span class="qr-label">BIST Betası</span>
+                            <span class="qr-value" id="bistBetaDisplay">—</span>
+                            <span class="qr-sub" id="bistBetaSub">Borsa Duyarlılığı</span>
+                        </div>
+                    </div>
+                    <div class="quant-ratio-card" id="qr-usd-beta">
+                        <div class="qr-icon">💵</div>
+                        <div class="qr-content">
+                            <span class="qr-label">USD Betası</span>
+                            <span class="qr-value" id="usdBetaDisplay">—</span>
+                            <span class="qr-sub" id="usdBetaSub">Dolar Duyarlılığı</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>🍩 Varlık Dağılımı</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>📊 Performans Karşılaştırma (1Y)</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid Row 2 -->
+                <div class="charts-grid">
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>⚖️ Maliyet vs Güncel Fiyat</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="costVsCurrentChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>🛡️ Risk Dağılımı</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                </div>
+
+                <!-- Monte Carlo Risk & Future Simulator Section -->
+                <div class="card monte-carlo-card" id="monteCarloSection">
+                    <div class="card-header mc-header">
+                        <div class="mc-header-title">
+                            <div class="mc-icon-badge">🎲</div>
+                            <div>
+                                <h3>Monte Carlo Risk & Gelecek Simülatörü</h3>
+                                <p class="mc-header-sub">Geometrik Brownian Motion (GBM) ile 1.000 olasılıksal piyasa simülasyonu</p>
+                            </div>
+                        </div>
+                        <div class="mc-controls">
+                            <div class="mc-horizon-group" id="mcHorizonGroup">
+                                <button class="mc-pill-btn active" data-years="1">1 Yıl (12 Ay)</button>
+                                <button class="mc-pill-btn" data-years="3">3 Yıl (36 Ay)</button>
+                                <button class="mc-pill-btn" data-years="5">5 Yıl (60 Ay)</button>
+                            </div>
+                            <button class="btn btn-sm btn-ghost mc-rerun-btn" id="mcRerunBtn" title="Yeni 1.000 rastgele yol simüle et">
+                                <span>🔄</span> Yeniden Simüle Et
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Monte Carlo KPI Badges -->
+                    <div class="mc-kpi-grid">
+                        <div class="mc-kpi-card mc-kpi-median">
+                            <div class="mc-kpi-icon">🎯</div>
+                            <div class="mc-kpi-info">
+                                <span class="mc-kpi-label">Beklenen Portföy (Medyan)</span>
+                                <span class="mc-kpi-val" id="mcExpectedVal">₺0,00</span>
+                                <span class="mc-kpi-sub" id="mcExpectedGain">+%0,00 Beklenen Getiri</span>
+                            </div>
+                        </div>
+                        <div class="mc-kpi-card mc-kpi-winrate">
+                            <div class="mc-kpi-icon">📈</div>
+                            <div class="mc-kpi-info">
+                                <span class="mc-kpi-label">Kazanma Olasılığı</span>
+                                <span class="mc-kpi-val" id="mcWinRateDisplay">%0</span>
+                                <span class="mc-kpi-sub" id="mcWinRateSub">Pozitif Getiri İhtimali</span>
+                            </div>
+                        </div>
+                        <div class="mc-kpi-card mc-kpi-var">
+                            <div class="mc-kpi-icon">🛡️</div>
+                            <div class="mc-kpi-info">
+                                <span class="mc-kpi-label">Parametrik VaR (%95 Güven)</span>
+                                <span class="mc-kpi-val" id="mcVarDisplay">₺0,00</span>
+                                <span class="mc-kpi-sub" id="mcVarSub">Kötümser En Düşük Değer</span>
+                            </div>
+                        </div>
+                        <div class="mc-kpi-card mc-kpi-range">
+                            <div class="mc-kpi-icon">🌌</div>
+                            <div class="mc-kpi-info">
+                                <span class="mc-kpi-label">%90 Güven Aralığı (P5 - P95)</span>
+                                <span class="mc-kpi-val" id="mcRangeDisplay">₺0 - ₺0</span>
+                                <span class="mc-kpi-sub" id="mcRangeSub">Ayı Piyasası ↔ Boğa Zirvesi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monte Carlo Chart Canvas -->
+                    <div class="mc-chart-container">
+                        <canvas id="monteCarloChart"></canvas>
+                    </div>
+
+                    <!-- Legend & Explanation Footer -->
+                    <div class="mc-footer">
+                        <div class="mc-legend-items">
+                            <span class="mc-legend-tag tag-p95"><span class="legend-dot dot-p95"></span> %95 Boğa Piyasası</span>
+                            <span class="mc-legend-tag tag-p75"><span class="legend-dot dot-p75"></span> %75 İyimser</span>
+                            <span class="mc-legend-tag tag-p50"><span class="legend-dot dot-p50"></span> %50 Medyan (Beklenen)</span>
+                            <span class="mc-legend-tag tag-p25"><span class="legend-dot dot-p25"></span> %25 Düşük Büyüme</span>
+                            <span class="mc-legend-tag tag-p5"><span class="legend-dot dot-p5"></span> %5 Ayı Piyasası (Kötümser)</span>
+                        </div>
+                        <div class="mc-formula-note">
+                            <span>📐 <em>Itô Kalkülüsü: $dS = \mu S dt + \sigma S dW$ &bull; 1.000 Yol &bull; Box-Muller Normalizasyonu</em></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Crisis Stress Testing Section -->
+                <div class="card stress-test-card" id="stressTestSection">
+                    <div class="card-header stress-header">
+                        <div class="stress-header-title">
+                            <div class="stress-icon-badge">📉</div>
+                            <div>
+                                <h3>Tarihsel Kriz Stres Testleri & Şok Dayanıklılığı</h3>
+                                <p class="stress-header-sub">Portföyünüz geçmiş küresel ve yerel krizlere maruz kalsaydı nasıl tepki verirdi?</p>
+                            </div>
+                        </div>
+                        <div class="stress-overall-badge" id="stressResilienceBadge">
+                            <span class="resilience-label">Genel Şok Direnci</span>
+                            <span class="resilience-score" id="stressScoreDisplay">8.4 / 10</span>
+                            <span class="resilience-tag" id="stressTagDisplay">🛡️ Yüksek Kalkan</span>
+                        </div>
+                    </div>
+
+                    <!-- Scenario Cards Grid -->
+                    <div class="stress-scenarios-grid" id="stressScenariosGrid">
+                        <!-- Dynamic Scenario Cards populated by StressTestEngine -->
+                    </div>
+
+                    <!-- Stress Details Modal / Expansion -->
+                    <div class="stress-details-panel" id="stressDetailsPanel">
+                        <div class="stress-detail-header">
+                            <h4 id="stressSelectedScenarioTitle">⚡ Seçili Kriz Detayı</h4>
+                            <span class="stress-detail-badge" id="stressSelectedImpactBadge">Net Etki: +%0.00</span>
+                        </div>
+                        <div class="stress-breakdown-list" id="stressBreakdownList">
+                            <!-- Dynamic asset class shock list -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fund Details Table -->
+                <div class="card table-card">
+                    <div class="card-header">
+                        <h3>📋 Fon Detayları</h3>
+                        <div class="table-controls">
+                            <button class="btn btn-sm btn-ghost" id="toggleValorInfo">Valör Bilgileri</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="fundTable">
+                            <thead>
+                                <tr>
+                                    <th>Fon</th>
+                                    <th>Kategori</th>
+                                    <th>Adet</th>
+                                    <th>Birim Fiyat</th>
+                                    <th>Toplam Değer</th>
+                                    <th>Ort. Maliyet</th>
+                                    <th>Günlük K/Z</th>
+                                    <th>Toplam Getiri</th>
+                                    <th>Ağırlık</th>
+                                    <th>Risk</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fundTableBody">
+                                                            </tbody>
+                            <tfoot id="fundTableFoot">
+                                <!-- Totals row -->
+                            </tfoot>
+                        </table>
+                    </div>
+                    <!-- Valör Info (Hidden by default) -->
+                    <div class="valor-info hidden" id="valorInfoPanel">
+                        <div class="card-header" style="margin-top:16px;">
+                            <h4>⏱️ Valör Süreleri ve Detaylar</h4>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="valorTable">
+                                <thead>
+                                    <tr>
+                                        <th>Fon</th>
+                                        <th>Alış Valörü</th>
+                                        <th>Satış Valörü</th>
+                                        <th>Valör Atlama Saati</th>
+                                        <th>Vergi</th>
+                                        <th>Yıl. Yön. Ücreti</th>
+                                        <th>Pazar Payı</th>
+                                        <th>Doluluk Oranı</th>
+                                        <th>Yatırımcı Sayısı</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="valorTableBody">
+                                                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Valor & Cash Flow Timeline Card -->
+                <div class="card valor-timeline-card" id="valorTimelineCard">
+                    <div class="card-header timeline-header">
+                        <div class="timeline-header-title">
+                            <div class="timeline-icon-badge">⏱️</div>
+                            <div>
+                                <h3>Görsel Valör & Nakit Akışı Zaman Çizelgesi</h3>
+                                <p class="timeline-header-sub">Emirlerin gerçekleşme günleri, T+X takas süreci ve net serbest nakit projeksiyonu</p>
+                            </div>
+                        </div>
+                        <div class="timeline-cutoff-badge" id="timelineCutoffStatus">
+                            <span class="pulse-dot"></span>
+                            <span>TEFAS Kapanış: <strong>13:30</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- 4-Day Settlement Cash Flow Projections -->
+                    <div class="timeline-projection-grid" id="timelineProjectionGrid">
+                        <!-- Populated dynamically by ValorTimeline -->
+                    </div>
+
+                    <!-- Visual Gantt Flow for Pending Orders -->
+                    <div class="timeline-flow-panel" id="timelineFlowPanel">
+                        <div class="timeline-flow-header">
+                            <h4>📋 Bekleyen Emirlerin Takas & Nakde Dönüşüm Akışı</h4>
+                            <span class="timeline-flow-counter" id="timelineOrderCounter">2 Aktif Emir</span>
+                        </div>
+                        <div class="timeline-tracks-container" id="timelineTracksContainer">
+                            <!-- Populated dynamically by ValorTimeline -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Grid -->
+                <div class="bottom-grid">
+                    <div class="card pending-card">
+                        <div class="card-header">
+                            <h3>⏳ Bekleyen İşlemler</h3>
+                            <span class="badge badge-warning" id="pendingCount">2</span>
+                        </div>
+                        <div id="pendingTransactions">
+                                                    </div>
+                    </div>
+                    <div class="card strategy-card">
+                        <div class="card-header">
+                            <h3>🎯 Strateji Uyum Göstergesi</h3>
+                        </div>
+                        <div id="strategyAlignment">
+                                                    </div>
+                    </div>
+                </div>
+
+                <!-- Tax & Withholding Optimization Lab Section -->
+                <div class="card tax-lab-card" id="taxLabSection">
+                    <div class="card-header">
+                        <div class="header-with-badge">
+                            <h3>⚡ Stopaj & Net Getiri Optimizasyon Laboratuvarı</h3>
+                            <span class="badge badge-success" id="taxShieldBadge">%0 Stopaj Kalkanı Aktif</span>
+                        </div>
+                        <span class="card-subtitle-note">2026 Resmî Vergi Mevzuatı: Hisse senedi yoğun fonlar %0 stopaj muafiyetine tabidir.</span>
+                    </div>
+
+                    <!-- Tax KPI Summary Grid -->
+                    <div class="tax-kpi-grid">
+                        <div class="tax-kpi-card">
+                            <span class="tax-kpi-label">Toplam Brüt Kâr</span>
+                            <span class="tax-kpi-val" id="taxGrossProfitVal">₺0,00</span>
+                            <span class="tax-kpi-sub">Vergi öncesi getiri</span>
+                        </div>
+                        <div class="tax-kpi-card danger">
+                            <span class="tax-kpi-label">Tahmini Stopaj Kesintisi</span>
+                            <span class="tax-kpi-val" id="taxDeductionVal">-₺0,00</span>
+                            <span class="tax-kpi-sub" id="taxEffectiveRateSub">Ort. Stopaj: %0,0</span>
+                        </div>
+                        <div class="tax-kpi-card success">
+                            <span class="tax-kpi-label">Net Ele Geçen Kâr</span>
+                            <span class="tax-kpi-val" id="taxNetProfitVal">₺0,00</span>
+                            <span class="tax-kpi-sub">Net realize edilebilir getiri</span>
+                        </div>
+                        <div class="tax-kpi-card purple">
+                            <span class="tax-kpi-label">Vergisiz Portföy Oranı</span>
+                            <span class="tax-kpi-val" id="taxExemptRatioVal">%0,0</span>
+                            <span class="tax-kpi-sub" id="taxSavedAmountSub">Kazandırılan Vergi Avantajı: ₺0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tax Breakdown Table -->
+                    <div class="table-wrapper" style="margin-top:16px;">
+                        <table class="tax-breakdown-table" id="taxBreakdownTable">
+                            <thead>
+                                <tr>
+                                    <th>Varlık / Fon</th>
+                                    <th>Kategori</th>
+                                    <th>Stopaj Oranı</th>
+                                    <th>Brüt Kâr/Zarar</th>
+                                    <th>Vergi Kesintisi</th>
+                                    <th>Net Ele Geçen</th>
+                                    <th>Durum / Kalkan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="taxTableBody">
+                                <!-- Populated dynamically by TaxOptimizer -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tax Shield Recommendations -->
+                    <div class="tax-recommendation-box" id="taxRecommendationBox">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Goal-Based Wealth & FIRE Builder Section -->
+                <div class="card goal-planner-card" id="goalPlannerSection">
+                    <div class="card-header">
+                        <div class="header-with-badge">
+                            <h3>🎯 Hedef Odaklı Varlık & FIRE Simülatörü</h3>
+                            <span class="badge badge-purple" id="goalMilestoneBadge">Finansal Hedef Planlama</span>
+                        </div>
+                        <span class="card-subtitle-note">Mevcut portföy büyüklüğü, düzenli tasarruf ve bileşik getiriyle hedeflerinize ulaşma süresini hesaplayın.</span>
+                    </div>
+
+                    <!-- Goal Presets Bar -->
+                    <div class="goal-presets-bar">
+                        <span class="goal-presets-label">Hazır Hedef Şablonları:</span>
+                        <button class="goal-preset-btn active" data-target="2500000" data-name="Ev Peşinatı">
+                            <span>🏠</span> Ev Peşinatı (₺2.5M)
+                        </button>
+                        <button class="goal-preset-btn" data-target="10000000" data-name="Finansal Özgürlük (FIRE)">
+                            <span>🏖️</span> FIRE Özgürlük (₺10M)
+                        </button>
+                        <button class="goal-preset-btn" data-target="1500000" data-name="Yeni Araç">
+                            <span>🚗</span> Yeni Araç (₺1.5M)
+                        </button>
+                        <button class="goal-preset-btn" data-target="800000" data-name="Eğitim & Gelecek Fonu">
+                            <span>🎓</span> Eğitim Fonu (₺800K)
+                        </button>
+                    </div>
+
+                    <!-- Goal Controls Grid -->
+                    <div class="goal-controls-grid">
+                        <div class="goal-input-group">
+                            <label for="goalTargetInput">Hedeflenen Tutar (₺):</label>
+                            <input type="number" id="goalTargetInput" class="form-control" value="2500000" step="50000">
+                        </div>
+                        <div class="goal-input-group">
+                            <label for="goalMonthlyInput">Aylık Düzenli Tasarruf / Ekleme (₺/ay):</label>
+                            <input type="number" id="goalMonthlyInput" class="form-control" value="25000" step="1000">
+                        </div>
+                        <div class="goal-input-group">
+                            <label for="goalCagrInput">Beklenen Yıllık Nominal Büyüme (CAGR %):</label>
+                            <input type="number" id="goalCagrInput" class="form-control" value="55" step="1" min="5" max="150">
+                        </div>
+                        <div class="goal-input-group">
+                            <label for="goalInflationInput">Yıllık Enflasyon Tahmini (%):</label>
+                            <input type="number" id="goalInflationInput" class="form-control" value="30" step="1" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <!-- Goal Results KPI & Progress Banner -->
+                    <div class="goal-result-banner" id="goalResultBanner">
+                        <div class="goal-result-left">
+                            <div class="goal-result-time" id="goalTimeText">⏱️ 1 Yıl 8 Ay</div>
+                            <div class="goal-result-date" id="goalDateText">Tahmini Ulaşma Tarihi: Nisan 2028</div>
+                        </div>
+                        <div class="goal-progress-wrapper">
+                            <div class="goal-progress-labels">
+                                <span>Mevcut Varlık: <strong id="goalCurrentValText">₺0</strong></span>
+                                <span id="goalPercentText">%0 Tamamlandı</span>
+                            </div>
+                            <div class="goal-progress-track">
+                                <div class="goal-progress-bar" id="goalProgressBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Goal Chart Canvas -->
+                    <div class="goal-chart-container" style="position:relative; height:280px; margin-top:20px;">
+                        <canvas id="goalProjectionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+            <!-- Funds Tab -->
+            <section id="tab-funds" class="tab-content">
+                <!-- Watchlist Card -->
+                <div class="card watchlist-card" id="watchlistCard">
+                    <div class="card-header">
+                        <div class="header-with-badge">
+                            <h3>⭐ Akıllı Fon İzleme Listesi (Watchlist)</h3>
+                            <span class="badge badge-purple" id="watchlistCountBadge">0 Fon İzleniyor</span>
+                        </div>
+                        <div class="watchlist-actions">
+                            <button class="btn btn-sm btn-ghost" id="watchlistAddBtn">
+                                <span>➕</span> Listeye Fon Ekle
+                            </button>
+                        </div>
+                    </div>
+                    <div class="watchlist-grid" id="watchlistGrid">
+                        <!-- Populated by WatchlistManager -->
+                    </div>
+                </div>
+
+                <!-- Head-to-Head Comparison Card -->
+                <div class="card compare-card" id="fundCompareCard">
+                    <div class="card-header">
+                        <div class="header-with-badge">
+                            <h3>⚔️ Fon Karşılaştırma Masası (Head-to-Head)</h3>
+                            <span class="badge badge-info">2-3 Fon Karşılaştırma</span>
+                        </div>
+                        <div class="compare-controls" id="compareControls">
+                            <select id="compareSelect1" class="compare-select"><option value="">1. Fonu Seçin</option></select>
+                            <span style="font-weight:700; color:var(--text-tertiary);">VS</span>
+                            <select id="compareSelect2" class="compare-select"><option value="">2. Fonu Seçin</option></select>
+                            <span style="font-weight:700; color:var(--text-tertiary);">VS</span>
+                            <select id="compareSelect3" class="compare-select"><option value="">3. Fon (Opsiyonel)</option></select>
+                        </div>
+                    </div>
+                    <div class="compare-matrix-container" id="compareMatrixContainer">
+                        <!-- Populated by FundComparator -->
+                    </div>
+                </div>
+
+                <div class="section-title-bar" style="margin-top:var(--space-xl); margin-bottom:var(--space-md); display:flex; align-items:center; justify-content:space-between;">
+                    <h3 style="font-size:1.1rem; color:var(--text-primary);">💼 Portföydeki Fonlar & Detaylı Varlık Kartları</h3>
+                </div>
+
+                <div class="funds-grid" id="fundsGrid">
+                </div>
+            </section>
+
+                        <section id="tab-add-fund" class="tab-content">
+                <div class="add-fund-container">
+                    <!-- Search Panel -->
+                    <div class="add-fund-search-panel card">
+                        <div class="card-header">
+                            <h3>🔍 TEFAS Fon Ara</h3>
+                            <span class="badge badge-purple" id="fundDbCount">1051 fon yükleniyor...</span>
+                        </div>
+                        <div class="fund-search-box">
+                            <span class="search-icon">🔎</span>
+                            <input
+                                type="text"
+                                id="fundSearchInput"
+                                class="fund-search-input"
+                                placeholder="Fon kodu veya adı ile arayın... (örn: AIS, AFT, Altın, Teknoloji)"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <button class="search-clear-btn" id="fundSearchClear" title="Temizle">✕</button>
+                        </div>
+
+                        <!-- TEFAS Screener Presets & Sorting Bar -->
+                        <div class="screener-presets-bar" id="screenerPresetsBar">
+                            <div class="screener-presets-label">
+                                <span>🎯</span> <strong>Akıllı Tarama (Screener):</strong>
+                            </div>
+                            <div class="screener-chips-group" id="screenerChipsGroup">
+                                <button class="screener-chip" data-preset="tax-free">🛡️ %0 Stopaj Muaf</button>
+                                <button class="screener-chip" data-preset="high-alpha">🚀 Yüksek Getiri (1Y > %70)</button>
+                                <button class="screener-chip" data-preset="liquid-t0">💧 T+0 Likit</button>
+                                <button class="screener-chip" data-preset="low-fee">🏷️ Düşük Ücret (< %1.5)</button>
+                                <button class="screener-chip" data-preset="global-tech">🌐 Global Teknoloji</button>
+                            </div>
+                            <div class="screener-sort-wrapper">
+                                <select id="fundSortSelect" class="screener-sort-select">
+                                    <option value="code-asc">Sırala: Kod (A-Z)</option>
+                                    <option value="perf-desc">Sırala: 1Y Getiri (En Yüksek)</option>
+                                    <option value="price-desc">Sırala: Fiyat (Yüksekten Düşüğe)</option>
+                                    <option value="price-asc">Sırala: Fiyat (Düşükten Yükseğe)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="fund-search-filters">
+                            <button class="filter-chip active" data-filter="all">Tümü</button>
+                            <button class="filter-chip" data-filter="Para Piyasası">Para Piyasası</button>
+                            <button class="filter-chip" data-filter="Altın">Altın</button>
+                            <button class="filter-chip" data-filter="Hisse">Hisse Senedi</button>
+                            <button class="filter-chip" data-filter="Yabancı">Yabancı</button>
+                            <button class="filter-chip" data-filter="Değişken">Değişken</button>
+                            <button class="filter-chip" data-filter="Serbest">Serbest</button>
+                            <button class="filter-chip" data-filter="Borçlanma">Borçlanma</button>
+                            <button class="filter-chip" data-filter="Katılım">Katılım</button>
+                        </div>
+                        <div class="fund-search-results" id="fundSearchResults">
+                                                        <div class="search-empty-state">
+                                <span class="search-empty-icon">📋</span>
+                                <p>Fon aramak için yukarıya yazın veya kategori seçin.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Fund + Position Form -->
+                    <div class="add-fund-form-panel card hidden" id="addFundFormPanel">
+                        <div class="card-header">
+                            <h3>💼 Pozisyon Ekle</h3>
+                            <button class="btn btn-sm btn-ghost" id="clearFundSelection">✕ İptal</button>
+                        </div>
+                        <div class="selected-fund-info" id="selectedFundInfo">
+                                                    </div>
+                        <form class="position-form" id="positionForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="positionShares">Pay Adedi <span class="form-required">*</span></label>
+                                    <input type="number" id="positionShares" class="form-input" placeholder="0" min="0" step="any" required>
+                                    <span class="form-hint">Elinizdeki toplam pay sayısı</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="positionAvgCost">Ortalama Alış Maliyeti (₺) <span class="form-required">*</span></label>
+                                    <input type="number" id="positionAvgCost" class="form-input" placeholder="0.000000" min="0" step="any" required>
+                                    <span class="form-hint" id="currentPriceHint">Güncel fiyat yükleniyor...</span>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Tahmini Pozisyon Değeri</label>
+                                    <div class="position-preview" id="positionPreview">
+                                        <div class="preview-item">
+                                            <span class="preview-label">Toplam Maliyet</span>
+                                            <span class="preview-value" id="previewCost">₺0,00</span>
+                                        </div>
+                                        <div class="preview-item">
+                                            <span class="preview-label">Güncel Değer</span>
+                                            <span class="preview-value" id="previewValue">₺0,00</span>
+                                        </div>
+                                        <div class="preview-item">
+                                            <span class="preview-label">Kar / Zarar</span>
+                                            <span class="preview-value" id="previewPnL">₺0,00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-lg" id="addFundSubmit">
+                                    <span>➕</span> Portföye Ekle
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Portfolio Management Section -->
+                    <div class="managed-funds-panel card" id="managedFundsPanel">
+                        <div class="card-header">
+                            <h3>📂 Portföyümdeki Fonlar</h3>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-sm btn-ghost" id="exportBackupBtn" onclick="PortfolioBackup.exportBackup()" title="Portföyü JSON Olarak Yedekle">💾 Yedekle</button>
+                                <button class="btn btn-sm btn-ghost" id="importBackupBtn" onclick="PortfolioBackup.triggerImport()" title="JSON Yedeğini İçe Aktar">📂 Yedeği Yükle</button>
+                                <button class="btn btn-sm btn-ghost" id="clearAllFundsBtn" title="Tüm portföyü sıfırla">🗑️ Sıfırla</button>
+                            </div>
+                        </div>
+                        <div id="managedFundsList">
+                                                    </div>
+                    </div>
+                </div>
+            </section>
+
+                        <section id="tab-strategy" class="tab-content">
+                <div class="strategy-container" id="strategyContainer">
+                                    </div>
+            </section>
+
+                        <section id="tab-plan" class="tab-content">
+                <div class="plan-container" id="planContainer">
+                </div>
+            </section>
+
+            <section id="tab-ai" class="tab-content">
+                <div class="ai-container" id="aiContainer">
+                    <div class="ai-header-card">
+                        <div class="ai-header-info">
+                            <div class="ai-badge-row">
+                                <span class="ai-badge">🌌 Zenith Dual Intelligence</span>
+                                <span class="ai-privacy-tag">🔒 %100 Gizli & Yerel</span>
+                                <span class="ai-hardware-tag" id="aiHardwareStatus">⚡ WebGPU & Quant Engine</span>
+                            </div>
+                            <h2>Akıllı Portföy & Risk Analisti</h2>
+                            <p>Deterministik finansal modelleme (Quant Core) ve tarayıcı içi yapay zekâ senteziyle portföyünüzü derinlemesine değerlendirin.</p>
+                        </div>
+                        <div class="ai-header-actions">
+                            <button class="btn btn-primary" id="generateAiReportBtn" title="Hızlı Deterministik Finansal Analiz">
+                                <span>⚡</span> Quant Analiz (0ms)
+                            </button>
+                            <button class="btn btn-secondary" id="generateDeepNeuralBtn" title="Tarayıcı İçi Donanım Hızlandırmalı Sinirsel Makro Değerlendirme">
+                                <span>🧠</span> Derin Sinirsel Analiz (WebGPU)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="ai-metrics-grid" id="aiMetricsGrid">
+                        <!-- Dynamically populated by ZenithIntelligence -->
+                    </div>
+
+                    <div class="ai-report-panel" id="aiReportPanel">
+                        <div class="ai-report-header">
+                            <div class="ai-report-title">
+                                <span class="ai-sparkle-icon">✨</span>
+                                <h3>Yönetici Özeti & Stratejik Öneriler</h3>
+                            </div>
+                            <div class="ai-report-actions">
+                                <button class="btn btn-ghost btn-sm" id="copyAiReportBtn" title="Raporu Kopyala">
+                                    <span>📋</span> Kopyala
+                                </button>
+                                <button class="btn btn-ghost btn-sm" id="downloadAiReportBtn" title="Raporu İndir">
+                                    <span>📥</span> İndir
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ai-report-content" id="aiReportContent">
+                            <div class="ai-placeholder">
+                                <span>🤖</span>
+                                <p>Portföyünüzün risk, likidite ve varlık yoğunluğunu analiz etmek için yukarıdaki <strong>"Analiz Raporu Oluştur"</strong> butonuna tıklayın.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+                <footer class="app-footer">
+            <div class="footer-left">
+                <span>Zenith Atlas © 2026</span>
+                <span class="footer-separator">•</span>
+                <span class="footer-disclaimer">Bu uygulama yatırım tavsiyesi niteliği taşımaz. Veriler yalnızca bilgi amaçlıdır.</span>
+            </div>
+            <div class="footer-right">
+                <span>Veri Kaynağı: <strong>TEFAS</strong> (SPK / Takasbank Resmi Verisi)</span>
+            </div>
+        </footer>
+    </div>
+
+        <div class="modal-overlay" id="priceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>💱 Fon Fiyatlarını Güncelle</h3>
+                <button class="modal-close" id="closeModal">✕</button>
+            </div>
+            <div class="modal-body" id="priceModalBody">
+                            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="cancelPriceUpdate">İptal</button>
+                <button class="btn btn-primary" id="savePriceUpdate">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="aiDownloadModal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3>📥 Rapor Formatı Seçin</h3>
+                <button class="modal-close" id="closeAiDownloadModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">Yapay zekâ analiz raporunu hangi formatta kaydetmek istersiniz?</p>
+                <div class="download-format-options">
+                    <button class="format-choice-btn" id="downloadPdfChoice">
+                        <span class="format-icon">📄</span>
+                        <div class="format-info">
+                            <strong>PDF Raporu (.pdf)</strong>
+                            <span>Yazdırılabilir, kurumsal A4 düzeninde görsel rapor</span>
+                        </div>
+                    </button>
+                    <button class="format-choice-btn" id="downloadExcelChoice">
+                        <span class="format-icon">📊</span>
+                        <div class="format-info">
+                            <strong>Excel Tablosu (.xlsx)</strong>
+                            <span>Portföy dağılımı, fon detayları ve analiz çalışma kitabı</span>
+                        </div>
+                    </button>
+                    <button class="format-choice-btn" id="downloadTxtChoice">
+                        <span class="format-icon">📝</span>
+                        <div class="format-info">
+                            <strong>Düz Metin (.txt)</strong>
+                            <span>Not defteri ve arşiv için UTF-8 metin dosyası</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="cancelAiDownload">Vazgeç</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Sessions Hub Modal -->
+    <div class="modal-overlay" id="marketSessionsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">⏱️</span>
+                    <h3>Piyasa & Borsa Seans Saatleri Hub</h3>
+                </div>
+                <button class="modal-close" id="closeMarketSessionsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="market-sessions-grid" id="marketSessionsGrid">
+                    <!-- Populated dynamically by MarketSessionsEngine -->
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="modal-footer-note" style="font-size:0.75rem; color:var(--text-tertiary);">⚡ Takasbank TEFAS, Borsa İstanbul (BIST), NYSE/NASDAQ (Midas) ve Kapalıçarşı resmî seans kurallarıyla tam senkronizedir.</span>
+                <button class="btn btn-secondary" id="dismissMarketSessionsModal">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Alerts Engine Modal -->
+    <div class="modal-overlay" id="alertsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">🔔</span>
+                    <h3>Akıllı Fiyat, K/Z & Portföy Alarmları</h3>
+                </div>
+                <button class="modal-close" id="closeAlertsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Create Alert Card -->
+                <div class="card" style="margin-bottom: 20px; background: rgba(255,255,255,0.02); border-color: rgba(99,102,241,0.2);">
+                    <div class="card-header" style="margin-bottom:12px;">
+                        <h4>➕ Yeni Akıllı Alarm Kur</h4>
+                    </div>
+                    <div class="alert-form-grid">
+                        <div class="form-group">
+                            <label for="alertTargetSelect">Takip Edilecek Varlık / Koşul:</label>
+                            <select id="alertTargetSelect" class="form-control">
+                                <optgroup label="💵 Canlı Piyasa & Kurlar">
+                                    <option value="USD">USD/TRY (Dolar Kuru)</option>
+                                    <option value="EUR">EUR/TRY (Euro Kuru)</option>
+                                    <option value="GA">Gram Altın (24 Ayar ₺/gr)</option>
+                                    <option value="ONS">Ons Altın (Spot USD/oz)</option>
+                                    <option value="BIST100">BIST 100 Endeksi (Puan)</option>
+                                </optgroup>
+                                <optgroup label="💼 Portföy Performansı">
+                                    <option value="PORTFOLIO_DAILY_PNL_PCT">Portföy Günlük Getiri (%)</option>
+                                    <option value="PORTFOLIO_TOTAL_VAL">Portföy Toplam Değeri (₺)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="alertConditionSelect">Tetiklenme Koşulu:</label>
+                            <select id="alertConditionSelect" class="form-control">
+                                <option value="GTE">>= Eşit veya Üzerine Çıkarsa</option>
+                                <option value="LTE"><= Eşit veya Altına Düşerse</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="alertThresholdInput">Hedef Eşik Değer / Yüzde:</label>
+                            <input type="number" id="alertThresholdInput" class="form-control" placeholder="Örn: 48.50 veya 7000" step="any">
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button class="btn btn-primary" id="saveNewAlertBtn" style="width:100%;">
+                                <span>🔔</span> Alarmı Kur
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Alerts List Card -->
+                <div class="card">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4>📋 Aktif Alarmlar</h4>
+                        <span class="badge badge-purple" id="activeAlertsCountBadge">0 Alarm Aktif</span>
+                    </div>
+                    <div class="alerts-list-container" id="alertsListContainer">
+                        <!-- Populated dynamically by AlertsEngine -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.75rem; color:var(--text-tertiary);">⚡ Alarmlar gelen her saliselik canlı WebSocket paketinde taranır ve sesli/görsel olarak tetiklenir.</span>
+                <button class="btn btn-secondary" id="dismissAlertsModal">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Report & A4 PDF Memo Modal -->
+    <div class="modal-overlay" id="executiveReportModal">
+        <div class="modal modal-lg" style="max-width: 860px;">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">🖨️</span>
+                    <h3>Kurumsal Yatırımcı Bülteni & Yönetici Özeti</h3>
+                </div>
+                <button class="modal-close" id="closeExecutiveReportModal">&times;</button>
+            </div>
+            <div class="modal-body" id="executiveReportContent">
+                <!-- Populated dynamically by ExecutiveReportEngine -->
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+                <button class="btn btn-primary" id="printExecutivePdfBtn">
+                    <span>🖨️</span> Yazdır / PDF Olarak Kaydet (A4)
+                </button>
+                <button class="btn btn-secondary" id="dismissExecutiveReportModal">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Import / Restore Guidance Modal -->
+    <div class="modal-overlay" id="portfolioImportModal">
+        <div class="modal modal-md" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">📂</span>
+                    <h3>Portföy Yedeği Geri Yükle (JSON)</h3>
+                </div>
+                <button class="modal-close" id="closePortfolioImportModal" onclick="PortfolioBackup.closeImportModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">💾</div>
+                    <h4 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 8px;">Daha Önceki Portföyünüzü Geri Yükleyin</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                        Daha önce indirdiğiniz bir <code>zenith_atlas_portfoy_yedek_*.json</code> dosyanız varsa, cihazınızdan seçerek tüm fonlarınızı, işlemlerinizi ve izleme listenizi anında geri yükleyebilirsiniz.
+                    </p>
+                </div>
+                
+                <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
+                    💡 <strong>Henüz bir portföy yedeğiniz yok mu?</strong><br>
+                    İlk kez fon ekleyecekseniz aşağıdaki <em>"➕ Sıfırdan Fon Ekle"</em> butonuna tıklayarak doğrudan fon arama ve ekleme ekranına geçebilirsiniz.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary" onclick="PortfolioBackup.triggerFilePicker()" style="justify-content: center; padding: 12px; font-size: 0.92rem;">
+                        <span>📂</span> Bilgisayarımdan JSON Dosyası Seç
+                    </button>
+                    <button class="btn btn-secondary" onclick="PortfolioBackup.closeImportModal(); Navigation.switchTab('add-fund');" style="justify-content: center; padding: 12px; font-size: 0.92rem;">
+                        <span>➕</span> Sıfırdan Fon Ekle
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+                <button class="btn btn-ghost" onclick="PortfolioBackup.closeImportModal()">Vazgeç</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+        <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+    <script src="src/data/funds_db.js"></script>
+    <script src="src/data/prices.js"></script>
+    <script src="src/data/markets.js"></script>
+    <script src="src/data/news.js"></script>
+    <script src="src/js/app.js"></script>
+</body>
+</html>
