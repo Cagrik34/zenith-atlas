@@ -1,6 +1,6 @@
 // Zenith Atlas - Makroekonomi & Resmi Politika Bültenleri Çevrimdışı Verisi
 window.ZENITH_MACRO_NEWS = {
-  "lastUpdate": "2026-08-17T16:03:36.073604+03:00",
+  "lastUpdate": "2026-08-17T23:21:30.662398+03:00",
   "policyIndicators": {
     "tcmbPolicyRate": {
       "name": "TCMB 1 Hafta Vadeli Repo (Politika Faizi)",
@@ -10,12 +10,28 @@ window.ZENITH_MACRO_NEWS = {
       "source": "TCMB (Türkiye Cumhuriyet Merkez Bankası)",
       "sourceUrl": "https://www.tcmb.gov.tr"
     },
+    "tuikInflation": {
+      "name": "TÜİK Yıllık TÜFE Enflasyonu (Tüketici Fiyat Endeksi)",
+      "rate": 44.38,
+      "monthlyChange": 2.24,
+      "period": "Yıllık TÜFE",
+      "source": "TÜİK (Türkiye İstatistik Kurumu)",
+      "sourceUrl": "https://www.tuik.gov.tr"
+    },
+    "realInterestRate": {
+      "name": "TCMB Net Reel Faiz Düzeyi (Politika Faizi - TÜFE)",
+      "rate": 5.62,
+      "formula": "TCMB Politika Faizi (%50.00) - TÜİK Yıllık TÜFE (%44.38)",
+      "status": "Pozitif Reel Faiz (Sıkı Para Politikası)",
+      "source": "TCMB & TÜİK Resmi Verileri",
+      "sourceUrl": "https://www.tcmb.gov.tr"
+    },
     "fundWithholdingTax": {
       "name": "Yatırım Fonları Stopaj Oranı (TL / Hisse / Katılım)",
-      "generalRate": 10.0,
+      "generalRate": 7.5,
       "equityRate": 0.0,
       "fxRate": 10.0,
-      "decree": "9075 Sayılı Cumhurbaşkanı Kararı (Resmi Gazete)",
+      "decree": "Cumhurbaşkanı Kararı (Resmi Gazete)",
       "source": "Gelir İdaresi Başkanlığı / Resmi Gazete",
       "sourceUrl": "https://www.resmigazete.gov.tr"
     },
@@ -52,7 +68,7 @@ window.ZENITH_MACRO_NEWS = {
       "category": "spk",
       "categoryLabel": "SPK & Vergi",
       "title": "Yatırım Fonlarında Stopaj Oranları ve Teşvik Düzenlemeleri",
-      "summary": "9075 Sayılı Cumhurbaşkanı Kararı uyarınca TL para piyasası, katılım ve borçlanma fonlarında stopaj oranı %10 uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
+      "summary": "TL cinsi para piyasası, katılım ve borçlanma fonlarında stopaj oranı %7,5 olarak uygulanırken; hisse senedi yoğun fonlar (BIST) %0 stopaj tam muafiyetini sürdürmektedir.",
       "date": "17.08.2026",
       "source": "Resmi Gazete & GİB",
       "sourceUrl": "https://www.resmigazete.gov.tr",

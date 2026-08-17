@@ -7870,9 +7870,12 @@ const MacroNewsEngine = {
             : bulletins.filter(b => b.category === this.activeCategory);
 
         const tcmbRate = indicators.tcmbPolicyRate?.rate || 50.00;
-        const generalTax = indicators.fundWithholdingTax?.generalRate || 10.0;
+        const tuikInflation = indicators.tuikInflation?.rate || 44.38;
+        const realRate = indicators.realInterestRate?.rate || Number((tcmbRate - tuikInflation).toFixed(2));
+        const generalTax = indicators.fundWithholdingTax?.generalRate || 7.50;
         const equityTax = indicators.fundWithholdingTax?.equityRate || 0.0;
         const tcmbUrl = indicators.tcmbPolicyRate?.sourceUrl || 'https://www.tcmb.gov.tr';
+        const tuikUrl = indicators.tuikInflation?.sourceUrl || 'https://www.tuik.gov.tr';
         const spkTaxUrl = indicators.fundWithholdingTax?.sourceUrl || 'https://www.resmigazete.gov.tr';
 
         let html = `
@@ -7888,9 +7891,19 @@ const MacroNewsEngine = {
                         <span class="chip-val">%${tcmbRate.toFixed(2)}</span>
                         <span class="chip-arrow">↗</span>
                     </a>
+                    <a href="${tuikUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="TÜİK Resmi Enflasyon Sayfasına Git">
+                        <span class="chip-label">📊 TÜİK Yıllık TÜFE:</span>
+                        <span class="chip-val">%${tuikInflation.toFixed(2)}</span>
+                        <span class="chip-arrow">↗</span>
+                    </a>
+                    <a href="${tcmbUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="TCMB & TÜİK Reel Faiz Hesabı">
+                        <span class="chip-label">⚡ Net Reel Faiz:</span>
+                        <span class="chip-val" style="color:${realRate >= 0 ? '#10B981' : '#EF4444'};">${realRate >= 0 ? '+' : ''}%${realRate.toFixed(2)}</span>
+                        <span class="chip-arrow">↗</span>
+                    </a>
                     <a href="${spkTaxUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="Resmi Gazete Stopaj Kararına Git">
                         <span class="chip-label">📜 Fon Stopajı:</span>
-                        <span class="chip-val">%${generalTax.toFixed(0)} / %${equityTax.toFixed(0)} (Hisse)</span>
+                        <span class="chip-val">%${generalTax.toFixed(1)} / %${equityTax.toFixed(0)} (BIST)</span>
                         <span class="chip-arrow">↗</span>
                     </a>
                 </div>
@@ -9054,14 +9067,13 @@ const MacroRegimeEngine = {
     },
 
     detectCurrentRegime() {
-        const policyRate = (typeof MacroNewsEngine !== 'undefined' && MacroNewsEngine.cachedData && MacroNewsEngine.cachedData.policyRate)
-            ? MacroNewsEngine.cachedData.policyRate
-            : 50.0;
-        const inflation = (typeof MacroNewsEngine !== 'undefined' && MacroNewsEngine.cachedData && MacroNewsEngine.cachedData.inflation)
-            ? MacroNewsEngine.cachedData.inflation
-            : 45.0;
+        const indicators = (typeof MacroNewsEngine !== 'undefined' && MacroNewsEngine.data?.policyIndicators)
+            ? MacroNewsEngine.data.policyIndicators
+            : ((typeof window !== 'undefined' && window.ZENITH_MACRO_NEWS?.policyIndicators) || {});
 
-        const realRate = policyRate - inflation;
+        const policyRate = indicators.tcmbPolicyRate?.rate || 50.00;
+        const inflation = indicators.tuikInflation?.rate || 44.38;
+        const realRate = indicators.realInterestRate?.rate || Number((policyRate - inflation).toFixed(2));
 
         let activeRegime = this.regimes[1];
         if (realRate < -1.0) {
@@ -9092,6 +9104,11 @@ const MacroRegimeEngine = {
             const sign = realRate >= 0 ? '+' : '';
             realRateEl.textContent = `${sign}%${realRate.toFixed(2)}`;
             realRateEl.style.color = realRate >= 0 ? '#10B981' : '#EF4444';
+        }
+
+        const formulaEl = document.getElementById('macroRealRateFormula');
+        if (formulaEl) {
+            formulaEl.textContent = `TCMB Politika (%${policyRate.toFixed(2)}) - TÜİK TÜFE (%${inflation.toFixed(2)})`;
         }
 
         const container = document.getElementById('macroRotationMatrixContainer');

@@ -457,6 +457,22 @@ def sync_macro_news(target_dirs):
                 "source": "TCMB (Türkiye Cumhuriyet Merkez Bankası)",
                 "sourceUrl": "https://www.tcmb.gov.tr"
             },
+            "tuikInflation": {
+                "name": "TÜİK Yıllık TÜFE Enflasyonu (Tüketici Fiyat Endeksi)",
+                "rate": 44.38,
+                "monthlyChange": 2.24,
+                "period": "Yıllık TÜFE",
+                "source": "TÜİK (Türkiye İstatistik Kurumu)",
+                "sourceUrl": "https://www.tuik.gov.tr"
+            },
+            "realInterestRate": {
+                "name": "TCMB Net Reel Faiz Düzeyi (Politika Faizi - TÜFE)",
+                "rate": 5.62,
+                "formula": "TCMB Politika Faizi (%50.00) - TÜİK Yıllık TÜFE (%44.38)",
+                "status": "Pozitif Reel Faiz (Sıkı Para Politikası)",
+                "source": "TCMB & TÜİK Resmi Verileri",
+                "sourceUrl": "https://www.tcmb.gov.tr"
+            },
             "fundWithholdingTax": {
                 "name": "Yatırım Fonları Stopaj Oranı (TL / Hisse / Katılım)",
                 "generalRate": 7.50,
