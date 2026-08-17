@@ -1545,6 +1545,10 @@ const Charts = {
             MarkowitzOptimizer.chartInstance.destroy();
             MarkowitzOptimizer.chartInstance = null;
         }
+        if (typeof StressTestEngine !== 'undefined' && StressTestEngine.chartInstance) {
+            StressTestEngine.chartInstance.destroy();
+            StressTestEngine.chartInstance = null;
+        }
     },
 
     getTooltipConfig() {
@@ -2074,14 +2078,45 @@ const MonteCarloEngine = {
 
 const StressTestEngine = {
     selectedScenarioId: 'cur_2021',
+    chartInstance: null,
 
     SCENARIOS: [
+        {
+            id: 'tighten_2024',
+            title: '2023-2024 %50 Faiz & Parasal Sıkılaşma',
+            year: '2023-2024',
+            icon: '🏦',
+            description: 'TCMB faiz artışları, TL mevduat/para piyasasında %50+ bileşik getiri, seçici hisse performansı.',
+            maxDrawdown: -5.8,
+            recoveryDays: 14,
+            timelineLabels: ['Başlangıç', 'Ay 2', 'Ay 4', 'Ay 6 (Zirve Faiz)', 'Ay 8', 'Ay 10', 'Bitiş (12A)'],
+            benchmarks: {
+                bist: [100, 106, 114, 122, 131, 139, 148],
+                gold: [100, 108, 119, 134, 146, 158, 168],
+                usd: [100, 104, 112, 119, 125, 132, 139]
+            },
+            shocks: {
+                liquid: 0.54,
+                globalTech: 0.62,
+                gold: 0.68,
+                bist: 0.48,
+                bond: 0.42
+            }
+        },
         {
             id: 'cur_2021',
             title: '2021 Türk Lirası & Kur Şoku',
             year: 'Ara 2021',
             icon: '⚡',
             description: 'Dolar kurunda tarihi sıçrama, gram altında %90 ralli, yerli hisselerde volatil düzeltme.',
+            maxDrawdown: -12.4,
+            recoveryDays: 28,
+            timelineLabels: ['Eyl 2021', 'Eki', 'Kas (Hızlanma)', '20 Ara (Zirve)', '24 Ara (KKM)', 'Oca 2022', 'Şub 2022'],
+            benchmarks: {
+                bist: [100, 104, 118, 142, 115, 128, 138],
+                gold: [100, 109, 135, 192, 145, 162, 175],
+                usd: [100, 108, 142, 205, 142, 158, 166]
+            },
             shocks: {
                 liquid: 0.04,
                 globalTech: 0.85,
@@ -2096,6 +2131,14 @@ const StressTestEngine = {
             year: 'Mar 2020',
             icon: '🔴',
             description: 'Tüm dünya borsalarında panik satış, likiditeye kaçış, altın ve nakit güvenli liman.',
+            maxDrawdown: -22.5,
+            recoveryDays: 45,
+            timelineLabels: ['Şub 2020', '28 Şub', '12 Mar', '23 Mar (Dip)', 'Nis (Teşvik)', 'May', 'Haz 2020'],
+            benchmarks: {
+                bist: [100, 91, 80, 72, 85, 96, 112],
+                gold: [100, 103, 98, 102, 114, 122, 132],
+                usd: [100, 102, 106, 109, 114, 116, 118]
+            },
             shocks: {
                 liquid: 0.035,
                 globalTech: -0.28,
@@ -2105,25 +2148,41 @@ const StressTestEngine = {
             }
         },
         {
-            id: 'fed_2022',
-            title: '2022 Küresel Sıkılaşma & BIST Rallisi',
+            id: 'ukraine_2022',
+            title: '2022 Jeopolitik Şok & Emtia Rallisi',
             year: '2022',
-            icon: '📉',
-            description: 'Fed faiz artışları Nasdaq devlerini baskılarken, yerli borsada enflasyonist rekor ralli.',
+            icon: '🇷🇺',
+            description: 'Rusya-Ukrayna savaşıyla petrol ve altında sıçrama; Nasdaq baskılanırken BIST enflasyon rallisi.',
+            maxDrawdown: -8.5,
+            recoveryDays: 18,
+            timelineLabels: ['Oca 2022', '24 Şub (Savaş)', 'Mar (Emtia Zirve)', 'May', 'Tem', 'Eyl', 'Ara 2022'],
+            benchmarks: {
+                bist: [100, 96, 112, 126, 145, 178, 220],
+                gold: [100, 108, 122, 118, 116, 124, 142],
+                usd: [100, 103, 109, 118, 132, 138, 144]
+            },
             shocks: {
                 liquid: 0.18,
-                globalTech: -0.33,
-                gold: -0.03,
+                globalTech: -0.22,
+                gold: 0.28,
                 bist: 1.10,
                 bond: -0.14
             }
         },
         {
             id: 'brunson_2018',
-            title: '2018 Döviz Krizi & Jeopolitik Şok',
+            title: '2018 Döviz Sıçraması & Faiz Şoku',
             year: 'Ağu 2018',
             icon: '💥',
             description: 'Döviz kurunda ani sıçrama, yüksek faiz, değerli maden ve döviz fonlarında yüksek kalkan.',
+            maxDrawdown: -18.2,
+            recoveryDays: 60,
+            timelineLabels: ['Haz 2018', 'Tem', '10 Ağu (Şok)', '13 Ağu (Zirve)', 'Eyl (Faiz +625bp)', 'Eki', 'Kas 2018'],
+            benchmarks: {
+                bist: [100, 92, 85, 81, 88, 92, 98],
+                gold: [100, 105, 142, 165, 138, 128, 124],
+                usd: [100, 106, 148, 178, 144, 132, 126]
+            },
             shocks: {
                 liquid: 0.06,
                 globalTech: 0.65,
@@ -2178,12 +2237,34 @@ const StressTestEngine = {
         const netPnlTL = totalNewVal - totalVal;
         const netPnlPct = (netPnlTL / totalVal) * 100;
 
+        // Generate synthetic historical trajectory
+        const timeCount = scenario.timelineLabels.length;
+        const portTrajectory = [100];
+        const minDipIndex = Math.floor(timeCount / 2);
+
+        for (let t = 1; t < timeCount; t++) {
+            if (t <= minDipIndex) {
+                // Moving toward shock trough
+                const progress = t / minDipIndex;
+                const intermediateDip = 100 + (scenario.maxDrawdown * progress * (1 - (netPnlPct > 20 ? 0.6 : 0.2)));
+                portTrajectory.push(Number(intermediateDip.toFixed(1)));
+            } else {
+                // Moving toward final net return
+                const recoveryProgress = (t - minDipIndex) / (timeCount - 1 - minDipIndex);
+                const val = portTrajectory[minDipIndex] + ((100 + netPnlPct - portTrajectory[minDipIndex]) * recoveryProgress);
+                portTrajectory.push(Number(val.toFixed(1)));
+            }
+        }
+
         return {
             scenario,
             totalVal,
             totalNewVal,
             netPnlTL,
             netPnlPct,
+            maxDrawdown: scenario.maxDrawdown,
+            recoveryDays: scenario.recoveryDays,
+            portTrajectory,
             assetBreakdowns
         };
     },
@@ -2242,7 +2323,7 @@ const StressTestEngine = {
                     </div>
                     <div class="stress-card-impact">
                         <span class="stress-impact-val ${isPositive ? 'positive' : 'negative'}">
-                            ${sign}%${res.netPnlPct.toFixed(2)}
+                            ${sign}%${res.netPnlPct.toFixed(1)}
                         </span>
                         <span class="stress-impact-tl">(${sign}${Utils.formatCurrency(res.netPnlTL)})</span>
                     </div>
@@ -2262,14 +2343,25 @@ const StressTestEngine = {
 
         const titleEl = document.getElementById('stressSelectedScenarioTitle');
         const impactEl = document.getElementById('stressSelectedImpactBadge');
+        const mddEl = document.getElementById('stressSelectedMddBadge');
+        const recEl = document.getElementById('stressSelectedRecBadge');
         const listEl = document.getElementById('stressBreakdownList');
 
-        if (titleEl) titleEl.textContent = `${res.scenario.icon} ${res.scenario.title} — Fon Kırılımı`;
+        if (titleEl) titleEl.textContent = `${res.scenario.icon} ${res.scenario.title} — Backtest Simülasyonu`;
         if (impactEl) {
             const sign = res.netPnlPct >= 0 ? '+' : '';
-            impactEl.textContent = `Net Portföy Etkisi: ${sign}%${res.netPnlPct.toFixed(2)} (${sign}${Utils.formatCurrency(res.netPnlTL)})`;
+            impactEl.textContent = `Kriz Sonu Net: ${sign}%${res.netPnlPct.toFixed(1)} (${sign}${Utils.formatCurrency(res.netPnlTL)})`;
             impactEl.className = `stress-detail-badge ${res.netPnlPct >= 0 ? 'positive' : 'negative'}`;
         }
+        if (mddEl) {
+            mddEl.textContent = `Max Drawdown: %${res.maxDrawdown.toFixed(1)}`;
+        }
+        if (recEl) {
+            recEl.textContent = `Toparlanma: ${res.recoveryDays} İş Günü`;
+        }
+
+        // Render Multi-Line Backtest Chart
+        this.renderBacktestChart(res);
 
         if (!listEl) return;
 
@@ -2282,7 +2374,7 @@ const StressTestEngine = {
                     <span class="stress-bi-icon">💵</span>
                     <div>
                         <div class="stress-bi-name">Serbest Nakit (TL)</div>
-                        <div class="stress-bi-role">Likit Faiz Koruması</div>
+                        <div class="stress-bi-role">Likit Faiz Kalkanı</div>
                     </div>
                 </div>
                 <div class="stress-bi-right">
@@ -2313,6 +2405,125 @@ const StressTestEngine = {
         });
 
         listEl.innerHTML = listHtml;
+    },
+
+    renderBacktestChart(res) {
+        const canvas = document.getElementById('crisisBacktestChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+            this.chartInstance = null;
+        }
+
+        const ctx = canvas.getContext('2d');
+        const sc = res.scenario;
+
+        this.chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sc.timelineLabels,
+                datasets: [
+                    {
+                        label: '🌟 Portföyünüz (Geriye Dönük)',
+                        data: res.portTrajectory,
+                        borderColor: '#6366F1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 7
+                    },
+                    {
+                        label: '🇹🇷 BIST 100 Endeksi',
+                        data: sc.benchmarks.bist,
+                        borderColor: '#EF4444',
+                        borderWidth: 1.8,
+                        borderDash: [4, 4],
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 2
+                    },
+                    {
+                        label: '🥇 Gram Altın (TL)',
+                        data: sc.benchmarks.gold,
+                        borderColor: '#F59E0B',
+                        borderWidth: 1.8,
+                        borderDash: [2, 2],
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 2
+                    },
+                    {
+                        label: '💵 USD / TRY',
+                        data: sc.benchmarks.usd,
+                        borderColor: '#10B981',
+                        borderWidth: 1.8,
+                        borderDash: [5, 3],
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#94A3B8',
+                            font: { family: "'JetBrains Mono', monospace", size: 10 }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Göreceli Getiri Endeksi (100 = Başlangıç)',
+                            color: '#94A3B8',
+                            font: { size: 10 }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#94A3B8',
+                            callback: v => v.toFixed(0),
+                            font: { family: "'JetBrains Mono', monospace", size: 10 }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#F1F3F9',
+                            font: { size: 11, weight: '600' },
+                            usePointStyle: true,
+                            padding: 12
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: 'rgba(99, 102, 241, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label(ctx) {
+                                const diff = ctx.raw - 100;
+                                const sign = diff >= 0 ? '+' : '';
+                                return ` ${ctx.dataset.label}: ${ctx.raw} (${sign}%${diff.toFixed(1)})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     },
 
     initEventListeners() {

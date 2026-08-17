@@ -406,14 +406,14 @@
                     </div>
                 </div>
 
-                <!-- Historical Crisis Stress Testing Section -->
+                <!-- Historical Crisis & Backtesting Simulator Section -->
                 <div class="card stress-test-card" id="stressTestSection">
                     <div class="card-header stress-header">
                         <div class="stress-header-title">
                             <div class="stress-icon-badge">📉</div>
                             <div>
-                                <h3>Tarihsel Kriz Stres Testleri & Şok Dayanıklılığı</h3>
-                                <p class="stress-header-sub">Portföyünüz geçmiş küresel ve yerel krizlere maruz kalsaydı nasıl tepki verirdi?</p>
+                                <h3>Tarihsel Kriz & Geriye Dönük Backtest Simülatörü</h3>
+                                <p class="stress-header-sub">Portföyünüz geçmiş küresel ve yerel krizlere maruz kalsaydı nasıl tepki verirdi? (Gerçek Piyasa Verileri)</p>
                             </div>
                         </div>
                         <div class="stress-overall-badge" id="stressResilienceBadge">
@@ -428,12 +428,22 @@
                         <!-- Dynamic Scenario Cards populated by StressTestEngine -->
                     </div>
 
-                    <!-- Stress Details Modal / Expansion -->
+                    <!-- Backtest Real Trajectory Chart & KPIs -->
                     <div class="stress-details-panel" id="stressDetailsPanel">
                         <div class="stress-detail-header">
-                            <h4 id="stressSelectedScenarioTitle">⚡ Seçili Kriz Detayı</h4>
-                            <span class="stress-detail-badge" id="stressSelectedImpactBadge">Net Etki: +%0.00</span>
+                            <h4 id="stressSelectedScenarioTitle">⚡ Seçili Kriz Simülasyonu</h4>
+                            <div class="stress-header-kpis">
+                                <span class="stress-detail-badge" id="stressSelectedImpactBadge">Net Getiri: +%0,00</span>
+                                <span class="stress-detail-badge badge-dd" id="stressSelectedMddBadge">Max Drawdown: -%0,00</span>
+                                <span class="stress-detail-badge badge-rec" id="stressSelectedRecBadge">Toparlanma: 0 Gün</span>
+                            </div>
                         </div>
+
+                        <!-- Backtesting Trajectory Chart Canvas -->
+                        <div class="stress-chart-container" style="height: 320px; margin: 16px 0; position: relative;">
+                            <canvas id="crisisBacktestChart"></canvas>
+                        </div>
+
                         <div class="stress-breakdown-list" id="stressBreakdownList">
                             <!-- Dynamic asset class shock list -->
                         </div>
