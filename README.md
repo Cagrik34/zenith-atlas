@@ -31,32 +31,48 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında saklar; harici bir
 
 ## 🎯 Temel Modüller & Fonksiyonlar
 
-### 1. 💱 Çoklu Para Birimi & Reel Değerleme Motoru
+### 1. 📐 Modern Portföy Teorisi & Markowitz Etkin Sınır (Efficient Frontier)
+* **Kovaryans Matrisi & Simplex Örnekleme:** 1.500 Monte Carlo Dirichlet simülasyonu ile portföyün risk-getiri uzayındaki tüm olası ağırlık kombinasyonlarını tarar.
+* **Maksimum Sharpe & Minimum Varyans:** %50 risksiz faiz oranı (TCMB repo göstergesi) referans alınarak teğet portföy (Max Sharpe) ve en düşük oynaklıklı portföy (Min Variance) ağırlıklarını analitik olarak hesaplar ve tek tıkla uygulama imkanı sunar.
+
+### 2. 📉 Tarihsel Kriz & Geriye Dönük Backtest Simülatörü
+* **Gerçek Kriz Senaryoları:** 2020 Küresel Pandemi, 2021 Türk Lirası Kur Şoku, 2022 Jeopolitik & Emtia Şoku, 2023-2024 %50 Faiz & Parasal Sıkılaşma, 2018 Döviz Sıçraması.
+* **Kantitatif Stres Metrikleri:** Portföyün geçmiş kriz pencerelerindeki maksimum dip çöküşü (Max Drawdown), krizden toparlanma süresi (İş Günü), BIST 100 / Gram Altın / USD karşılaştırmalı getiri yörüngesi ve varlık bazlı şok kalkanı analizi.
+
+### 3. 💵 Akıllı Temettü & Pasif Gelir Nakit Akışı Matrisi
+* **12 Aylık Dağıtım Takvimi:** Türk sermaye piyasaları ve fon dağıtım ritimlerine (Mart-Nisan temettü sezonu, üçer aylık kuponlar) göre aylık pasif nakit projeksiyonu.
+* **Ağırlıklı Temettü Verimi & DRIP:** Portföyün ağırlıklı temettü verimi (%), aylık ortalama pasif maaş ve temettülerin yeniden yatırıma yönlendirilmesi (DRIP - Dividend Reinvestment Plan) durumunda 10 yıllık ek bileşik sermaye katkısı.
+
+### 4. 📲 Progressive Web App (PWA) & Çevrimdışı Native Terminal
+* **Offline-First Mimari:** `sw.js` Service Worker önbelleklemesi ile internet bağlantısı kesildiğinde veya uçuş modunda dahi tüm analitik motorlar, 1.051 TEFAS fon veritabanı ve portföy hesaplamaları yerel olarak çalışır.
+* **Masaüstü & Mobil Kurulum:** `manifest.webmanifest` desteğiyle Windows, macOS, Linux, iOS ve Android cihazlara bağımsız bir masaüstü/mobil uygulama olarak yüklenebilir.
+
+### 5. 💱 Çoklu Para Birimi & Reel Değerleme Motoru
 * **Desteklenen Birimler:** `TRY`, `USD`, `EUR`, `Gram Altın`.
 * Portföy büyüklüğünü, kâr/zarar durumunu ve varlık dağılımını döviz ve fiziki altın bazında anlık olarak hesaplar; portföyün reel satın alma gücünü izler.
 
-### 2. ⚡ Stopaj ve Vergi Optimizasyonu Modülü
+### 6. ⚡ Stopaj ve Vergi Optimizasyonu Modülü
 * Güncel sermaye piyasası ve fon vergi mevzuatına uygun brüt/net getiri analizi.
 * Hisse senedi yoğun fonlar ve BIST hisselerinde geçerli %0 stopaj muafiyetinin net getiriye katkısını simüle eder ve portföy bazında vergi yükünü hesaplar.
 
-### 3. 🔔 Eşik & Fiyat Uyarı Sistemi
-* Canlı piyasa akışına entegre fiyat, getiri ve portföy eşik alarmları.
-* Hedef kur/fiyat seviyeleri ve günlük hareket sınırları için Web Audio API ve tarayıcı masaüstü bildirimleri desteği.
-
-### 4. 🎯 Hedef Odaklı Varlık & Finansal Planlama Simülatörü
+### 7. 🎯 Hedef Odaklı Varlık & Finansal Planlama Simülatörü
 * Düzenli birikim, beklenen bileşik getiri (CAGR) ve enflasyon düzeltmesi içeren hedef projeksiyon modelleri.
 * Finansal özgürlük (FIRE), gayrimenkul ve birikim hedefleri için tahmini vade ve sermaye eğrisi hesaplamaları.
 
-### 5. 🖨️ Yönetici Portföy Özeti & A4/PDF Çıktısı
+### 8. 🔔 Eşik & Fiyat Uyarı Sistemi
+* Canlı piyasa akışına entegre fiyat, getiri ve portföy eşik alarmları.
+* Hedef kur/fiyat seviyeleri ve günlük hareket sınırları için Web Audio API ve tarayıcı masaüstü bildirimleri desteği.
+
+### 9. 🖨️ Yönetici Portföy Özeti & A4/PDF Çıktısı
 * Varlık dağılımı, risk metrikleri (Sharpe, Sortino, VaR, Beta) ve performans tablolarını içeren, standart A4 yazdırma ve PDF aktarımına uygun kurumsal raporlama.
 
-### 6. ⏱️ Piyasa ve Seans Takibi
+### 10. ⏱️ Piyasa ve Seans Takibi
 * Borsa İstanbul, TEFAS Fon İşlem Saatleri, ABD Borsaları (NYSE/NASDAQ), Serbest Piyasa ve Kripto piyasalarının seans açılış/kapanış zamanlarını gösteren dinamik durum göstergesi.
 
-### 7. ⚔️ TEFAS Fon Karşılaştırma Modülü
+### 11. ⚔️ TEFAS Fon Karşılaştırma Modülü
 * 1.051 TEFAS yatırım fonu arasından seçilen fonları fiyat, 1 yıllık getiri, yönetim ücreti, stopaj oranı, valör süresi ve risk kategorisi kriterlerine göre yan yana karşılaştırma.
 
-### 8. 📢 Makroekonomik Göstergeler & Resmî Bülten Paneli
+### 12. 📢 Makroekonomik Göstergeler & Resmî Bülten Paneli
 * TCMB Politika Faizi, SPK düzenlemeleri ve resmî duyuruları kaynak bağlantılarıyla birlikte gösteren makroekonomik bilgi paneli.
 
 ---
@@ -66,6 +82,8 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında saklar; harici bir
 ```text
 Zenith-Atlas/
 ├── 📄 index.html                           # Terminal ana kullanıcı arayüzü
+├── 📄 manifest.webmanifest                 # Standart PWA Web Manifest dosyası
+├── 📄 sw.js                                # Çevrimdışı ve önbellek Service Worker motoru
 ├── 📄 sync.bat                             # Windows veri güncelleme betiği
 ├── 📄 requirements.txt                     # Python bağımlılıkları
 ├── 📄 .gitignore                           # Git konfigürasyonu
@@ -77,6 +95,9 @@ Zenith-Atlas/
 │   │   └── 📄 styles.css                   # Arayüz ve tema stilleri
 │   ├── 📁 js/
 │   │   └── 📄 app.js                       # Portföy motoru, WebSocket ve hesaplama mantığı
+│   ├── 📁 icons/                           # PWA uygulama ikonları
+│   │   ├── 📄 icon-192.png                 # 192x192 uygulama ikonu
+│   │   └── 📄 icon-512.png                 # 512x512 yüksek çözünürlüklü ikon
 │   ├── 📁 data/                            # Veri katmanı
 │   │   ├── 📄 funds_db.json                # 1.051 TEFAS Fonu veri tabanı
 │   │   ├── 📄 funds_db.js                  # Çevrimdışı fon verisi
