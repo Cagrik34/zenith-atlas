@@ -610,6 +610,56 @@
                     </div>
                 </div>
 
+                <!-- Black-Litterman Asset Allocation & Market Views Engine -->
+                <div class="card black-litterman-card" id="blackLittermanSection" style="margin-top: 24px;">
+                    <div class="card-header bl-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div class="bl-title-group" style="display:flex; align-items:center; gap:12px;">
+                            <div class="bl-icon-badge" style="width:40px; height:40px; border-radius:10px; background:rgba(99,102,241,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🏛</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Black-Litterman Varlık Tahsis & Piyasa Görüşü Modeli</h3>
+                                <p class="bl-sub" style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">Piyasa dengesi (CAPM) ile yatırımcı beklentilerini Bayesyen istatistikle birleştiren kurumsal portföy optimizasyonu.</p>
+                            </div>
+                        </div>
+                        <div class="bl-header-actions" style="display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-ghost" id="blAddViewBtn"><span>➕</span> Yeni Görüş Ekle</button>
+                            <button class="btn btn-sm btn-primary" id="blCalculateBtn"><span>⚡</span> Bayesyen Dağılımı Hesapla</button>
+                        </div>
+                    </div>
+
+                    <!-- Market Views Input Panel -->
+                    <div class="bl-views-container" style="padding: 16px; background: rgba(15, 23, 42, 0.4); border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <h4 style="font-size: 0.88rem; color: var(--text-primary); margin:0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                            <span>🎯</span> Aktif Piyasa Beklentileri & Güven Seviyeleri (Investor Views)
+                        </h4>
+                        <div class="table-wrapper">
+                            <table class="bl-views-table" id="blViewsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Hedef Fon / Varlık</th>
+                                        <th>Beklenen Yıllık Getiri (%)</th>
+                                        <th>Görüşe Güven Seviyesi (%)</th>
+                                        <th>İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blViewsTableBody">
+                                    <!-- Populated dynamically by BlackLittermanEngine -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- BL Comparison Results Grid -->
+                    <div class="bl-results-grid" style="padding: 20px;">
+                        <div class="bl-comparison-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h4 style="font-size: 0.92rem; color: var(--accent-primary); margin: 0;">📊 Markowitz vs. Piyasa Dengesi (CAPM) vs. Black-Litterman Posterior Ağırlıkları</h4>
+                            <button class="btn btn-sm btn-secondary" id="blApplyWeightsBtn"><span>🎯</span> Black-Litterman Ağırlıklarını Uygula</button>
+                        </div>
+                        <div id="blAllocationBarsContainer">
+                            <!-- Dynamic comparison bars -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Fund Details Table -->
                 <div class="card table-card">
                     <div class="card-header">

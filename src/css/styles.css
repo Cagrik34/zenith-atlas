@@ -5792,8 +5792,84 @@ tfoot td {
     background: rgba(255, 255, 255, 0.02);
 }
 
+/* ==========================================================================
+   Black-Litterman Asset Allocation & Views Manager Styles
+   ========================================================================== */
+.black-litterman-card {
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
 
+.bl-views-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+}
 
+.bl-views-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
 
+.bl-views-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
 
+.bl-bar-row {
+    margin-bottom: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
 
+.bl-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+}
+
+.bl-bar-track-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bl-bar-track {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-full, 9999px);
+    overflow: hidden;
+    position: relative;
+}
+
+.bl-bar-fill-markowitz {
+    height: 100%;
+    background: #60A5FA;
+    border-radius: var(--radius-full, 9999px);
+    transition: width 0.4s ease;
+}
+
+.bl-bar-fill-capm {
+    height: 100%;
+    background: #94A3B8;
+    border-radius: var(--radius-full, 9999px);
+    transition: width 0.4s ease;
+}
+
+.bl-bar-fill-bl {
+    height: 100%;
+    background: linear-gradient(90deg, #6366F1, #A855F7);
+    border-radius: var(--radius-full, 9999px);
+    transition: width 0.4s ease;
+}

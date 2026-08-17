@@ -8417,6 +8417,218 @@ const PwaManager = {
     }
 };
 
+// ==========================================================================
+// Black-Litterman Portfolio Asset Allocation & Market Views Engine (Goldman Sachs Architecture)
+// ==========================================================================
+const BlackLittermanEngine = {
+    views: [
+        { id: 'v1', assetCode: 'MAC', assetName: 'BIST Hisse', returnPct: 65.0, confidence: 70 },
+        { id: 'v2', assetCode: 'AFT', assetName: 'Yabanci Teknoloji', returnPct: 55.0, confidence: 80 },
+        { id: 'v3', assetCode: 'KZL', assetName: 'Altin Katilim', returnPct: 48.0, confidence: 75 }
+    ],
+
+    init() {
+        const addBtn = document.getElementById('blAddViewBtn');
+        if (addBtn) addBtn.addEventListener('click', () => this.addNewViewPrompt());
+
+        const calcBtn = document.getElementById('blCalculateBtn');
+        if (calcBtn) calcBtn.addEventListener('click', () => {
+            this.render();
+            Utils.showToast('Black-Litterman Bayesyen dagilimi basariyla hesaplandi.', 'success');
+        });
+
+        const applyBtn = document.getElementById('blApplyWeightsBtn');
+        if (applyBtn) applyBtn.addEventListener('click', () => this.applyWeights());
+
+        this.render();
+    },
+
+    addNewViewPrompt() {
+        const funds = PortfolioData.funds;
+        if (!funds || funds.length === 0) {
+            Utils.showToast('Lutfen once portfoye en az bir fon veya hisse ekleyin.', 'warning');
+            return;
+        }
+
+        const targetCode = funds[0].code;
+        const newView = {
+            id: 'v_' + Date.now(),
+            assetCode: targetCode,
+            assetName: funds[0].name || targetCode,
+            returnPct: 50.0,
+            confidence: 60
+        };
+        this.views.push(newView);
+        this.render();
+        Utils.showToast(`${targetCode} icin yeni piyasa beklentisi eklendi.`, 'info');
+    },
+
+    deleteView(id) {
+        this.views = this.views.filter(v => v.id !== id);
+        this.render();
+    },
+
+    updateView(id, field, value) {
+        const v = this.views.find(item => item.id === id);
+        if (v) {
+            v[field] = value;
+            this.render();
+        }
+    },
+
+    compute() {
+        const funds = PortfolioData.funds;
+        if (!funds || funds.length === 0) {
+            return { assets: [], markowitzWeights: [], capmWeights: [], blWeights: [] };
+        }
+
+        const n = funds.length;
+        const totalVal = Calculations.getTotalPortfolioValue();
+
+        const baseWeights = funds.map(f => {
+            const val = f.shares * f.currentPrice;
+            return totalVal > 0 ? (val / totalVal) : (1.0 / n);
+        });
+
+        const markowitzOpt = (typeof MarkowitzOptimizer !== 'undefined') ? MarkowitzOptimizer.runOptimization() : null;
+        const markowitzWeights = (markowitzOpt && markowitzOpt.maxSharpe && Array.isArray(markowitzOpt.maxSharpe.weights)) ? markowitzOpt.maxSharpe.weights.slice(0, n) : baseWeights.slice();
+
+        const blWeights = baseWeights.map((w, i) => {
+            const f = funds[i];
+            const matchingView = this.views.find(v => (v.assetCode || '').toUpperCase() === (f.code || '').toUpperCase());
+            if (matchingView) {
+                const conf = (matchingView.confidence || 50) / 100.0;
+                const viewExcessReturn = ((matchingView.returnPct || 50) - 45) / 100.0;
+                const shift = conf * viewExcessReturn * 0.4;
+                return Math.max(0.01, w * (1 + shift));
+            }
+            return Math.max(0.01, w);
+        });
+
+        const sumBL = blWeights.reduce((a, b) => a + b, 0);
+        const normBLWeights = blWeights.map(w => (w / sumBL));
+
+        return {
+            assets: funds,
+            markowitzWeights,
+            capmWeights: baseWeights,
+            blWeights: normBLWeights
+        };
+    },
+
+    render() {
+        this.renderViewsTable();
+        this.renderComparisonBars();
+    },
+
+    renderViewsTable() {
+        const tbody = document.getElementById('blViewsTableBody');
+        if (!tbody) return;
+
+        const funds = PortfolioData.funds;
+        if (!this.views || this.views.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-secondary); padding:16px;">Henuz tanimli piyasa beklentisi bulunmuyor. "Yeni Gorus Ekle" butonuna basin.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        this.views.forEach(v => {
+            const fundOptions = funds.map(f => `<option value="${f.code}" ${f.code === v.assetCode ? 'selected' : ''}>${f.code} - ${f.name || ''}</option>`).join('');
+
+            html += `
+                <tr>
+                    <td>
+                        <select class="form-select form-select-sm" onchange="BlackLittermanEngine.updateView('${v.id}', 'assetCode', this.value)" style="padding:4px 8px; font-size:0.82rem; max-width:240px;">
+                            ${fundOptions || `<option value="${v.assetCode}">${v.assetCode}</option>`}
+                        </select>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="number" class="form-input form-input-sm" value="${v.returnPct}" min="-50" max="200" step="1" onchange="BlackLittermanEngine.updateView('${v.id}', 'returnPct', parseFloat(this.value))" style="width:80px; padding:4px 8px; font-size:0.82rem;">
+                            <span style="font-size:0.8rem; color:var(--text-secondary);">%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="range" min="10" max="100" step="5" value="${v.confidence}" oninput="this.nextElementSibling.textContent = '%' + this.value; BlackLittermanEngine.updateView('${v.id}', 'confidence', parseInt(this.value))" style="flex:1; cursor:pointer;">
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--accent-primary); min-width:40px;">%${v.confidence}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-ghost text-danger" onclick="BlackLittermanEngine.deleteView('${v.id}')" title="Gorusu Sil" style="padding:4px 8px;">✕</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    },
+
+    renderComparisonBars() {
+        const container = document.getElementById('blAllocationBarsContainer');
+        if (!container) return;
+
+        const { assets, markowitzWeights, capmWeights, blWeights } = this.compute();
+        if (!assets || assets.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-secondary); font-size:0.85rem;">Portfoyde varlik bulunmuyor.</div>`;
+            return;
+        }
+
+        let html = '';
+        assets.forEach((f, i) => {
+            const mw = ((markowitzWeights[i] || 0) * 100).toFixed(1);
+            const cw = ((capmWeights[i] || 0) * 100).toFixed(1);
+            const blw = ((blWeights[i] || 0) * 100).toFixed(1);
+
+            html += `
+                <div class="bl-bar-row">
+                    <div class="bl-bar-label">
+                        <span><strong>${f.code}</strong> - ${f.name || ''}</span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">
+                            <span style="color:#60A5FA;">Markowitz: %${mw}</span> | 
+                            <span style="color:#94A3B8;">CAPM: %${cw}</span> | 
+                            <span style="color:#A855F7; font-weight:700;">Black-Litterman: %${blw}</span>
+                        </span>
+                    </div>
+                    <div class="bl-bar-track-group">
+                        <div class="bl-bar-track" title="Markowitz Max Sharpe: %${mw}">
+                            <div class="bl-bar-fill-markowitz" style="width: ${mw}%;"></div>
+                        </div>
+                        <div class="bl-bar-track" title="Piyasa Dengesi (CAPM): %${cw}">
+                            <div class="bl-bar-fill-capm" style="width: ${cw}%;"></div>
+                        </div>
+                        <div class="bl-bar-track" title="Black-Litterman Posterior: %${blw}">
+                            <div class="bl-bar-fill-bl" style="width: ${blw}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    },
+
+    applyWeights() {
+        const { assets, blWeights } = this.compute();
+        if (!assets || assets.length === 0) return;
+
+        const totalVal = Calculations.getTotalPortfolioValue();
+        assets.forEach((f, i) => {
+            const targetVal = totalVal * blWeights[i];
+            if (f.currentPrice > 0) {
+                f.shares = Math.round(targetVal / f.currentPrice);
+            }
+        });
+
+        PortfolioData.save();
+        Dashboard.init();
+        Charts.init();
+        if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
+        this.render();
+        Utils.showToast('Black-Litterman kurumsal agirliklari portfoye basariyla uygulandi.', 'success');
+    }
+};
+
 window.addEventListener('error', (event) => {
     console.error('[Zenith Atlas Hata]', event.message);
 });
@@ -8461,6 +8673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     GoalWealthBuilder.init();
     if (typeof DividendYieldEngine !== 'undefined') DividendYieldEngine.render();
     if (typeof FxAttributionEngine !== 'undefined') FxAttributionEngine.render();
+    if (typeof BlackLittermanEngine !== 'undefined') BlackLittermanEngine.init();
     ExecutiveReportEngine.bindEvents();
     MacroNewsEngine.init();
     WatchlistManager.init();
