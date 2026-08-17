@@ -1,6 +1,6 @@
 // Zenith Atlas - Makroekonomi & Resmi Politika Bültenleri Çevrimdışı Verisi
 window.ZENITH_MACRO_NEWS = {
-  "lastUpdate": "2026-08-18T00:00:03.301043+03:00",
+  "lastUpdate": "2026-08-18T00:04:03.456456+03:00",
   "policyIndicators": {
     "tcmbPolicyRate": {
       "name": "TCMB 1 Hafta Vadeli Repo (Politika Faizi)",
