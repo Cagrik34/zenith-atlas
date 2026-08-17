@@ -440,6 +440,100 @@
                     </div>
                 </div>
 
+                <!-- Modern Portfolio Theory & Markowitz Efficient Frontier Optimizer Section -->
+                <div class="card markowitz-card" id="markowitzSection">
+                    <div class="card-header markowitz-header">
+                        <div class="markowitz-header-title">
+                            <div class="markowitz-icon-badge">📐</div>
+                            <div>
+                                <h3>Modern Portföy Teorisi & Markowitz Etkin Sınır (Efficient Frontier)</h3>
+                                <p class="markowitz-header-sub">Kovaryans matrisi ve 1.500 simülasyonla Maksimum Sharpe & Minimum Varyans optimizasyonu</p>
+                            </div>
+                        </div>
+                        <div class="markowitz-controls">
+                            <button class="btn btn-sm btn-ghost markowitz-rerun-btn" id="markowitzRerunBtn" title="1.500 yeni olasılıksal portföy simüle et">
+                                <span>🔄</span> Yeniden Optimize Et
+                            </button>
+                            <button class="btn btn-sm btn-primary markowitz-apply-btn" id="markowitzApplyOptimalBtn" title="Maksimum Sharpe ağırlıklarını strateji hedeflerine aktar">
+                                <span>⚡</span> Optimal Dağılımı Uygula
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Markowitz 3-Pillar KPI Cards -->
+                    <div class="markowitz-kpi-grid">
+                        <div class="markowitz-kpi-card kpi-current">
+                            <div class="mk-kpi-header">
+                                <span class="mk-badge badge-current">📍 Mevcut Portföy</span>
+                            </div>
+                            <div class="mk-kpi-metrics">
+                                <div class="mk-metric-row">
+                                    <span>Beklenen Yıllık Getiri E[R]:</span>
+                                    <strong id="mkCurrentReturn">%0,0</strong>
+                                </div>
+                                <div class="mk-metric-row">
+                                    <span>Yıllık Volatilite (σ):</span>
+                                    <strong id="mkCurrentVol">%0,0</strong>
+                                </div>
+                                <div class="mk-metric-row">
+                                    <span>Sharpe Rasyosu (Rf=%50):</span>
+                                    <strong id="mkCurrentSharpe">0,00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="markowitz-kpi-card kpi-optimal">
+                            <div class="mk-kpi-header">
+                                <span class="mk-badge badge-optimal">💎 Maksimum Sharpe (Optimal Teğet)</span>
+                            </div>
+                            <div class="mk-kpi-metrics">
+                                <div class="mk-metric-row">
+                                    <span>Beklenen Yıllık Getiri E[R]:</span>
+                                    <strong id="mkOptimalReturn" class="text-cyan">%0,0</strong>
+                                </div>
+                                <div class="mk-metric-row">
+                                    <span>Yıllık Volatilite (σ):</span>
+                                    <strong id="mkOptimalVol" class="text-cyan">%0,0</strong>
+                                </div>
+                                <div class="mk-metric-row">
+                                    <span>Sharpe Rasyosu (Rf=%50):</span>
+                                    <strong id="mkOptimalSharpe" class="text-cyan">0,00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="markowitz-kpi-card kpi-minvar">
+                            <div class="mk-kpi-header">
+                                <span class="mk-badge badge-minvar">🛡️ Minimum Varyans (En Düşük Risk)</span>
+                            </div>
+                            <div class="mk-kpi-metrics">
+                                <div class="mk-metric-row">
+                                    <span>Beklenen Yıllık Getiri E[R]:</span>
+                                    <strong id="mkMinVolReturn" class="text-emerald">%0,0</strong>
+                                </div>
+                                <div class="mk-metric-row">
+                                    <span>Yıllık Volatilite (σ):</span>
+                                    <strong id="mkMinVolVol" class="text-emerald">%0,0</strong>
+                                </div>
+                                <div class="mk-metric-row">
+                                    <span>Sharpe Rasyosu (Rf=%50):</span>
+                                    <strong id="mkMinVolSharpe" class="text-emerald">0,00</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Markowitz Scatter & Frontier Chart Canvas -->
+                    <div class="markowitz-chart-container">
+                        <canvas id="markowitzChart"></canvas>
+                    </div>
+
+                    <!-- Optimal Weights Table & Comparison -->
+                    <div class="markowitz-weights-container" id="markowitzWeightsContainer">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
                 <!-- Fund Details Table -->
                 <div class="card table-card">
                     <div class="card-header">

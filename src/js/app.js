@@ -1033,6 +1033,9 @@ const Dashboard = {
         if (typeof StressTestEngine !== 'undefined') {
             StressTestEngine.render();
         }
+        if (typeof MarkowitzOptimizer !== 'undefined') {
+            MarkowitzOptimizer.render();
+        }
         if (typeof ValorTimeline !== 'undefined') {
             ValorTimeline.render();
         }
@@ -1537,6 +1540,10 @@ const Charts = {
         if (typeof MonteCarloEngine !== 'undefined' && MonteCarloEngine.chartInstance) {
             MonteCarloEngine.chartInstance.destroy();
             MonteCarloEngine.chartInstance = null;
+        }
+        if (typeof MarkowitzOptimizer !== 'undefined' && MarkowitzOptimizer.chartInstance) {
+            MarkowitzOptimizer.chartInstance.destroy();
+            MarkowitzOptimizer.chartInstance = null;
         }
     },
 
@@ -2321,6 +2328,472 @@ const StressTestEngine = {
                 grid.querySelectorAll('.stress-scenario-card').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
                 this.renderBreakdown(id);
+            });
+        }
+    }
+};
+
+// ==========================================================================
+// Modern Portfolio Theory & Markowitz Efficient Frontier Optimizer
+// ==========================================================================
+const MarkowitzOptimizer = {
+    chartInstance: null,
+    riskFreeRate: 0.50, // TCMB 2026 Repo Benchmark (%50.0)
+    lastOptimizationData: null,
+
+    CATEGORY_DEFAULTS: {
+        'Para Piyasası': { expectedReturn: 54.0, volatility: 2.5 },
+        'Hisse Senedi': { expectedReturn: 88.0, volatility: 32.0 },
+        'Hisse Senedi Yoğun': { expectedReturn: 92.0, volatility: 34.0 },
+        'Yabancı Teknoloji': { expectedReturn: 95.0, volatility: 36.0 },
+        'Altın & Emtia': { expectedReturn: 74.0, volatility: 22.0 },
+        'Kıymetli Madenler': { expectedReturn: 74.0, volatility: 22.0 },
+        'Değişken': { expectedReturn: 65.0, volatility: 16.0 },
+        'Fon Sepeti': { expectedReturn: 62.0, volatility: 15.0 },
+        'Borçlanma Araçları': { expectedReturn: 56.0, volatility: 6.0 },
+        'TL Nakit': { expectedReturn: 50.0, volatility: 0.5 }
+    },
+
+    getAssetParameters(fund) {
+        if (!fund) return { expectedReturn: 50.0, volatility: 0.5, category: 'TL Nakit' };
+        const cat = fund.category || 'Değişken';
+        let matched = this.CATEGORY_DEFAULTS[cat];
+        if (!matched) {
+            for (const key of Object.keys(this.CATEGORY_DEFAULTS)) {
+                if (cat.toLowerCase().includes(key.toLowerCase())) {
+                    matched = this.CATEGORY_DEFAULTS[key];
+                    break;
+                }
+            }
+        }
+        if (!matched) matched = { expectedReturn: 60.0, volatility: 20.0 };
+
+        let expRet = (fund.performance1Y && fund.performance1Y > 0) ? fund.performance1Y : matched.expectedReturn;
+        let vol = fund.riskScore ? (fund.riskScore * 5.2) : matched.volatility;
+
+        return {
+            expectedReturn: Math.max(10, Math.min(150, expRet)),
+            volatility: Math.max(1.5, Math.min(60, vol)),
+            category: cat
+        };
+    },
+
+    getCorrelation(catA, catB) {
+        if (catA === catB) return 1.0;
+        const a = (catA || '').toLowerCase();
+        const b = (catB || '').toLowerCase();
+
+        if (a.includes('nakit') || b.includes('nakit')) return 0.0;
+        if (a.includes('para piyasası') || b.includes('para piyasası')) return -0.05;
+        if ((a.includes('hisse') && b.includes('altın')) || (a.includes('altın') && b.includes('hisse'))) return 0.12;
+        if ((a.includes('yabancı') && b.includes('hisse')) || (a.includes('hisse') && b.includes('yabancı'))) return 0.42;
+        if ((a.includes('yabancı') && b.includes('altın')) || (a.includes('altın') && b.includes('yabancı'))) return 0.22;
+        if ((a.includes('borçlanma') && b.includes('hisse')) || (a.includes('hisse') && b.includes('borçlanma'))) return 0.08;
+
+        return 0.20;
+    },
+
+    runOptimization() {
+        const assets = [];
+        const totalPortfolio = Calculations.getTotalPortfolioValue();
+
+        if (PortfolioData.funds.length === 0 && PortfolioData.cashTL === 0) {
+            return null;
+        }
+
+        PortfolioData.funds.forEach(f => {
+            const val = f.shares * f.currentPrice;
+            const currentWeight = totalPortfolio > 0 ? (val / totalPortfolio) : 0;
+            const params = this.getAssetParameters(f);
+            assets.push({
+                code: f.code,
+                name: f.name || f.code,
+                color: f.color || '#6366F1',
+                category: f.category || 'TEFAS Fonu',
+                currentWeight,
+                expectedReturn: params.expectedReturn,
+                volatility: params.volatility
+            });
+        });
+
+        if (PortfolioData.cashTL > 0 || assets.length === 0) {
+            const cashWeight = totalPortfolio > 0 ? (PortfolioData.cashTL / totalPortfolio) : 1;
+            assets.push({
+                code: 'TRY_NAKIT',
+                name: 'Serbest TL Nakit',
+                color: '#10B981',
+                category: 'TL Nakit',
+                currentWeight: cashWeight,
+                expectedReturn: 50.0,
+                volatility: 0.5
+            });
+        }
+
+        const N = assets.length;
+        if (N === 0) return null;
+
+        const covMatrix = [];
+        for (let i = 0; i < N; i++) {
+            covMatrix[i] = [];
+            for (let j = 0; j < N; j++) {
+                const corr = this.getCorrelation(assets[i].category, assets[j].category);
+                covMatrix[i][j] = (assets[i].volatility / 100) * (assets[j].volatility / 100) * corr;
+            }
+        }
+
+        let currentReturn = 0;
+        let currentVariance = 0;
+        for (let i = 0; i < N; i++) {
+            currentReturn += assets[i].currentWeight * assets[i].expectedReturn;
+            for (let j = 0; j < N; j++) {
+                currentVariance += assets[i].currentWeight * assets[j].currentWeight * covMatrix[i][j];
+            }
+        }
+        const currentVol = Math.sqrt(Math.max(0.0001, currentVariance)) * 100;
+        const currentSharpe = currentVol > 0 ? ((currentReturn - (this.riskFreeRate * 100)) / currentVol) : 0;
+
+        const simulations = [];
+        let maxSharpe = { sharpe: -Infinity, expectedReturn: 0, volatility: 0, weights: [] };
+        let minVariance = { sharpe: 0, expectedReturn: 0, volatility: Infinity, weights: [] };
+
+        const SAMPLE_COUNT = 1500;
+        for (let s = 0; s < SAMPLE_COUNT; s++) {
+            const rawWeights = [];
+            let sumWeights = 0;
+            for (let i = 0; i < N; i++) {
+                const expVal = -Math.log(Math.max(0.00001, Math.random()));
+                rawWeights.push(expVal);
+                sumWeights += expVal;
+            }
+            const weights = rawWeights.map(w => w / sumWeights);
+
+            let pReturn = 0;
+            let pVariance = 0;
+            for (let i = 0; i < N; i++) {
+                pReturn += weights[i] * assets[i].expectedReturn;
+                for (let j = 0; j < N; j++) {
+                    pVariance += weights[i] * weights[j] * covMatrix[i][j];
+                }
+            }
+            const pVol = Math.sqrt(Math.max(0.0001, pVariance)) * 100;
+            const pSharpe = pVol > 0 ? ((pReturn - (this.riskFreeRate * 100)) / pVol) : 0;
+
+            const point = {
+                x: Number(pVol.toFixed(2)),
+                y: Number(pReturn.toFixed(2)),
+                sharpe: Number(pSharpe.toFixed(2)),
+                weights
+            };
+
+            simulations.push(point);
+
+            if (pSharpe > maxSharpe.sharpe) {
+                maxSharpe = { sharpe: pSharpe, expectedReturn: pReturn, volatility: pVol, weights };
+            }
+            if (pVol < minVariance.volatility) {
+                minVariance = { sharpe: pSharpe, expectedReturn: pReturn, volatility: pVol, weights };
+            }
+        }
+
+        const sortedSims = [...simulations].sort((a, b) => a.x - b.x);
+        const frontierPoints = [];
+        let maxRetSoFar = -Infinity;
+        sortedSims.forEach(pt => {
+            if (pt.y > maxRetSoFar) {
+                maxRetSoFar = pt.y;
+                frontierPoints.push({ x: pt.x, y: pt.y });
+            }
+        });
+
+        this.lastOptimizationData = {
+            assets,
+            current: {
+                expectedReturn: currentReturn,
+                volatility: currentVol,
+                sharpe: currentSharpe
+            },
+            maxSharpe,
+            minVariance,
+            simulations,
+            frontierPoints
+        };
+
+        return this.lastOptimizationData;
+    },
+
+    render() {
+        const data = this.runOptimization();
+        if (!data) return;
+
+        const curRetEl = document.getElementById('mkCurrentReturn');
+        const curVolEl = document.getElementById('mkCurrentVol');
+        const curSharpeEl = document.getElementById('mkCurrentSharpe');
+
+        const optRetEl = document.getElementById('mkOptimalReturn');
+        const optVolEl = document.getElementById('mkOptimalVol');
+        const optSharpeEl = document.getElementById('mkOptimalSharpe');
+
+        const minRetEl = document.getElementById('mkMinVolReturn');
+        const minVolEl = document.getElementById('mkMinVolVol');
+        const minSharpeEl = document.getElementById('mkMinVolSharpe');
+
+        if (curRetEl) curRetEl.textContent = `%${data.current.expectedReturn.toFixed(1)}`;
+        if (curVolEl) curVolEl.textContent = `%${data.current.volatility.toFixed(1)}`;
+        if (curSharpeEl) curSharpeEl.textContent = data.current.sharpe.toFixed(2);
+
+        if (optRetEl) optRetEl.textContent = `%${data.maxSharpe.expectedReturn.toFixed(1)}`;
+        if (optVolEl) optVolEl.textContent = `%${data.maxSharpe.volatility.toFixed(1)}`;
+        if (optSharpeEl) optSharpeEl.textContent = data.maxSharpe.sharpe.toFixed(2);
+
+        if (minRetEl) minRetEl.textContent = `%${data.minVariance.expectedReturn.toFixed(1)}`;
+        if (minVolEl) minVolEl.textContent = `%${data.minVariance.volatility.toFixed(1)}`;
+        if (minSharpeEl) minSharpeEl.textContent = data.minVariance.sharpe.toFixed(2);
+
+        this.renderChart(data);
+        this.renderWeightsTable(data);
+        this.bindEvents();
+    },
+
+    renderChart(data) {
+        const canvas = document.getElementById('markowitzChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+            this.chartInstance = null;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        this.chartInstance = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Simüle Portföyler (1.500)',
+                        data: data.simulations.map(s => ({ x: s.x, y: s.y, sharpe: s.sharpe })),
+                        backgroundColor: (ctx) => {
+                            const raw = ctx.raw;
+                            if (!raw) return 'rgba(99, 102, 241, 0.25)';
+                            const norm = Math.max(0, Math.min(1, (raw.sharpe - 0) / 1.5));
+                            return `rgba(${Math.round(99 + (1 - norm) * 100)}, ${Math.round(102 + norm * 150)}, 241, 0.45)`;
+                        },
+                        pointRadius: 2.8,
+                        pointHoverRadius: 5,
+                        borderWidth: 0,
+                        order: 4
+                    },
+                    {
+                        label: 'Etkin Sınır (Efficient Frontier)',
+                        data: data.frontierPoints,
+                        showLine: true,
+                        borderColor: '#06B6D4',
+                        borderWidth: 2.5,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        order: 2
+                    },
+                    {
+                        label: '📍 Mevcut Portföy',
+                        data: [{ x: Number(data.current.volatility.toFixed(2)), y: Number(data.current.expectedReturn.toFixed(2)) }],
+                        backgroundColor: '#F59E0B',
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        pointHoverRadius: 11,
+                        order: 1
+                    },
+                    {
+                        label: '💎 Maksimum Sharpe (Optimal)',
+                        data: [{ x: Number(data.maxSharpe.volatility.toFixed(2)), y: Number(data.maxSharpe.expectedReturn.toFixed(2)) }],
+                        backgroundColor: '#06B6D4',
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2.5,
+                        pointStyle: 'rectRot',
+                        pointRadius: 9,
+                        pointHoverRadius: 12,
+                        order: 1
+                    },
+                    {
+                        label: '🛡️ Minimum Varyans',
+                        data: [{ x: Number(data.minVariance.volatility.toFixed(2)), y: Number(data.minVariance.expectedReturn.toFixed(2)) }],
+                        backgroundColor: '#10B981',
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2.5,
+                        pointRadius: 8,
+                        pointHoverRadius: 11,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Yıllık Risk / Volatilite (σ %)',
+                            color: '#94A3B8',
+                            font: { family: "'JetBrains Mono', monospace", size: 11 }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#94A3B8',
+                            callback: v => '%' + v,
+                            font: { family: "'JetBrains Mono', monospace", size: 10 }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Beklenen Yıllık Getiri E[R] (%)',
+                            color: '#94A3B8',
+                            font: { family: "'JetBrains Mono', monospace", size: 11 }
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            color: '#94A3B8',
+                            callback: v => '%' + v,
+                            font: { family: "'JetBrains Mono', monospace", size: 10 }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#F1F3F9',
+                            font: { size: 11, weight: '600' },
+                            usePointStyle: true,
+                            padding: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: 'rgba(99, 102, 241, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label(ctx) {
+                                return ` ${ctx.dataset.label}: Risk %${ctx.raw.x} | Getiri %${ctx.raw.y}` + (ctx.raw.sharpe ? ` (Sharpe: ${ctx.raw.sharpe})` : '');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    },
+
+    renderWeightsTable(data) {
+        const container = document.getElementById('markowitzWeightsContainer');
+        if (!container) return;
+
+        let tableHtml = `
+            <table class="markowitz-weights-table">
+                <thead>
+                    <tr>
+                        <th>Varlık / Fon</th>
+                        <th>Kategori</th>
+                        <th>Mevcut Ağırlık</th>
+                        <th>Max Sharpe (Optimal)</th>
+                        <th>Min Varyans (Düşük Risk)</th>
+                        <th>Önerilen Aksiyon</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        data.assets.forEach((asset, idx) => {
+            const curPct = asset.currentWeight * 100;
+            const optPct = (data.maxSharpe.weights[idx] || 0) * 100;
+            const minPct = (data.minVariance.weights[idx] || 0) * 100;
+            const delta = optPct - curPct;
+
+            let actionBadge = '';
+            if (Math.abs(delta) < 1.5) {
+                actionBadge = '<span class="badge" style="background:rgba(255,255,255,0.06); color:#94A3B8;">⚖️ Dengede</span>';
+            } else if (delta > 0) {
+                actionBadge = `<span class="badge" style="background:rgba(6,182,212,0.15); color:#06B6D4;">+ %${delta.toFixed(1)} Artır</span>`;
+            } else {
+                actionBadge = `<span class="badge" style="background:rgba(239,68,68,0.15); color:#EF4444;">- %${Math.abs(delta).toFixed(1)} Azalt</span>`;
+            }
+
+            tableHtml += `
+                <tr>
+                    <td>
+                        <strong style="color: ${asset.color}">${asset.code}</strong>
+                        <div style="font-size: 0.74rem; color: var(--text-secondary);">${asset.name}</div>
+                    </td>
+                    <td>${asset.category}</td>
+                    <td>
+                        <div class="weight-bar-wrapper">
+                            <span style="min-width:40px; font-family:'JetBrains Mono';">%${curPct.toFixed(1)}</span>
+                            <div class="weight-mini-bar" style="width: ${Math.min(100, curPct * 2)}px; background: #F59E0B;"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="weight-bar-wrapper">
+                            <span style="min-width:40px; font-family:'JetBrains Mono'; font-weight:700; color:#06B6D4;">%${optPct.toFixed(1)}</span>
+                            <div class="weight-mini-bar" style="width: ${Math.min(100, optPct * 2)}px; background: #06B6D4;"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="weight-bar-wrapper">
+                            <span style="min-width:40px; font-family:'JetBrains Mono'; color:#10B981;">%${minPct.toFixed(1)}</span>
+                            <div class="weight-mini-bar" style="width: ${Math.min(100, minPct * 2)}px; background: #10B981;"></div>
+                        </div>
+                    </td>
+                    <td>${actionBadge}</td>
+                </tr>
+            `;
+        });
+
+        tableHtml += `
+                </tbody>
+            </table>
+        `;
+
+        container.innerHTML = tableHtml;
+    },
+
+    bindEvents() {
+        const rerunBtn = document.getElementById('markowitzRerunBtn');
+        if (rerunBtn && !rerunBtn._hasListener) {
+            rerunBtn._hasListener = true;
+            rerunBtn.addEventListener('click', () => {
+                this.render();
+                Utils.showToast('1.500 Markowitz etkin sınır olasılık simülasyonu güncellendi.', 'info');
+            });
+        }
+
+        const applyBtn = document.getElementById('markowitzApplyOptimalBtn');
+        if (applyBtn && !applyBtn._hasListener) {
+            applyBtn._hasListener = true;
+            applyBtn.addEventListener('click', () => {
+                if (!this.lastOptimizationData || !this.lastOptimizationData.maxSharpe) return;
+                const opt = this.lastOptimizationData;
+                
+                opt.assets.forEach((asset, idx) => {
+                    const weightPct = Number(((opt.maxSharpe.weights[idx] || 0) * 100).toFixed(1));
+                    if (asset.code !== 'TRY_NAKIT') {
+                        const fund = PortfolioData.funds.find(f => f.code === asset.code);
+                        if (fund) {
+                            fund.targetWeight = weightPct;
+                        }
+                    }
+                });
+
+                if (typeof RebalancingEngine !== 'undefined') {
+                    RebalancingEngine.render();
+                }
+                if (typeof StrategyTab !== 'undefined') {
+                    StrategyTab.render();
+                }
+
+                Utils.showToast('💎 Maksimum Sharpe optimal ağırlıkları portföy stratejinize aktarıldı!', 'success');
             });
         }
     }
