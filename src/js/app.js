@@ -7128,6 +7128,8 @@ const MacroNewsEngine = {
             : bulletins.filter(b => b.category === this.activeCategory);
 
         const tcmbRate = indicators.tcmbPolicyRate?.rate || 50.00;
+        const generalTax = indicators.fundWithholdingTax?.generalRate || 10.0;
+        const equityTax = indicators.fundWithholdingTax?.equityRate || 0.0;
         const tcmbUrl = indicators.tcmbPolicyRate?.sourceUrl || 'https://www.tcmb.gov.tr';
         const spkTaxUrl = indicators.fundWithholdingTax?.sourceUrl || 'https://www.resmigazete.gov.tr';
 
@@ -7146,7 +7148,7 @@ const MacroNewsEngine = {
                     </a>
                     <a href="${spkTaxUrl}" target="_blank" rel="noopener noreferrer" class="policy-indicator-chip" title="Resmî Gazete Stopaj Kararına Git">
                         <span class="chip-label">📜 Fon Stopajı:</span>
-                        <span class="chip-val">%7.5 / %0 (Hisse)</span>
+                        <span class="chip-val">%${generalTax.toFixed(0)} / %${equityTax.toFixed(0)} (Hisse)</span>
                         <span class="chip-arrow">↗</span>
                     </a>
                 </div>
