@@ -6,10 +6,6 @@ const STORAGE_KEYS = {
     CASH: 'zenithatlas_cash_v1',
     PENDING: 'zenithatlas_pending_v1',
     STRATEGY: 'zenithatlas_strategy_v1',
-    LEGACY_PORTFOLIO: 'yatirim101_portfolio_v1',
-    LEGACY_CASH: 'yatirim101_cash_v1',
-    LEGACY_PENDING: 'yatirim101_pending_v1',
-    LEGACY_STRATEGY: 'yatirim101_strategy_v1',
 };
 
 // ==========================================================================
@@ -322,8 +318,8 @@ const PortfolioManager = {
 
     clear() {
         Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
-        localStorage.removeItem('yatirim101_prices_v5');
-        localStorage.removeItem('yatirim101_lastUpdate_v5');
+        localStorage.removeItem('zenithatlas_prices_v1');
+        localStorage.removeItem('zenithatlas_lastUpdate_v1');
         if (typeof IndexedDBStorage !== 'undefined') {
             IndexedDBStorage.clear();
         }
@@ -606,8 +602,8 @@ const Utils = {
 };
 
 const PriceService = {
-    STORAGE_KEY: 'yatirim101_prices_v5',
-    UPDATE_KEY: 'yatirim101_lastUpdate_v5',
+    STORAGE_KEY: 'zenithatlas_prices_v1',
+    UPDATE_KEY: 'zenithatlas_lastUpdate_v1',
 
     async init() {
         this.loadCachedPrices();
@@ -3982,8 +3978,8 @@ const ExcelExport = {
         const totalReturn = Calculations.getTotalReturn();
 
                 const summaryData = [
-            ['YATIRIM 101 – PORTFÖY TAKİP VE ANALİZ MODELİ'],
-            ['Strateji:', 'Dengeli ve Büyüme+'],
+            ['ZENITH ATLAS – PORTFÖY VE KANTİTATİF ANALİZ RAPORU'],
+            ['Strateji:', 'Dengeli ve Büyüme'],
             ['Raporlama Tarihi:', Utils.getTimestamp()],
             [],
             ['GENEL PERFORMANS METRİKLERİ', ''],
@@ -4527,9 +4523,9 @@ const AddFundTab = {
         const ok = PortfolioManager.addFund(newFund);
         if (ok) {
             try {
-                const cached = JSON.parse(localStorage.getItem('yatirim101_prices_v5') || '{}');
+                const cached = JSON.parse(localStorage.getItem('zenithatlas_prices_v1') || '{}');
                 cached[fund.code] = currentPrice;
-                localStorage.setItem('yatirim101_prices_v5', JSON.stringify(cached));
+                localStorage.setItem('zenithatlas_prices_v1', JSON.stringify(cached));
             } catch (e) { /* pass */ }
 
             Utils.showToast(`✅ ${fund.code} portföye eklendi!`, 'success');

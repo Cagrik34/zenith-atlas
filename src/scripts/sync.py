@@ -26,7 +26,7 @@ def get_target_data_dirs():
     
     # 2. Desktop klasörleri
     desktop = pathlib.Path.home() / 'Desktop'
-    for folder_name in ['Zenith Atlas', 'zenith-atlas', 'ZenithAtlas', 'YATIRIM 101']:
+    for folder_name in ['Zenith Atlas', 'zenith-atlas', 'ZenithAtlas']:
         d_dir = desktop / folder_name
         if d_dir.exists():
             d_data = d_dir / 'src' / 'data' if (d_dir / 'src').exists() else d_dir / 'data'
