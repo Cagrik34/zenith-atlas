@@ -3965,9 +3965,9 @@ const ExcelExport = {
 
         const wb = XLSX.utils.book_new();
         wb.Props = {
-            Title: 'Yatırım 101 – Portföy Takip ve Analiz Modeli',
-            Subject: 'Dengeli ve Büyüme+ Portföy Modeli',
-            Author: 'Yatırım 101',
+            Title: 'Zenith Atlas – Portföy Takip ve Analiz Modeli',
+            Subject: 'Zenith Atlas Çoklu Varlık Portföy Modeli',
+            Author: 'Zenith Atlas',
             CreatedDate: new Date()
         };
 
