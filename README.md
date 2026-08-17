@@ -81,6 +81,7 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında saklar; harici bir
 
 ```text
 Zenith-Atlas/
+├── 📄 .gitattributes                       # Git satır sonu ve dosya normalizasyon kuralları
 ├── 📄 index.html                           # Terminal ana kullanıcı arayüzü
 ├── 📄 manifest.webmanifest                 # Standart PWA Web Manifest dosyası
 ├── 📄 sw.js                                # Çevrimdışı ve önbellek Service Worker motoru
