@@ -5588,8 +5588,6 @@ const Navigation = {
     }
 };
 
-const FEATURED_FUND_CODES = ['AIS', 'AFT', 'IJC', 'KZL', 'MAC', 'TP2', 'TI2', 'TTE', 'YAY', 'GMR', 'GTA', 'TCD', 'IPB', 'HKH'];
-
 const FundSearch = {
     db: [],
     loaded: false,
