@@ -1,15 +1,17 @@
 # Zenith Atlas
 
-### Çoklu Varlık Portföy Yönetimi & Kantitatif Risk Terminali
+### Evrensel Çoklu Varlık Portföy Yönetimi & Kantitatif Risk Terminali
 
+[![Version: 2.0.0](https://img.shields.io/badge/Versiyon-v2.0.0%20(Kurumsal)-emerald?style=flat-square)](index.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![TEFAS Veritabanı](https://img.shields.io/badge/TEFAS-1.051%20Fon-indigo?style=flat-square)](src/data/funds_db.json)
-[![Piyasa Akışı](https://img.shields.io/badge/Canlı%20Veri-WebSocket-emerald?style=flat-square)](https://canlidoviz.com)
+[![Piyasa Akışı](https://img.shields.io/badge/Canlı%20Veri-WebSocket%20%2B%20Failover-emerald?style=flat-square)](https://canlidoviz.com)
+[![Zenith AI](https://img.shields.io/badge/Zenith%20AI-BYOK%20LLM%20(Claude%2FGPT%2GGemini)-purple?style=flat-square)](index.html)
 [![Mimari](https://img.shields.io/badge/Mimari-İstemci%20Taraflı%20(Zero--Server)-slate?style=flat-square)](index.html)
 
-Zenith Atlas; Borsa İstanbul pay senetleri, ABD hisse senetleri (NYSE/NASDAQ), TEFAS fonları (1.051 fon), Kapalıçarşı kıymetli madenler ve döviz kurlarını tek arayüzde birleştiren, istemci taraflı çalışan bir finansal analiz ve portföy takip terminalidir.
+Zenith Atlas; Borsa İstanbul pay senetleri (BIST), ABD hisse senetleri (NYSE/NASDAQ), TEFAS fonları (1.051 fon), Kapalıçarşı serbest piyasa kıymetli madenleri ve canlı döviz kurlarını tek çatı altında birleştiren kurumsal düzeyde bir finansal analiz, portföy takip ve kantitatif risk simülasyon terminalidir.
 
-Kullanıcı verilerini tamamen yerel tarayıcı hafızasında saklar; harici bir kullanıcı veritabanı gerektirmeden gerçek zamanlı fiyatlama, vergi simülasyonları, kantitatif risk metrikleri ve uzun vadeli varlık projeksiyonları sunar.
+Kullanıcı verilerini tamamen yerel tarayıcı hafızasında (`localStorage` & `IndexedDB`) saklar; sıfır sunucu (Zero-Server / Zero-Data-Transmission) mimarisiyle harici bir veritabanı gerektirmeden gerçek zamanlı saliselik WebSocket fiyatlaması, çoklu bağımsız portföy/BES yönetimi, kur vs. reel varlık getirisi ayrıştırması (FX Attribution), 2026 resmi 9075 sayılı karar stopaj optimizasyonu, Markowitz modern portföy teorisi ve BYOK (Bring Your Own Key) yapay zeka asistanı sunar.
 
 ---
 
