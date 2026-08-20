@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PortfolioProvider, usePortfolio } from './context/PortfolioContext';
+import { PortfolioProvider } from './context/PortfolioContext';
 import { MarketProvider } from './context/MarketContext';
 import { useAutoSync } from './hooks/useAutoSync';
 import { useLivePrices } from './hooks/useLivePrices';
@@ -40,11 +40,8 @@ const AppContent: React.FC = () => {
   useLivePrices();
 
   return (
-    <div className="app-layout">
-      {/* 1. Donanım Hızlandırmalı 60 FPS Canlı Ticker */}
-      <TerminalTicker />
-
-      {/* 2. Kurumsal Üst Bar & Navigasyon */}
+    <div className="app">
+      {/* 1. Sabit Üst Header Bar (Titreme/Kayma Engelli) */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -57,18 +54,19 @@ const AppContent: React.FC = () => {
         isSyncing={isSyncing}
       />
 
-      {/* 3. Ana İçerik ve Sekme Yönlendirme */}
-      <main className="main-content">
-        <div className="content-container">
-          {activeTab === 'dashboard' && <DashboardTab onNavigateTab={setActiveTab} />}
-          {activeTab === 'funds' && <FundsTab />}
-          {activeTab === 'add-fund' && <FundSearchTab />}
-          {activeTab === 'heatmap' && <TreemapHeatmapTab />}
-          {activeTab === 'quant' && <QuantAttributionTab />}
-          {activeTab === 'strategy' && <StrategyTab />}
-          {activeTab === 'execution-plan' && <ExecutionPlanTab />}
-          {activeTab === 'zenith-ai' && <ZenithAiTab />}
-        </div>
+      {/* 2. Donanım Hızlandırmalı 60 FPS Canlı Ticker */}
+      <TerminalTicker />
+
+      {/* 3. Ana İçerik Alanı (Kenarlardan Dengeli Boşluklu ve Taşmasız) */}
+      <main className="app-main">
+        {activeTab === 'dashboard' && <DashboardTab onNavigateTab={setActiveTab} />}
+        {activeTab === 'funds' && <FundsTab />}
+        {activeTab === 'add-fund' && <FundSearchTab />}
+        {activeTab === 'heatmap' && <TreemapHeatmapTab />}
+        {activeTab === 'quant' && <QuantAttributionTab />}
+        {activeTab === 'strategy' && <StrategyTab />}
+        {activeTab === 'execution-plan' && <ExecutionPlanTab />}
+        {activeTab === 'zenith-ai' && <ZenithAiTab />}
       </main>
 
       {/* 4. Global Modallar */}
