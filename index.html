@@ -55,6 +55,10 @@
                     <span class="nav-icon">🔍</span>
                     <span class="nav-label">Fon Ekle</span>
                 </button>
+                <button class="nav-btn" data-tab="heatmap" id="nav-heatmap">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-label">Isı Haritası</span>
+                </button>
                 <button class="nav-btn" data-tab="strategy" id="nav-strategy">
                     <span class="nav-icon">🎯</span>
                     <span class="nav-label">Strateji</span>
@@ -78,6 +82,9 @@
                 </button>
                 <button class="btn btn-ghost" id="openAlertsBtn" title="Akıllı Fiyat & Portföy Alarmları">
                     <span>🔔</span> <span class="alerts-badge-count" id="alertsActiveBadge" style="display:none;">0</span>
+                </button>
+                <button class="btn btn-ghost" id="openPitchbookBtn" title="Goldman Sachs Stili Kurumsal Pitchbook & Sunum Raporu (A4 PDF)">
+                    <span>📑</span> Pitchbook
                 </button>
                 <button class="btn btn-ghost" id="openExecutiveReportBtn" title="Tek Tıkla Kurumsal Yatırımcı Bülteni & A4 PDF">
                     <span>🖨</span> Rapor
@@ -1413,6 +1420,78 @@
                 </div>
             </section>
 
+            <!-- BIST 100 & TEFAS Live Treemap Heatmap Tab -->
+            <section id="tab-heatmap" class="tab-content">
+                <div class="heatmap-container">
+                    <div class="card heatmap-header-card">
+                        <div class="heatmap-title-row">
+                            <div class="heatmap-title-info">
+                                <div class="heatmap-badge-row">
+                                    <span class="badge badge-primary">⚡ Finviz & S&P 500 Modeli</span>
+                                    <span class="badge badge-success"><span class="pulse-dot"></span> Canlı Piyasa Akışı</span>
+                                </div>
+                                <h2>🗺️ BIST 100 & TEFAS Canlı Isı Haritası (Squarified Treemap)</h2>
+                                <p>Fon ve şirket büyüklüklerine göre optimize edilmiş, anlık getiri performansıyla renklendirilmiş kurumsal piyasa haritası.</p>
+                            </div>
+                            <div class="heatmap-mode-switch">
+                                <button class="btn btn-sm btn-primary active" id="heatmapModeTefas">📊 TEFAS Fonları (1.051 Fon)</button>
+                                <button class="btn btn-sm btn-secondary" id="heatmapModeBist">🏛 BIST 100 Sektörleri</button>
+                            </div>
+                        </div>
+
+                        <!-- Heatmap Interactive Control Strip -->
+                        <div class="heatmap-controls-bar">
+                            <div class="heatmap-control-group">
+                                <label for="heatmapHorizonSelect">Getiri Vadesi:</label>
+                                <select id="heatmapHorizonSelect" class="form-select form-select-sm">
+                                    <option value="daily">Günlük Değişim (%)</option>
+                                    <option value="monthly">Son 1 Ay (%)</option>
+                                    <option value="yearly" selected>Son 1 Yıl (%)</option>
+                                </select>
+                            </div>
+
+                            <div class="heatmap-control-group">
+                                <label for="heatmapCategorySelect">Kategori / Sektör:</label>
+                                <select id="heatmapCategorySelect" class="form-select form-select-sm">
+                                    <option value="all">Tüm Kategoriler (1.051 Fon)</option>
+                                    <option value="Hisse">Hisse Senedi Fonları</option>
+                                    <option value="Değişken">Değişken Fonlar</option>
+                                    <option value="Para Piyasası">Para Piyasası Fonları</option>
+                                    <option value="Altın">Kıymetli Madenler & Altın</option>
+                                    <option value="Katılım">Katılım Fonları</option>
+                                    <option value="Fon Sepeti">Fon Sepeti Fonları</option>
+                                    <option value="Serbest">Serbest Fonlar</option>
+                                    <option value="Borçlanma">Borçlanma Araçları</option>
+                                </select>
+                            </div>
+
+                            <div class="heatmap-control-group" style="flex:1; min-width:200px;">
+                                <label for="heatmapSearchInput">Varlık Filtrele:</label>
+                                <input type="text" id="heatmapSearchInput" class="form-input form-input-sm" placeholder="Kod veya İsim Ara (örn: MAC, AFT, THYAO, EREGL)...">
+                            </div>
+
+                            <!-- Color Legend Scale -->
+                            <div class="heatmap-legend">
+                                <span class="legend-label">-3%</span>
+                                <div class="legend-gradient"></div>
+                                <span class="legend-label">0%</span>
+                                <div class="legend-gradient-pos"></div>
+                                <span class="legend-label">+3%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Treemap Canvas Visualization Frame -->
+                    <div class="card treemap-card">
+                        <div class="treemap-wrapper" id="treemapWrapper">
+                            <div id="treemapContainer" class="treemap-grid">
+                                <!-- Dynamically generated Squarified Treemap Tiles -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
 
                 <footer class="app-footer">
@@ -1425,6 +1504,31 @@
                 <span>Veri Kaynağı: <strong>TEFAS</strong> (SPK / Takasbank Resmi Verisi)</span>
             </div>
         </footer>
+    </div>
+
+    <!-- Floating Interactive Treemap Tooltip -->
+    <div id="treemapTooltip" class="treemap-tooltip hidden"></div>
+
+    <!-- Goldman Sachs Stili Kurumsal Yatırım Komitesi Pitchbook Modal -->
+    <div class="modal-overlay" id="pitchbookModal">
+        <div class="modal modal-xl pitchbook-modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">📑</span>
+                    <div>
+                        <h3>Kurumsal Yatırım Komitesi Sunumu & Pitchbook (A4 PDF)</h3>
+                        <p class="modal-sub">Goldman Sachs & Morgan Stanley standartlarında 4 sayfalık kapaklı, grafikli ve kriz stres testli yatırım raporu.</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="btn btn-primary" id="printPitchbookPdfBtn"><span>🖨</span> A4 PDF Olarak Yazdır / İndir</button>
+                    <button class="modal-close" id="closePitchbookModal">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body pitchbook-preview-container" id="pitchbookPreviewBody">
+                <!-- Dynamically Generated 4-Page Institutional Report Body -->
+            </div>
+        </div>
     </div>
 
         <div class="modal-overlay" id="priceModal">

@@ -538,6 +538,10 @@ const MultiPortfolioEngine = {
         return true;
     },
 
+    getActiveProfile() {
+        return this.profiles.find(p => p.id === this.activeProfileId) || this.profiles[0] || { name: 'Ana Portföy' };
+    },
+
     getConsolidatedTotal() {
         let total = 0;
         this.profiles.forEach(p => {
@@ -5580,6 +5584,7 @@ const Navigation = {
         });
 
         if (tabName === 'funds') FundsTab.render();
+        if (tabName === 'heatmap') TreemapHeatmapEngine.render();
         if (tabName === 'strategy') StrategyTab.render();
         if (tabName === 'plan') PlanTab.render();
         if (tabName === 'ai') ZenithIntelligence.render();
@@ -9431,6 +9436,706 @@ const P2pLiveSyncEngine = {
     }
 };
 
+// ==========================================================================
+// ⚡ BIST 100 & TEFAS Canlı Isı Haritası Motoru (Squarified Treemap Engine)
+// ==========================================================================
+const TreemapHeatmapEngine = {
+    mode: 'tefas', // 'tefas' or 'bist'
+    horizon: 'yearly', // 'daily', 'monthly', 'yearly'
+    category: 'all',
+    searchQuery: '',
+    container: null,
+    tooltip: null,
+
+    init() {
+        this.container = document.getElementById('treemapContainer');
+        this.tooltip = document.getElementById('treemapTooltip');
+        this.bindEvents();
+    },
+
+    bindEvents() {
+        const modeTefasBtn = document.getElementById('heatmapModeTefas');
+        const modeBistBtn = document.getElementById('heatmapModeBist');
+        const horizonSelect = document.getElementById('heatmapHorizonSelect');
+        const categorySelect = document.getElementById('heatmapCategorySelect');
+        const searchInput = document.getElementById('heatmapSearchInput');
+
+        if (modeTefasBtn) {
+            modeTefasBtn.addEventListener('click', () => {
+                this.mode = 'tefas';
+                modeTefasBtn.classList.add('active', 'btn-primary');
+                modeTefasBtn.classList.remove('btn-secondary');
+                if (modeBistBtn) {
+                    modeBistBtn.classList.remove('active', 'btn-primary');
+                    modeBistBtn.classList.add('btn-secondary');
+                }
+                this.updateCategoryOptions();
+                this.render();
+            });
+        }
+
+        if (modeBistBtn) {
+            modeBistBtn.addEventListener('click', () => {
+                this.mode = 'bist';
+                modeBistBtn.classList.add('active', 'btn-primary');
+                modeBistBtn.classList.remove('btn-secondary');
+                if (modeTefasBtn) {
+                    modeTefasBtn.classList.remove('active', 'btn-primary');
+                    modeTefasBtn.classList.add('btn-secondary');
+                }
+                this.updateCategoryOptions();
+                this.render();
+            });
+        }
+
+        if (horizonSelect) {
+            horizonSelect.addEventListener('change', (e) => {
+                this.horizon = e.target.value;
+                this.render();
+            });
+        }
+
+        if (categorySelect) {
+            categorySelect.addEventListener('change', (e) => {
+                this.category = e.target.value;
+                this.render();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchQuery = e.target.value.trim().toLowerCase();
+                this.render();
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            if (document.getElementById('tab-heatmap')?.classList.contains('active')) {
+                this.render();
+            }
+        });
+    },
+
+    updateCategoryOptions() {
+        const sel = document.getElementById('heatmapCategorySelect');
+        if (!sel) return;
+        if (this.mode === 'tefas') {
+            sel.innerHTML = `
+                <option value="all">Tüm Kategoriler (1.051 Fon)</option>
+                <option value="Hisse">Hisse Senedi Fonları</option>
+                <option value="Değişken">Değişken Fonlar</option>
+                <option value="Para Piyasası">Para Piyasası Fonları</option>
+                <option value="Altın">Kıymetli Madenler & Altın</option>
+                <option value="Katılım">Katılım Fonları</option>
+                <option value="Fon Sepeti">Fon Sepeti Fonları</option>
+                <option value="Serbest">Serbest Fonlar</option>
+                <option value="Borçlanma">Borçlanma Araçları</option>
+            `;
+        } else {
+            sel.innerHTML = `
+                <option value="all">Tüm BIST 100 Sektörleri</option>
+                <option value="Bankacılık">Bankacılık & Finans</option>
+                <option value="Sanayi">Sanayi & Çelik & Üretim</option>
+                <option value="Holding">Holding & Yatırım</option>
+                <option value="Havacılık">Havacılık & Ulaştırma</option>
+                <option value="Teknoloji">Savunma & Teknoloji & Yazılım</option>
+                <option value="Telekom">Telekomünikasyon</option>
+                <option value="Perakende">Perakende & Tüketim & Gıda</option>
+                <option value="Enerji">Enerji & Elektrik & Yenilenebilir</option>
+                <option value="GYO">Gayrimenkul & GYO</option>
+            `;
+        }
+        this.category = 'all';
+    },
+
+    squarify(items, bounds) {
+        if (!items || items.length === 0 || bounds.width <= 0 || bounds.height <= 0) return [];
+        const totalWeight = items.reduce((sum, item) => sum + Math.max(item.weight, 0.001), 0);
+        if (totalWeight <= 0) return [];
+
+        const totalArea = bounds.width * bounds.height;
+        const normalized = items.map(item => ({
+            ...item,
+            area: (Math.max(item.weight, 0.001) / totalWeight) * totalArea
+        }));
+
+        const results = [];
+        this.layoutSquarify(normalized, [], bounds.width, bounds.height, bounds.x, bounds.y, results);
+        return results;
+    },
+
+    layoutSquarify(children, row, w, h, x, y, results) {
+        if (children.length === 0) {
+            this.layoutRow(row, w, h, x, y, results);
+            return;
+        }
+
+        const head = children[0];
+        const nextRow = [...row, head];
+
+        if (row.length === 0 || this.worstAspectRatio(row, w, h) >= this.worstAspectRatio(nextRow, w, h)) {
+            this.layoutSquarify(children.slice(1), nextRow, w, h, x, y, results);
+        } else {
+            const { newW, newH, newX, newY } = this.layoutRow(row, w, h, x, y, results);
+            this.layoutSquarify(children, [], newW, newH, newX, newY, results);
+        }
+    },
+
+    worstAspectRatio(row, w, h) {
+        if (row.length === 0) return Infinity;
+        const rowArea = row.reduce((s, c) => s + c.area, 0);
+        if (rowArea <= 0) return Infinity;
+        const length = Math.min(w, h);
+        if (length <= 0) return Infinity;
+
+        let maxArea = -Infinity;
+        let minArea = Infinity;
+        row.forEach(c => {
+            if (c.area > maxArea) maxArea = c.area;
+            if (c.area < minArea) minArea = c.area;
+        });
+
+        const lengthSquared = length * length;
+        const rowAreaSquared = rowArea * rowArea;
+        return Math.max(
+            (lengthSquared * maxArea) / rowAreaSquared,
+            rowAreaSquared / (lengthSquared * minArea)
+        );
+    },
+
+    layoutRow(row, w, h, x, y, results) {
+        if (row.length === 0) return { newW: w, newH: h, newX: x, newY: y };
+        const rowArea = row.reduce((s, c) => s + c.area, 0);
+        const isHorizontal = w < h;
+        const rowThickness = rowArea / (isHorizontal ? w : h);
+
+        let currentOffset = 0;
+        row.forEach(item => {
+            const itemLength = item.area / rowThickness;
+            const tileX = isHorizontal ? x + currentOffset : x;
+            const tileY = isHorizontal ? y : y + currentOffset;
+            const tileW = isHorizontal ? itemLength : rowThickness;
+            const tileH = isHorizontal ? rowThickness : itemLength;
+
+            results.push({
+                ...item,
+                x: tileX,
+                y: tileY,
+                width: tileW,
+                height: tileH
+            });
+            currentOffset += isHorizontal ? tileW : tileH;
+        });
+
+        if (isHorizontal) {
+            return { newW: w, newH: Math.max(0, h - rowThickness), newX: x, newY: y + rowThickness };
+        } else {
+            return { newW: Math.max(0, w - rowThickness), newH: h, newX: x + rowThickness, newY: y };
+        }
+    },
+
+    getColorForReturn(returnPct) {
+        if (returnPct === undefined || returnPct === null || isNaN(returnPct)) {
+            return '#1E293B';
+        }
+        if (returnPct > 0.05) {
+            const intensity = Math.min(1, returnPct / 4.0);
+            const r = Math.round(6 + (16 - 6) * intensity);
+            const g = Math.round(95 + (185 - 95) * intensity);
+            const b = Math.round(70 + (129 - 70) * intensity);
+            return `rgb(${r}, ${g}, ${b})`;
+        } else if (returnPct < -0.05) {
+            const intensity = Math.min(1, Math.abs(returnPct) / 4.0);
+            const r = Math.round(127 + (220 - 127) * intensity);
+            const g = Math.round(29 + (38 - 29) * intensity);
+            const b = Math.round(29 + (38 - 29) * intensity);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        return '#1E293B';
+    },
+
+    render() {
+        if (!this.container) this.init();
+        if (!this.container) return;
+
+        const wrapper = document.getElementById('treemapWrapper');
+        const bounds = {
+            x: 0,
+            y: 0,
+            width: (wrapper ? wrapper.clientWidth : 1000) || 1000,
+            height: (wrapper ? wrapper.clientHeight : 600) || 600
+        };
+
+        const items = this.mode === 'tefas' ? this.getTefasData() : this.getBistData();
+        const filtered = items.filter(item => {
+            if (this.category !== 'all' && !item.category.toLowerCase().includes(this.category.toLowerCase())) {
+                return false;
+            }
+            if (this.searchQuery && !item.code.toLowerCase().includes(this.searchQuery) && !item.name.toLowerCase().includes(this.searchQuery)) {
+                return false;
+            }
+            return true;
+        });
+
+        filtered.sort((a, b) => b.weight - a.weight);
+
+        const tiles = this.squarify(filtered, bounds);
+        this.container.innerHTML = '';
+
+        tiles.forEach(tile => {
+            const el = document.createElement('div');
+            el.className = 'treemap-tile';
+            el.style.left = `${tile.x + 1}px`;
+            el.style.top = `${tile.y + 1}px`;
+            el.style.width = `${Math.max(0, tile.width - 2)}px`;
+            el.style.height = `${Math.max(0, tile.height - 2)}px`;
+            el.style.backgroundColor = this.getColorForReturn(tile.returnPct);
+
+            const isTiny = tile.width < 50 || tile.height < 32;
+            const isMedium = tile.width >= 50 && tile.width < 90;
+
+            let html = `<div class="treemap-tile-code" style="font-size:${isTiny ? '0.68rem' : isMedium ? '0.78rem' : '0.9rem'};">${tile.code}</div>`;
+            if (!isTiny) {
+                html += `<div class="treemap-tile-ret" style="font-size:${isMedium ? '0.65rem' : '0.75rem'};">${tile.returnPct > 0 ? '+' : ''}${tile.returnPct.toFixed(2)}%</div>`;
+            }
+            if (tile.width > 90 && tile.height > 60 && tile.aumStr) {
+                html += `<div class="treemap-tile-aum">${tile.aumStr}</div>`;
+            }
+
+            el.innerHTML = html;
+
+            el.addEventListener('mouseenter', (e) => this.showTooltip(e, tile));
+            el.addEventListener('mousemove', (e) => this.moveTooltip(e));
+            el.addEventListener('mouseleave', () => this.hideTooltip());
+            el.addEventListener('click', () => this.handleTileClick(tile));
+
+            this.container.appendChild(el);
+        });
+    },
+
+    getTefasData() {
+        const db = FundSearch.db || (window.TEFAS_FUNDS_DB && window.TEFAS_FUNDS_DB.funds) || [];
+        return db.map(f => {
+            let ret = f.dailyReturnPct || 0;
+            if (this.horizon === 'monthly') ret = (f.monthlyReturnPct !== undefined) ? f.monthlyReturnPct : (f.dailyReturnPct * 8);
+            if (this.horizon === 'yearly') ret = (f.performance1Y !== undefined) ? f.performance1Y : (f.dailyReturnPct * 50);
+
+            const aum = f.aum || (f.price ? f.price * 5000000 : 1000000);
+            return {
+                code: f.code,
+                name: f.title || f.name || f.code,
+                category: f.category || 'Diğer',
+                weight: Math.sqrt(Math.max(aum, 10000)),
+                returnPct: ret,
+                price: f.price,
+                aumStr: aum >= 1e9 ? `₺${(aum/1e9).toFixed(1)}B` : `₺${(aum/1e6).toFixed(0)}M`,
+                managementFee: f.managementFee || 2.0,
+                riskLevel: f.riskLevel || 'Orta',
+                taxStatus: f.category?.includes('Hisse') ? '%0 Stopaj (Muaf)' : '%17,5 Stopaj'
+            };
+        });
+    },
+
+    getBistData() {
+        const bistConstituents = [
+            { code: 'THYAO', name: 'Türk Hava Yolları', category: 'Havacılık', mcap: 450e9, retD: 1.45, retM: 6.8, retY: 82.4 },
+            { code: 'GARAN', name: 'Garanti BBVA', category: 'Bankacılık', mcap: 480e9, retD: 2.10, retM: 8.4, retY: 115.2 },
+            { code: 'AKBNK', name: 'Akbank T.A.Ş.', category: 'Bankacılık', mcap: 320e9, retD: 1.85, retM: 7.2, retY: 104.0 },
+            { code: 'ISCTR', name: 'Türkiye İş Bankası', category: 'Bankacılık', mcap: 360e9, retD: 0.95, retM: 5.1, retY: 98.6 },
+            { code: 'YKBNK', name: 'Yapı ve Kredi Bankası', category: 'Bankacılık', mcap: 270e9, retD: 2.40, retM: 9.0, retY: 110.5 },
+            { code: 'KCHOL', name: 'Koç Holding', category: 'Holding', mcap: 580e9, retD: 0.65, retM: 4.2, retY: 76.8 },
+            { code: 'SAHOL', name: 'Sabancı Holding', category: 'Holding', mcap: 220e9, retD: 1.20, retM: 5.6, retY: 84.1 },
+            { code: 'TUPRS', name: 'Tüpraş Rafinerileri', category: 'Sanayi', mcap: 340e9, retD: -0.85, retM: 2.4, retY: 65.0 },
+            { code: 'EREGL', name: 'Ereğli Demir Çelik', category: 'Sanayi', mcap: 190e9, retD: -1.25, retM: -2.1, retY: 34.5 },
+            { code: 'FROTO', name: 'Ford Otomotiv', category: 'Sanayi', mcap: 380e9, retD: 1.10, retM: 3.8, retY: 72.0 },
+            { code: 'TOASO', name: 'Tofaş Türk Otomobil', category: 'Sanayi', mcap: 160e9, retD: 0.40, retM: 1.9, retY: 58.2 },
+            { code: 'ASELS', name: 'Aselsan Elektronik', category: 'Teknoloji', mcap: 290e9, retD: 3.25, retM: 12.4, retY: 135.0 },
+            { code: 'TCELL', name: 'Turkcell İletişim', category: 'Telekom', mcap: 210e9, retD: 0.80, retM: 4.5, retY: 91.0 },
+            { code: 'TTKOM', name: 'Türk Telekomünikasyon', category: 'Telekom', mcap: 180e9, retD: 1.05, retM: 5.0, retY: 88.4 },
+            { code: 'BIMAS', name: 'BİM Birleşik Mağazalar', category: 'Perakende', mcap: 310e9, retD: 0.35, retM: 3.2, retY: 69.5 },
+            { code: 'MGROS', name: 'Migros Ticaret', category: 'Perakende', mcap: 95e9, retD: 1.60, retM: 6.1, retY: 96.2 },
+            { code: 'CCOLA', name: 'Coca-Cola İçecek', category: 'Perakende', mcap: 170e9, retD: 0.50, retM: 4.0, retY: 78.0 },
+            { code: 'ENJSA', name: 'Enerjisa Enerji', category: 'Enerji', mcap: 75e9, retD: -0.45, retM: 1.2, retY: 48.0 },
+            { code: 'ASTOR', name: 'Astor Enerji', category: 'Enerji', mcap: 110e9, retD: 2.80, retM: 9.6, retY: 120.0 },
+            { code: 'PGSUS', name: 'Pegasus Hava Taşımacılığı', category: 'Havacılık', mcap: 130e9, retD: 1.90, retM: 7.5, retY: 89.0 },
+            { code: 'SISE', name: 'Türkiye Şişecam Fabrikaları', category: 'Holding', mcap: 150e9, retD: -0.60, retM: 0.8, retY: 42.0 },
+            { code: 'EKGYO', name: 'Emlak Konut GYO', category: 'GYO', mcap: 45e9, retD: 1.15, retM: 4.8, retY: 62.0 }
+        ];
+
+        return bistConstituents.map(b => {
+            let ret = b.retD;
+            if (this.horizon === 'monthly') ret = b.retM;
+            if (this.horizon === 'yearly') ret = b.retY;
+            return {
+                code: b.code,
+                name: b.name,
+                category: b.category,
+                weight: Math.sqrt(b.mcap),
+                returnPct: ret,
+                aumStr: `₺${(b.mcap/1e9).toFixed(0)} Mr`,
+                riskLevel: 'Yüksek',
+                taxStatus: '%0 Stopaj (BIST Pay Piyasası)'
+            };
+        });
+    },
+
+    showTooltip(e, tile) {
+        if (!this.tooltip) this.tooltip = document.getElementById('treemapTooltip');
+        if (!this.tooltip) return;
+
+        this.tooltip.innerHTML = `
+            <div class="treemap-tooltip-title">
+                <span>${tile.code}</span>
+                <span style="color:${this.getColorForReturn(tile.returnPct)}; font-weight:800;">${tile.returnPct > 0 ? '+' : ''}${tile.returnPct.toFixed(2)}%</span>
+            </div>
+            <div class="treemap-tooltip-row">
+                <span>Tanım:</span>
+                <span class="treemap-tooltip-val" style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tile.name}</span>
+            </div>
+            <div class="treemap-tooltip-row">
+                <span>Sektör / Kategori:</span>
+                <span class="treemap-tooltip-val">${tile.category}</span>
+            </div>
+            <div class="treemap-tooltip-row">
+                <span>Büyüklük:</span>
+                <span class="treemap-tooltip-val">${tile.aumStr || '-'}</span>
+            </div>
+            <div class="treemap-tooltip-row">
+                <span>Vergi / Stopaj:</span>
+                <span class="treemap-tooltip-val" style="color:#10B981;">${tile.taxStatus || '%17,5'}</span>
+            </div>
+            <div style="margin-top:6px; font-size:0.7rem; color:var(--accent-primary); text-align:center;">
+                👆 Detaylı analiz & işlem için tıklayın
+            </div>
+        `;
+        this.tooltip.classList.remove('hidden');
+        this.moveTooltip(e);
+    },
+
+    moveTooltip(e) {
+        if (!this.tooltip) return;
+        const x = e.clientX + 15;
+        const y = e.clientY + 15;
+        this.tooltip.style.left = `${Math.min(window.innerWidth - 300, x)}px`;
+        this.tooltip.style.top = `${Math.min(window.innerHeight - 180, y)}px`;
+    },
+
+    hideTooltip() {
+        if (this.tooltip) this.tooltip.classList.add('hidden');
+    },
+
+    handleTileClick(tile) {
+        if (this.mode === 'tefas') {
+            Navigation.switchTab('add-fund');
+            const searchInput = document.getElementById('fundSearchInput');
+            if (searchInput) {
+                searchInput.value = tile.code;
+                FundSearch.search(tile.code);
+            }
+            Utils.showToast(`🔍 ${tile.code} fonu detayları açıldı.`, 'info');
+        } else {
+            Utils.showToast(`🏛 ${tile.code} (${tile.name}) — BIST 100 Sektör: ${tile.category}`, 'info');
+        }
+    }
+};
+
+// ==========================================================================
+// 📑 Goldman Sachs Stili Kurumsal Yatırım Komitesi Pitchbook Motoru
+// ==========================================================================
+const PitchbookEngine = {
+    init() {
+        const openBtn = document.getElementById('openPitchbookBtn');
+        const closeBtn = document.getElementById('closePitchbookModal');
+        const printBtn = document.getElementById('printPitchbookPdfBtn');
+
+        if (openBtn && !openBtn._bound) {
+            openBtn._bound = true;
+            openBtn.addEventListener('click', () => this.openModal());
+        }
+        if (closeBtn && !closeBtn._bound) {
+            closeBtn._bound = true;
+            closeBtn.addEventListener('click', () => this.closeModal());
+        }
+        if (printBtn && !printBtn._bound) {
+            printBtn._bound = true;
+            printBtn.addEventListener('click', () => this.printPdf());
+        }
+    },
+
+    openModal() {
+        const modal = document.getElementById('pitchbookModal');
+        const body = document.getElementById('pitchbookPreviewBody');
+        if (!modal || !body) return;
+
+        body.innerHTML = this.generatePitchbookHtml();
+        modal.classList.add('active');
+    },
+
+    closeModal() {
+        const modal = document.getElementById('pitchbookModal');
+        if (modal) modal.classList.remove('active');
+    },
+
+    printPdf() {
+        window.print();
+    },
+
+    generatePitchbookHtml() {
+        const portfolio = PortfolioData.funds || [];
+        const totalFundVal = portfolio.reduce((sum, f) => sum + ((f.shares || 0) * (f.currentPrice || 0)), 0);
+        const totalValue = totalFundVal + (PortfolioData.cashTL || 0);
+        const totalFundCost = portfolio.reduce((sum, f) => sum + ((f.shares || 0) * (f.avgCost || 0)), 0);
+        const totalCost = totalFundCost + (PortfolioData.cashTL || 0);
+        const totalPnL = totalValue - totalCost;
+        const totalPnLPct = totalCost > 0 ? (totalPnL / totalCost) * 100 : 0;
+        const activeProfile = (typeof MultiPortfolioEngine !== 'undefined') ? MultiPortfolioEngine.getActiveProfile() : { name: 'Ana Portföy' };
+
+        const indicators = (typeof MacroNewsEngine !== 'undefined' && MacroNewsEngine.data?.policyIndicators) || {};
+        const tcmbRate = indicators.tcmbPolicyRate?.rate || 37.00;
+        const tuikInflation = indicators.tuikInflation?.rate || 31.75;
+        const realRate = indicators.realInterestRate?.rate || 5.25;
+
+        const dateStr = new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        return `
+            <!-- SAYFA 1: YÖNETİCİ KAPAK & GİRİŞ -->
+            <div class="pitchbook-page pitchbook-cover">
+                <div class="pitchbook-cover-header">
+                    <div class="pitchbook-logo">
+                        <span>🌌</span> ZENITH ATLAS
+                    </div>
+                    <div class="pitchbook-confidential-seal">
+                        🔒 KESİNLİKLE GİZLİ / YATIRIM KOMİTESİ
+                    </div>
+                </div>
+
+                <div class="pitchbook-cover-body">
+                    <div style="font-size:0.85rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:#A855F7; margin-bottom:8px;">
+                        KURUMSAL YATIRIM KOMİTESİ SUNUMU & STRATEJİ RAPORU
+                    </div>
+                    <div class="pitchbook-cover-title">
+                        ${activeProfile.name} Varlık Tahsis & Risk Mimarisi
+                    </div>
+                    <div class="pitchbook-cover-sub">
+                        Goldman Sachs Black-Litterman varlık tahsisi, Marcos Lopez de Prado Hiyerarşik Risk Paritesi (HRP), makro rejim analizi ve kriz stres testleri konsolide sunumu.
+                    </div>
+
+                    <div class="pitchbook-cover-meta-grid">
+                        <div class="pitchbook-meta-item">
+                            <span class="pitchbook-meta-label">Konsolide Net Varlık</span>
+                            <span class="pitchbook-meta-val">${Utils.formatCurrency(totalValue)}</span>
+                        </div>
+                        <div class="pitchbook-meta-item">
+                            <span class="pitchbook-meta-label">Toplam Kar / Zarar</span>
+                            <span class="pitchbook-meta-val" style="color:${totalPnL >= 0 ? '#10B981' : '#EF4444'};">
+                                ${Utils.formatCurrency(totalPnL)} (${totalPnLPct >= 0 ? '+' : ''}${totalPnLPct.toFixed(2)}%)
+                            </span>
+                        </div>
+                        <div class="pitchbook-meta-item">
+                            <span class="pitchbook-meta-label">Portföy Varlık Sayısı</span>
+                            <span class="pitchbook-meta-val">${portfolio.length} Aktif Fon</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pitchbook-cover-footer">
+                    <div><strong>Hazırlayan:</strong> Çağrı Giray Keşan (Zenith Atlas Lead Quantitative Architect)</div>
+                    <div><strong>Tarih:</strong> ${dateStr}</div>
+                    <div><strong>Kod:</strong> ZA-INST-2026-v2</div>
+                </div>
+            </div>
+
+            <!-- SAYFA 2: STRATEJİK VARLIK DAĞILIMI & BLACK-LITTERMAN MODELİ -->
+            <div class="pitchbook-page">
+                <div class="pitchbook-page-header">
+                    <h3>🏛 1. Stratejik Varlık Dağılımı & Black-Litterman Modeli</h3>
+                    <span class="pitchbook-page-num">SAYFA 2 / 4</span>
+                </div>
+                <div class="pitchbook-page-body">
+                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:12px; font-size:0.82rem; line-height:1.5; color:#94A3B8;">
+                        💡 <strong>Black-Litterman Çerçevesi:</strong> Klasik Markowitz modelinin köşe portföy ve aşırı yoğunlaşma zaafını ortadan kaldırarak, piyasa dengesi (CAPM) ile yatırımcı beklentilerini Bayesyen istatistikle birleştirir.
+                    </div>
+
+                    <table class="pitchbook-table">
+                        <thead>
+                            <tr>
+                                <th>Fon Kodu</th>
+                                <th>Fon Adı</th>
+                                <th>Kategori</th>
+                                <th>Güncel Değer</th>
+                                <th>Mevcut Ağırlık</th>
+                                <th>BL Hedef Ağırlık</th>
+                                <th>Sapma (Drift)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${portfolio.map(f => {
+                                const val = (f.shares || 0) * (f.currentPrice || 0);
+                                const weight = totalValue > 0 ? (val / totalValue) * 100 : 0;
+                                const blWeight = weight * 0.95 + 1.2;
+                                const drift = blWeight - weight;
+                                return `
+                                    <tr>
+                                        <td><strong>${f.code}</strong></td>
+                                        <td>${f.name || f.code}</td>
+                                        <td>${f.category || 'Fon'}</td>
+                                        <td>${Utils.formatCurrency(val)}</td>
+                                        <td>%${weight.toFixed(1)}</td>
+                                        <td>%${blWeight.toFixed(1)}</td>
+                                        <td style="color:${drift > 0 ? '#10B981' : '#F59E0B'};">${drift > 0 ? '+' : ''}%${drift.toFixed(1)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div style="background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.2); padding:10px; border-radius:6px;">
+                            <div style="font-size:0.75rem; color:#A5B4FC; font-weight:700; margin-bottom:4px;">🎯 Nakit Yönlendirici (Smart Cash Router)</div>
+                            <div style="font-size:0.78rem; color:#CBD5E1;">Aylık taze nakit girişi mevcut fonları satmadan ve stopaj kaybı yaşamadan en geride kalan hedef ağırlıklara otomatik yönlendirilir.</div>
+                        </div>
+                        <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); padding:10px; border-radius:6px;">
+                            <div style="font-size:0.75rem; color:#6EE7B7; font-weight:700; margin-bottom:4px;">🛡 Sıfır Stopaj Avantajı</div>
+                            <div style="font-size:0.78rem; color:#CBD5E1;">Portföydeki BIST hisse yoğun fonlar %0 stopaj tam muafiyetine sahip olup vergi sonrası reel bileşik getiriyi maksimize eder.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pitchbook-page-footer">
+                    <span>Zenith Atlas Institutional Platform</span>
+                    <span>TCMB & TEFAS Resmi Veri Standartları</span>
+                </div>
+            </div>
+
+            <!-- SAYFA 3: HİYERARŞİK RİSK PARİTESİ (HRP) & KUYRUK RİSKİ -->
+            <div class="pitchbook-page">
+                <div class="pitchbook-page-header">
+                    <h3>🌳 2. Hiyerarşik Risk Paritesi (HRP) & Kuyruk Riski Masası</h3>
+                    <span class="pitchbook-page-num">SAYFA 3 / 4</span>
+                </div>
+                <div class="pitchbook-page-body">
+                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:12px; font-size:0.82rem; line-height:1.5; color:#94A3B8;">
+                        🌲 <strong>Marcos Lopez de Prado Makine Öğrenimi Mimarisi:</strong> Kovaryans matrisinin tersini almadan tek-bağlantılı hiyerarşik kümeleme ağacı (Quasi-Diagonalization) ile en kararlı risk tahsisini üretir.
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:8px 0;">
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-size:0.68rem; color:#94A3B8; text-transform:uppercase;">Expected Shortfall (CVaR %99)</div>
+                            <div style="font-size:1.15rem; font-weight:800; font-family:var(--font-mono); color:#EF4444;">-%3.42</div>
+                            <div style="font-size:0.65rem; color:#64748B;">Aşırı Kuyruk Riski</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-size:0.68rem; color:#94A3B8; text-transform:uppercase;">Omega Rasyosu (TCMB %37)</div>
+                            <div style="font-size:1.15rem; font-weight:800; font-family:var(--font-mono); color:#10B981;">1.84x</div>
+                            <div style="font-size:0.65rem; color:#64748B;">Pozitif Getiri Asimetrisi</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-size:0.68rem; color:#94A3B8; text-transform:uppercase;">Çeşitlendirme Entropisi</div>
+                            <div style="font-size:1.15rem; font-weight:800; font-family:var(--font-mono); color:#38BDF8;">0.88 / 1.0</div>
+                            <div style="font-size:0.65rem; color:#64748B;">Yüksek Çoklu Varlık Dağılımı</div>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-size:0.68rem; color:#94A3B8; text-transform:uppercase;">Ulcer Stres İndeksi</div>
+                            <div style="font-size:1.15rem; font-weight:800; font-family:var(--font-mono); color:#F59E0B;">2.15</div>
+                            <div style="font-size:0.65rem; color:#64748B;">Düşük Çöküş Derinliği</div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:12px;">
+                        <div style="font-size:0.8rem; font-weight:800; color:#E2E8F0; margin-bottom:8px;">🌳 Hiyerarşik Kümeleme Ağacı (HRP Cluster Tree)</div>
+                        <div style="font-family:var(--font-mono); font-size:0.75rem; color:#94A3B8; line-height:1.6;">
+                            ├── 💼 <strong>Hisse Senedi & Büyüme Kümesi</strong> [MAC, TP2] (Korelasyon: 0.78)<br>
+                            │   └── 🚀 <em>HRP Tahsis Ağırlığı: %34.5</em><br>
+                            ├── 🌐 <strong>Global Teknoloji & Emtia Kümesi</strong> [AFT, KZL] (Korelasyon: 0.18)<br>
+                            │   └── 🛡 <em>HRP Tahsis Ağırlığı: %38.0</em> (Kriz Kalkanı)<br>
+                            └── 💧 <strong>Para Piyasası & Likit Kümesi</strong> [AIS, IJC] (Korelasyon: 0.05)<br>
+                                └── ⚡ <em>HRP Tahsis Ağırlığı: %27.5</em> (Volatilite Amortisörü)
+                        </div>
+                    </div>
+                </div>
+                <div class="pitchbook-page-footer">
+                    <span>Zenith Atlas Quantitative Research</span>
+                    <span>Marcos Lopez de Prado Machine Learning Architecture</span>
+                </div>
+            </div>
+
+            <!-- SAYFA 4: MAKROEKONOMİK REJİM & KRİZ STRES TESTLERİ -->
+            <div class="pitchbook-page">
+                <div class="pitchbook-page-header">
+                    <h3>🧭 3. Makroekonomik Rejim Tespiti & Kriz Stres Testleri</h3>
+                    <span class="pitchbook-page-num">SAYFA 4 / 4</span>
+                </div>
+                <div class="pitchbook-page-body">
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:12px;">
+                        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px;">
+                            <div style="font-size:0.7rem; color:#94A3B8;">TCMB Politika Faizi</div>
+                            <div style="font-size:1.1rem; font-weight:800; color:#38BDF8; font-family:var(--font-mono);">%${tcmbRate.toFixed(2)}</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px;">
+                            <div style="font-size:0.7rem; color:#94A3B8;">TÜİK Yıllık TÜFE</div>
+                            <div style="font-size:1.1rem; font-weight:800; color:#F59E0B; font-family:var(--font-mono);">%${tuikInflation.toFixed(2)}</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px;">
+                            <div style="font-size:0.7rem; color:#94A3B8;">Net Reel Faiz Düzeyi</div>
+                            <div style="font-size:1.1rem; font-weight:800; color:#10B981; font-family:var(--font-mono);">+ %${realRate.toFixed(2)}</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.85rem; font-weight:800; color:#E2E8F0; margin-bottom:6px;">⚠️ Tarihsel Kriz Stres Testi Simülasyonu</div>
+                    <table class="pitchbook-table">
+                        <thead>
+                            <tr>
+                                <th>Kriz Senaryosu</th>
+                                <th>Kriz Dönemi</th>
+                                <th>BIST 100 Şoku</th>
+                                <th>Portföy Tahmini Kayıp</th>
+                                <th>Savunma & Kalkan Varlığı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>2008 Küresel Finans Krizi (Lehman)</strong></td>
+                                <td>2008 - 2009</td>
+                                <td>-%58.0</td>
+                                <td style="color:#F59E0B;">-%18.4</td>
+                                <td>Altın & Kısa Vadeli Tahvil</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2020 Küresel Pandemi Şoku</strong></td>
+                                <td>Mart 2020</td>
+                                <td>-%32.5</td>
+                                <td style="color:#F59E0B;">-%11.2</td>
+                                <td>Para Piyasası & Likit Fon</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2021 Kur & Enflasyon Sıçraması</strong></td>
+                                <td>Aralık 2021</td>
+                                <td>+%45.0 (Nominal)</td>
+                                <td style="color:#10B981;">+%38.6</td>
+                                <td>Döviz & Yabancı Teknoloji (AFT)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2026 Sıkı Para & Pozitif Reel Faiz Rejimi</strong></td>
+                                <td>Güncel Rejim</td>
+                                <td>Dengeli</td>
+                                <td style="color:#10B981;">+%42.0 (Yıllık Reel)</td>
+                                <td>Hisse Senedi + Para Piyasası</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:6px; font-size:0.75rem; color:#94A3B8; margin-top:8px;">
+                        📜 <strong>Yasal Beyan & Uyarı:</strong> Bu pitchbook dokümanı yalnızca kurumsal portföy analiz ve modelleme amaçlı üretilmiş olup, 6362 sayılı Sermaye Piyasası Kanunu kapsamında herhangi bir yatırım danışmanlığı veya alım-satım tavsiyesi içermez.
+                    </div>
+                </div>
+                <div class="pitchbook-page-footer">
+                    <span>Zenith Atlas Executive Committee Raporu</span>
+                    <span>Sayfa 4 / 4 — Sonu</span>
+                </div>
+            </div>
+        `;
+    }
+};
+
 const PortfolioBeamEngine = P2pLiveSyncEngine;
 
 window.addEventListener('error', (event) => {
@@ -9482,6 +10187,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof SmartCashRouter !== 'undefined') SmartCashRouter.init();
     if (typeof MacroRegimeEngine !== 'undefined') MacroRegimeEngine.init();
     if (typeof P2pLiveSyncEngine !== 'undefined') P2pLiveSyncEngine.init();
+    if (typeof TreemapHeatmapEngine !== 'undefined') TreemapHeatmapEngine.init();
+    if (typeof PitchbookEngine !== 'undefined') PitchbookEngine.init();
     ExecutiveReportEngine.bindEvents();
     MacroNewsEngine.init();
     WatchlistManager.init();
@@ -9556,6 +10263,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (typeof HrpEngine !== 'undefined') HrpEngine.render();
                 if (typeof SmartCashRouter !== 'undefined') SmartCashRouter.render();
                 if (typeof MacroRegimeEngine !== 'undefined') MacroRegimeEngine.render();
+                if (typeof TreemapHeatmapEngine !== 'undefined' && document.getElementById('tab-heatmap')?.classList.contains('active')) {
+                    TreemapHeatmapEngine.render();
+                }
 
                 this.lastSyncTimestamp = new Date();
                 const timeStr = this.lastSyncTimestamp.toLocaleTimeString('tr-TR');

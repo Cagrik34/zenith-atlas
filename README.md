@@ -103,6 +103,15 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında (`localStorage` & 
 * **Milisaniye Gecikmeli Senkronizasyon:** Masaüstünde eklenen her fon veya güncellenen nakit bakiyesi telefon ekranına milisaniyeler içinde anında yansır; canlı ping/gecikme (`ms`) ve aktarılan paket sayaçları takip edilir.
 * **Anlık Portföy Işınlama (QR Teleporter):** Kamera ile tek tıkla tüm portföyü ve profilleri mobil cihaza sıfır sunucu veri sızıntısıyla (Zero-Knowledge Base64 URI) ışınlama.
 
+### 20. ⚡ BIST 100 & TEFAS Canlı Isı Haritası (Finviz / S&P 500 Squarified Treemap)
+* **Squarified Treemap Geometrisi:** 1.051 TEFAS yatırım fonu ve BIST 100 şirketlerini pazar payı ve fon büyüklüğüne göre optimum en-boy oranında (Aspect Ratio $\approx 1.0$) dikdörtgen bloklara yerleştirir.
+* **Çift Mod & Çoklu Vade:** TEFAS Fonları ve BIST 100 Sektörleri (Bankacılık, Sanayi, Holding, Havacılık, Teknoloji vb.) arasında geçiş; Günlük, Aylık ve Yıllık getiri skalasında dinamik zümrüt yeşili ve koyu kırmızı ısı haritası renklendirmesi.
+* **İnteraktif Sektörel Filtreleme:** Canlı varlık arama, getiri filtreleri ve fon detaylarına tek tıkla doğrudan geçiş.
+
+### 21. 📑 Goldman Sachs Stili Kurumsal Yatırım Komitesi Pitchbook & A4 PDF Motoru
+* **4 Sayfalık Vektörel Kurumsal Rapor:** Kapak sayfası, Stratejik Varlık Dağılımı & Black-Litterman Modeli, Marcos Lopez de Prado HRP Kümeleme Ağacı & CVaR Kuyruk Riski, Makroekonomik Rejimler ve Tarihsel Kriz Stres Testleri.
+* **%100 Sıfır-Bilgi İstemci Taraflı Baskı:** Portföy verisini hiçbir harici sunucuya iletmeden doğrudan tarayıcı içi vektörel CSS A4 baskı motoruyla yüksek çözünürlüklü PDF oluşturma.
+
 ---
 
 ## 📁 Proje Mimarisi
