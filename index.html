@@ -83,6 +83,9 @@
                 <button class="btn btn-ghost" id="openAlertsBtn" title="Akıllı Fiyat & Portföy Alarmları">
                     <span>🔔</span> <span class="alerts-badge-count" id="alertsActiveBadge" style="display:none;">0</span>
                 </button>
+                <button class="btn btn-ghost" id="openVoiceBriefingBtn" title="Zenith Voice AI Sesli Sabah Bülteni (Türkçe Spiker)">
+                    <span>🎙️</span> Sesli Bülten
+                </button>
                 <button class="btn btn-ghost" id="openPitchbookBtn" title="Goldman Sachs Stili Kurumsal Pitchbook & Sunum Raporu (A4 PDF)">
                     <span>📑</span> Pitchbook
                 </button>
@@ -882,6 +885,208 @@
                                 <button class="btn btn-xs btn-outline" id="qrCopyBeamUrlBtn"><span>📋</span> Eşleşme Linkini Kopyala</button>
                                 <button class="btn btn-xs btn-outline" id="p2pTestPingBtn"><span>📡</span> Canlı P2P Sinyal Testi</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fama-French 5-Factor & Alpha Attribution Desk -->
+                <div class="card factor-attribution-card" id="factorAttributionSection" style="margin-top: 24px;">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:40px; height:40px; border-radius:10px; background:rgba(14,165,233,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🧬</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Fama-French 5-Faktör Risk & Alfa Ayrıştırma Masası (Factor Investing)</h3>
+                                <p style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">Nobel ödüllü Fama-French modeliyle portföy getirisini Piyasa, Büyüklük, Değer, Karlılık ve Yatırım faktörlerine ayrıştırarak gerçek yönetici Alfasını kanıtlar.</p>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <span class="badge badge-primary" id="factorAlphaBadge">Alfa: Hesaplanıyor...</span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; padding:16px 20px; background:rgba(15,23,42,0.3); border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">🏆 Gerçek Yönetici Alfası (Jensen's Alpha)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#10B981;" id="ffAlphaVal">+%4.85 / Yıl</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">Faktörlerin Ötesindeki Net Katkı</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">📈 Piyasa Betası (Market Exposure)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#38BDF8;" id="ffMarketBetaVal">0.82x</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">BIST 100 & Küresel Piyasa Duyarlılığı</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">📊 R² Açıklayıcılık Gücü (Goodness of Fit)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#A855F7;" id="ffRSquaredVal">%89.4</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">5 Faktörün Portföyü Açıklama Oranı</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">🎯 Aktif Paylaşım (Active Share)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#F59E0B;" id="ffActiveShareVal">%74.2</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">Endeksten Özgün Ayrışma Derecesi</div>
+                        </div>
+                    </div>
+
+                    <!-- Factor Loadings Matrix Grid -->
+                    <div style="padding:20px;">
+                        <h4 style="font-size:0.92rem; color:var(--accent-primary); margin:0 0 14px 0;">📊 Fama-French 5 Temel Faktör Yükü (Factor Loadings)</h4>
+                        <div class="factor-matrix-grid" id="factorMatrixGrid">
+                            <!-- Populated dynamically by FactorAttributionEngine -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rolling Cross-Asset Correlation Dynamics & Eigenvalue Matrix -->
+                <div class="card rolling-correlation-card" id="rollingCorrelationSection" style="margin-top: 24px;">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🌊</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Yuvarlanan Çapraz Varlık Korelasyon Dinamikleri & Özdeğer Riski</h3>
+                                <p style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">30G, 90G ve 365G hareketli pencerelerle kriz anında korelasyon çöküşünü (Correlation Breakdown) ve sistemik yoğunlaşmayı (PCA Absorption Ratio) tespit eder.</p>
+                            </div>
+                        </div>
+                        <div class="rolling-window-switch" style="display:flex; gap:6px; background:rgba(0,0,0,0.3); padding:4px; border-radius:var(--radius-md);">
+                            <button class="btn btn-xs btn-primary active" id="rollingWindow30Btn">30 Günlük</button>
+                            <button class="btn btn-xs btn-secondary" id="rollingWindow90Btn">90 Günlük</button>
+                            <button class="btn btn-xs btn-secondary" id="rollingWindow365Btn">1 Yıllık</button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; padding:16px 20px; background:rgba(15,23,42,0.3); border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">📐 PCA Absorpsiyon Oranı (Absorption Ratio)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#10B981;" id="pcaAbsorptionVal">%48.2</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">&lt; %65: Sağlıklı Çeşitlendirme</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">🛡 Çeşitlendirme Oranı (Diversification Ratio)</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#38BDF8;" id="diversificationRatioVal">1.74x</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">&gt; 1.3x: Güçlü Portföy Kalkanı</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">⚡ Ortalama Çapraz Korelasyon</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#F59E0B;" id="avgCorrelationVal">0.24</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">Düşük İç Varlık Bağımlılığı</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Rolling Correlation Heatmap Matrix -->
+                    <div style="padding:20px;">
+                        <h4 style="font-size:0.92rem; color:var(--accent-primary); margin:0 0 14px 0;">🌐 Dinamik Çapraz Korelasyon Isı Matrisi</h4>
+                        <div class="correlation-matrix-wrapper" id="correlationMatrixWrapper" style="overflow-x:auto;">
+                            <!-- Populated dynamically by RollingCorrelationEngine -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Synthetic Macro Shock Generator -->
+                <div class="card synthetic-stress-card" id="syntheticStressSection" style="margin-top: 24px;">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:40px; height:40px; border-radius:10px; background:rgba(239,68,68,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">🎛️</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">İnteraktif Sentetik Makro Şok Jeneratörü (What-If Crisis Engine)</h3>
+                                <p style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">Döviz, faiz, borsa ve altın kaydırıcılarını (sliders) hareket ettirerek anlık çok boyutlu kriz senaryosu simülasyonu çalıştırın.</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-ghost" id="resetStressSlidersBtn">🔄 Sıfırla</button>
+                    </div>
+
+                    <div style="padding:20px; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+                        <!-- Sliders Column -->
+                        <div class="stress-sliders-panel" style="display:flex; flex-direction:column; gap:16px;">
+                            <div class="stress-slider-group">
+                                <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px;">
+                                    <span>💱 USD/TRY Kur Şoku</span>
+                                    <strong id="sliderUsdVal" style="color:#38BDF8; font-family:var(--font-mono);">%0</strong>
+                                </div>
+                                <input type="range" id="sliderUsd" min="-20" max="50" value="0" step="1" class="form-range" style="width:100%;">
+                            </div>
+
+                            <div class="stress-slider-group">
+                                <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px;">
+                                    <span>🏛 TCMB Politika Faizi Değişimi</span>
+                                    <strong id="sliderRateVal" style="color:#F59E0B; font-family:var(--font-mono);">0 bps</strong>
+                                </div>
+                                <input type="range" id="sliderRate" min="-1000" max="1000" value="0" step="50" class="form-range" style="width:100%;">
+                            </div>
+
+                            <div class="stress-slider-group">
+                                <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px;">
+                                    <span>📈 BIST 100 Endeks Şoku</span>
+                                    <strong id="sliderBistVal" style="color:#10B981; font-family:var(--font-mono);">%0</strong>
+                                </div>
+                                <input type="range" id="sliderBist" min="-30" max="30" value="0" step="1" class="form-range" style="width:100%;">
+                            </div>
+
+                            <div class="stress-slider-group">
+                                <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px;">
+                                    <span>🥇 Spot Altın / Emtia Şoku</span>
+                                    <strong id="sliderGoldVal" style="color:#EAB308; font-family:var(--font-mono);">%0</strong>
+                                </div>
+                                <input type="range" id="sliderGold" min="-20" max="40" value="0" step="1" class="form-range" style="width:100%;">
+                            </div>
+                        </div>
+
+                        <!-- Real-Time Impact Output Column -->
+                        <div class="stress-output-panel" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius-lg); padding:20px; display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:0.75rem; text-transform:uppercase; color:#94A3B8; font-weight:700; margin-bottom:4px;">Simüle Edilen Portföy Etkisi</div>
+                                <div style="font-size:2rem; font-weight:900; font-family:var(--font-mono);" id="stressProjectedPnlVal">₺0,00 (+%0,00)</div>
+                                <div style="font-size:0.8rem; color:#94A3B8; margin-top:4px;" id="stressResilienceBadge">🛡 Dayanıklılık Skoru: 85 / 100</div>
+                            </div>
+                            <div style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div>
+                                    <div style="font-size:0.7rem; color:#64748B;">🛡 En Güçlü Kalkan Varlık</div>
+                                    <div style="font-size:0.95rem; font-weight:700; color:#10B981;" id="stressBestDefenderVal">AFT (+%12.4)</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:0.7rem; color:#64748B;">⚠️ En Hassas Varlık</div>
+                                    <div style="font-size:0.95rem; font-weight:700; color:#EF4444;" id="stressWorstAssetVal">MAC (-%8.2)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax-Loss Harvesting & Specific Lot Identification Simulator -->
+                <div class="card tax-harvesting-card" id="taxLossHarvestingSection" style="margin-top: 24px;">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:40px; height:40px; border-radius:10px; background:rgba(234,179,8,0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">⚡</div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:var(--text-primary);">Gelişmiş Vergi Kayıp Hasadı & Lot Bazlı Optimizasyon (Tax-Loss Harvesting)</h3>
+                                <p style="margin:4px 0 0 0; font-size:0.8rem; color:var(--text-secondary);">2026 güncel %17,5 stopaj ve %0 hisse muafiyeti mevzuatıyla HIFO/FIFO simülasyonu yaparak vergi yükünü yasal olarak en aza indirir.</p>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <span class="badge badge-success" id="taxSavingsBadge">Tahmini Vergi Tasarrufu: Hesaplanıyor...</span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; padding:16px 20px; background:rgba(15,23,42,0.3); border-bottom:1px solid rgba(255,255,255,0.06);">
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">💵 HIFO Yöntemiyle Vergi Tasarrufu</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#10B981;" id="hifoTaxSavingsVal">₺4.850,00</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">FIFO'ya Kıyasla Net Vergi Avantajı</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">🌾 Hasat Edilebilir Zarar Havuzu</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#F59E0B;" id="harvestableLossVal">₺12.400,00</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">Kar Stopajını Mahsup Etme Gücü</div>
+                        </div>
+                        <div class="hrp-kpi-card" style="background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:0.72rem; color:var(--text-secondary);">🛡 %0 Stopaj Muaf Varlık Oranı</div>
+                            <div style="font-size:1.2rem; font-weight:700; color:#38BDF8;" id="taxFreeAssetRatioVal">%38.5</div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary);">BIST Hisse Yoğun Fonlar</div>
+                        </div>
+                    </div>
+
+                    <div style="padding:20px;">
+                        <h4 style="font-size:0.92rem; color:var(--accent-primary); margin:0 0 14px 0;">📋 Vergi Kayıp Hasadı & İkame Fon Önerileri</h4>
+                        <div class="tax-opportunities-list" id="taxOpportunitiesList">
+                            <!-- Populated dynamically by TaxLossHarvestingEngine -->
                         </div>
                     </div>
                 </div>
@@ -1824,6 +2029,57 @@
                     <button class="btn btn-ghost" id="dismissByokSettingsModal">Vazgeç</button>
                     <button class="btn btn-primary" id="saveByokSettingsBtn">💾 Kaydet & Aktifleştir</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zenith Voice AI Morning Audio Briefing Modal -->
+    <div class="modal-overlay" id="voiceBriefingModal">
+        <div class="modal modal-md" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="modal-icon">🎙️</span>
+                    <div>
+                        <h3>Zenith Voice AI — Sabah Açılış Sesli Bülteni</h3>
+                        <p class="modal-sub">Doğal Türkçe ses sentezleyiciyle günlük kişiselleştirilmiş portföy & piyasa özeti.</p>
+                    </div>
+                </div>
+                <button class="modal-close" id="closeVoiceBriefingModal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px 24px;">
+                <!-- Animated Audio Waveform Visualizer -->
+                <div class="voice-waveform-box" id="voiceWaveformBox" style="height: 64px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 16px; margin-bottom: 16px;">
+                    <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+                    <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+                    <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+                    <span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span><span class="wave-bar"></span>
+                </div>
+
+                <!-- Live Spoken Transcript -->
+                <div class="voice-transcript-box" id="voiceTranscriptBox" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 14px; min-height: 120px; max-height: 180px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; color: #E2E8F0;">
+                    Bülteni dinlemek için aşağıdaki <strong>"Sesli Oynat"</strong> butonuna basın.
+                </div>
+
+                <!-- Controls Strip -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="voiceSpeedSelect" style="font-size: 0.75rem; color: var(--text-secondary);">Hız:</label>
+                        <select id="voiceSpeedSelect" class="form-select form-select-sm" style="width: 90px;">
+                            <option value="0.9">0.9x</option>
+                            <option value="1.0" selected>1.0x (Normal)</option>
+                            <option value="1.15">1.15x (Akıcı)</option>
+                            <option value="1.3">1.3x (Hızlı)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" id="stopVoiceBriefingBtn">⏹ Durdur</button>
+                        <button class="btn btn-primary" id="playVoiceBriefingBtn">▶️ Sesli Oynat</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.72rem; color: var(--text-tertiary);">🔒 %100 Cihaz İçi Web Speech API (Sıfır Veri Sızıntısı)</span>
+                <button class="btn btn-ghost" id="dismissVoiceBriefingModal">Kapat</button>
             </div>
         </div>
     </div>

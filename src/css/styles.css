@@ -6439,3 +6439,207 @@ tfoot td {
     }
 }
 
+/* ==========================================================================
+   🧬 Fama-French 5-Factor & Alpha Attribution Styles
+   ========================================================================== */
+.factor-attribution-card {
+    border: 1px solid rgba(14, 165, 233, 0.25);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.factor-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+}
+
+.factor-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.factor-card:hover {
+    border-color: rgba(14, 165, 233, 0.4);
+    transform: translateY(-2px);
+}
+
+.factor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.factor-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #E2E8F0;
+}
+
+.factor-beta-val {
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.factor-bar-wrapper {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 6px 0;
+}
+
+.factor-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.factor-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   🌊 Rolling Cross-Asset Correlation Dynamics Styles
+   ========================================================================== */
+.rolling-correlation-card {
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.corr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    min-width: 500px;
+}
+
+.corr-table th {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #94A3B8;
+    text-align: center;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.corr-table td {
+    padding: 8px 10px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: filter 0.15s ease;
+}
+
+.corr-table td:hover {
+    filter: brightness(1.25);
+    cursor: default;
+}
+
+/* ==========================================================================
+   🎙️ Zenith Voice AI Waveform Animation Styles
+   ========================================================================== */
+.voice-waveform-box .wave-bar {
+    width: 4px;
+    height: 8px;
+    background: linear-gradient(to top, #A855F7, #EC4899);
+    border-radius: 2px;
+    transition: height 0.15s ease;
+}
+
+.voice-waveform-box.active .wave-bar {
+    animation: waveAnimation 0.8s ease-in-out infinite alternate;
+}
+
+.voice-waveform-box.active .wave-bar:nth-child(2n) {
+    animation-delay: 0.15s;
+}
+
+.voice-waveform-box.active .wave-bar:nth-child(3n) {
+    animation-delay: 0.3s;
+}
+
+.voice-waveform-box.active .wave-bar:nth-child(4n) {
+    animation-delay: 0.45s;
+}
+
+@keyframes waveAnimation {
+    0% { height: 8px; }
+    50% { height: 44px; }
+    100% { height: 16px; }
+}
+
+/* ==========================================================================
+   🎛️ Interactive Synthetic Macro Shock Generator Styles
+   ========================================================================== */
+.synthetic-stress-card {
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.stress-slider-group {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+}
+
+.stress-slider-group input[type="range"] {
+    accent-color: #EF4444;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   ⚡ Tax-Loss Harvesting & Lot-Level Simulator Styles
+   ========================================================================== */
+.tax-harvesting-card {
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.tax-opportunities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tax-opp-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+}
+
+.tax-opp-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+

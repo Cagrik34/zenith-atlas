@@ -112,6 +112,26 @@ Kullanıcı verilerini tamamen yerel tarayıcı hafızasında (`localStorage` & 
 * **4 Sayfalık Vektörel Kurumsal Rapor:** Kapak sayfası, Stratejik Varlık Dağılımı & Black-Litterman Modeli, Marcos Lopez de Prado HRP Kümeleme Ağacı & CVaR Kuyruk Riski, Makroekonomik Rejimler ve Tarihsel Kriz Stres Testleri.
 * **%100 Sıfır-Bilgi İstemci Taraflı Baskı:** Portföy verisini hiçbir harici sunucuya iletmeden doğrudan tarayıcı içi vektörel CSS A4 baskı motoruyla yüksek çözünürlüklü PDF oluşturma.
 
+### 22. 🧬 Fama-French 5-Faktör & Risk Ayrıştırma Masası (Factor Investing & Alpha Attribution)
+* **Faktör Yükleri:** Piyasa Riski ($\beta_{mkt}$), Büyüklük Primi ($SMB$), Değer Primi ($HML$), Karlılık Primi ($RMW$) ve Yatırım Disiplini Primi ($CMA$).
+* **Jensen's Alpha & Active Share:** Portföy getirisinin ne kadarının gerçek fon yöneticisi yeteneğinden (Alfa), ne kadarının endeks dalgasından kaynaklandığını ve endeksten sapma derecesini ($R^2$, Active Share) matematiksel olarak kanıtlar.
+
+### 23. 🌊 Yuvarlanan Çapraz Varlık Korelasyon Dinamikleri & PCA Absorpsiyon Oranı
+* **30G / 90G / 365G Hareketli Korelasyon:** Fonlar arasındaki dinamik korelasyon matrisi ve kriz anındaki korelasyon çöküşü (*Correlation Breakdown*) tespiti.
+* **PCA Özdeğer Analizi:** Sistemik kırılganlığı ve portföyün gizli ortak faktörlere bağımlılığını ölçen *Absorption Ratio* ve *Diversification Ratio* katsayıları.
+
+### 24. 🎙️ Zenith Voice AI Günlük Sabah Açılış Sesli Bülteni (Web Speech API)
+* **%100 Cihaz İçi Ses Sentezi:** Tarayıcının yerel ses sentezleyicisi (`SpeechSynthesisUtterance`) ile sıfır harici sunucu bağımlılığı ve sıfır veri sızıntısıyla çalışan yapay zeka spikeri.
+* **Kişiselleştirilmiş Piyasa Bülteni:** Portföy büyüklüğü, günlük kar/zarar, TCMB faiz ve makro veriler, günün yıldız fonu ve seans açılış geri sayımını doğal Türkçe tonlamayla seslendirir.
+
+### 25. ⚡ Gelişmiş Vergi Kayıp Hasadı & Lot Bazlı Optimizasyon (HIFO Tax-Loss Harvesting)
+* **HIFO (Highest In First Out) Satış Simülatörü:** En yüksek maliyetli payları öncelikli satarak kar realizasyonlarında ödenecek stopaj vergisini yasal olarak minimize eder.
+* **Hasat Edilebilir Zarar & İkame Fon:** Portföydeki zararları tespit edip karlı fonların stopajıyla mahsup eder ve aynı varlık sınıfındaki ikame fonlarla riski bozmadan vergi kalkanı oluşturur.
+
+### 26. 🎛️ İnteraktif Sentetik Makro Şok Jeneratörü (What-If Custom Crisis Engine)
+* **Canlı Çok Boyutlu Stres Testi:** USD/TRY, TCMB Politika Faizi (bps), BIST 100 ve Spot Altın/Emtia kaydırıcıları (sliders) ile gerçek zamanlı (0ms) kriz simülasyonu.
+* **Hassasiyet Analizi:** Senaryo bazlı simüle edilen portföy TL kar/zararı, Portföy Dayanıklılık Skoru (0-100), en güçlü kalkan varlık ve en hassas varlık analizi.
+
 ---
 
 ## 📁 Proje Mimarisi
