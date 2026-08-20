@@ -46,7 +46,26 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="app-header">
       <div className="header-left">
         <div className="logo">
-          <div className="logo-icon">📊</div>
+          <div className="logo-icon" style={{ background: 'transparent', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg viewBox="0 0 128 128" width="30" height="30" style={{ display: 'block' }}>
+              <defs>
+                <linearGradient id="zenithHdrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366F1" />
+                  <stop offset="50%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="#EC4899" />
+                </linearGradient>
+                <filter id="hdrZPrismGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <rect width="128" height="128" rx="28" fill="#0C1021" stroke="#334155" strokeWidth="3" />
+              <circle cx="64" cy="64" r="40" fill="none" stroke="url(#zenithHdrGrad)" strokeWidth="2" opacity="0.5" />
+              <path d="M42 42 L86 42 L42 86 L86 86" fill="none" stroke="url(#zenithHdrGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" filter="url(#hdrZPrismGlow)" />
+              <circle cx="86" cy="42" r="5" fill="#38BDF8" />
+              <circle cx="42" cy="86" r="5" fill="#EC4899" />
+            </svg>
+          </div>
           <div className="logo-text">
             <h1>ZENITH ATLAS</h1>
             <span className="strategy-badge">INSTITUTIONAL TERMINAL v2.2</span>
