@@ -378,8 +378,9 @@ button {
     animation: tickerMarquee 45s linear infinite;
 }
 
-.terminal-ticker-bar:hover .ticker-track {
-    animation-play-state: paused;
+/* Kesintisiz Sürekli Kayan Şerit (Mouse Hover'da da Durmadan Akmaya Devam Eder) */
+.terminal-ticker-bar .ticker-track {
+    animation-play-state: running !important;
 }
 
 @keyframes tickerMarquee {
