@@ -1789,6 +1789,169 @@
   margin-top: auto;
 }
 
+/* ==========================================================================
+   📱 360° RESPONSIVE BREAKPOINTS (DESKTOP, LAPTOP, TABLET, MOBILE)
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .main-content {
+    padding: 20px 24px;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  .last-update-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .app-header {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .header-nav {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px;
+    justify-content: flex-start;
+    scrollbar-width: none;
+  }
+
+  .header-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+
+  .dashboard-grid-row {
+    grid-template-columns: 1fr;
+  }
+
+  .screener-filter-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 16px 12px;
+  }
+
+  .terminal-ticker-bar {
+    padding: 0 12px;
+    height: 34px;
+    gap: 8px;
+  }
+
+  .ticker-tefas-countdown {
+    display: none;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .metric-card {
+    padding: 14px;
+  }
+
+  .metric-value {
+    font-size: 1.25rem;
+  }
+
+  .nav-tab {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .header-btn {
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+
+  .macro-news-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-content {
+    padding: 16px;
+    max-height: 94vh;
+    border-radius: 14px;
+  }
+
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .pitchbook-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pitchbook-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logo-title {
+    font-size: 1rem;
+  }
+
+  .logo-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .ticker-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .macro-indicators-strip {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .policy-indicator-chip {
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 @media print {
   body {
     background: #FFFFFF !important;
