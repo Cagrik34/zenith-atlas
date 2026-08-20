@@ -1,0 +1,10 @@
+{
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "editor.unicodeHighlight.nonBasicASCII": false,
+    "editor.unicodeHighlight.allowedLocales": {
+        "tr": true,
+        "en": true
+    },
+    "files.eol": "\n"
+}
