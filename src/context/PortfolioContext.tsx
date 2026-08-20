@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { PortfolioFund, PortfolioAccount, PendingOrder, FundLot } from '../types/portfolio';
-import { loadStoredPortfolios, savePortfoliosToStorage } from '../utils/storage';
+import { loadStoredPortfolios, savePortfoliosToStorage, DEMO_FUNDS } from '../utils/storage';
 
 interface PortfolioContextType {
   portfolios: PortfolioAccount[];
@@ -20,6 +20,10 @@ interface PortfolioContextType {
   removePendingOrder: (id: string) => void;
   createNewPortfolio: (name: string) => void;
   deletePortfolio: (id: string) => void;
+  loadDemoPortfolio: () => void;
+  clearPortfolio: () => void;
+  importPortfolioJson: (jsonStr: string) => boolean;
+  exportPortfolioJson: () => string;
   totalFundValue: number;
   totalPortfolioValue: number;
   totalCost: number;
@@ -112,37 +116,57 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [updateActiveAccount]);
 
   const addLot = useCallback((fundCode: string, lotData: Omit<FundLot, 'id' | 'totalCost'>) => {
-    updateActiveAccount(acc => ({
-      ...acc,
-      funds: acc.funds.map(f => {
-        if (f.code === fundCode) {
+    updateActiveAccount(acc => {
+      return {
+        ...acc,
+        funds: acc.funds.map(f => {
+          if (f.code !== fundCode) return f;
           const newLot: FundLot = {
             ...lotData,
-            id: `LOT-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+            id: `LOT-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             totalCost: lotData.shares * lotData.buyPrice
           };
-          const existingLots = f.lots || [];
-          return { ...f, lots: [...existingLots, newLot] };
-        }
-        return f;
-      })
-    }));
+          const lots = [...(f.lots || []), newLot];
+          const totalShares = lots.reduce((s, l) => s + l.shares, 0);
+          const totalCost = lots.reduce((s, l) => s + l.totalCost, 0);
+          const avgCost = totalShares > 0 ? totalCost / totalShares : f.costPrice;
+          return {
+            ...f,
+            shares: totalShares,
+            costPrice: avgCost,
+            lots
+          };
+        })
+      };
+    });
   }, [updateActiveAccount]);
 
   const removeLot = useCallback((fundCode: string, lotId: string) => {
-    updateActiveAccount(acc => ({
-      ...acc,
-      funds: acc.funds.map(f => {
-        if (f.code === fundCode && f.lots) {
-          return { ...f, lots: f.lots.filter(l => l.id !== lotId) };
-        }
-        return f;
-      })
-    }));
+    updateActiveAccount(acc => {
+      return {
+        ...acc,
+        funds: acc.funds.map(f => {
+          if (f.code !== fundCode || !f.lots) return f;
+          const lots = f.lots.filter(l => l.id !== lotId);
+          const totalShares = lots.reduce((s, l) => s + l.shares, 0);
+          const totalCost = lots.reduce((s, l) => s + l.totalCost, 0);
+          const avgCost = totalShares > 0 ? totalCost / totalShares : f.costPrice;
+          return {
+            ...f,
+            shares: totalShares,
+            costPrice: avgCost,
+            lots
+          };
+        })
+      };
+    });
   }, [updateActiveAccount]);
 
   const setCashTL = useCallback((amount: number) => {
-    updateActiveAccount(acc => ({ ...acc, cashTL: Math.max(0, amount) }));
+    updateActiveAccount(acc => ({
+      ...acc,
+      cashTL: Math.max(0, amount)
+    }));
   }, [updateActiveAccount]);
 
   const addPendingOrder = useCallback((orderData: Omit<PendingOrder, 'id' | 'createdAt' | 'status'>) => {
@@ -188,6 +212,56 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return { activeId: newActive, portfolios: remaining };
     });
   }, []);
+
+  // Örnek / Demo Portföyü Yükle
+  const loadDemoPortfolio = useCallback(() => {
+    updateActiveAccount(acc => ({
+      ...acc,
+      funds: [...DEMO_FUNDS],
+      cashTL: 25000
+    }));
+  }, [updateActiveAccount]);
+
+  // Portföyü Tamamen Temizle (Sıfırla)
+  const clearPortfolio = useCallback(() => {
+    updateActiveAccount(acc => ({
+      ...acc,
+      funds: [],
+      cashTL: 0,
+      pendingOrders: []
+    }));
+  }, [updateActiveAccount]);
+
+  // JSON Yedeğini Geri Yükle
+  const importPortfolioJson = useCallback((jsonStr: string): boolean => {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (parsed && Array.isArray(parsed.funds)) {
+        updateActiveAccount(acc => ({
+          ...acc,
+          name: parsed.name || acc.name,
+          funds: parsed.funds,
+          cashTL: typeof parsed.cashTL === 'number' ? parsed.cashTL : 0
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.error('Import error:', e);
+    }
+    return false;
+  }, [updateActiveAccount]);
+
+  // JSON Olarak Dışa Aktar
+  const exportPortfolioJson = useCallback((): string => {
+    const payload = {
+      version: '2.2.0',
+      exportedAt: new Date().toISOString(),
+      name: activePortfolio.name,
+      funds: activePortfolio.funds,
+      cashTL: activePortfolio.cashTL
+    };
+    return JSON.stringify(payload, null, 2);
+  }, [activePortfolio]);
 
   const syncLivePrices = useCallback((prices: Record<string, number>, tefasDate?: string) => {
     if (!prices || Object.keys(prices).length === 0) return;
@@ -260,6 +334,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         removePendingOrder,
         createNewPortfolio,
         deletePortfolio,
+        loadDemoPortfolio,
+        clearPortfolio,
+        importPortfolioJson,
+        exportPortfolioJson,
         totalFundValue,
         totalPortfolioValue,
         totalCost,

@@ -3,6 +3,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { formatTRY, formatPercent } from '../../utils/formatters';
+import { PieChart } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -91,87 +92,19 @@ export const AssetDistribution: React.FC<AssetDistributionProps> = ({ onNavigate
   };
 
   return (
-    <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '20px', marginBottom: '24px' }}>
-      {/* 1. SOL: Varlık & Kategori Dağılımı Donut */}
-      <div className="card chart-card">
-        <div className="card-header">
-          <h3>Varlık & Kategori Dağılımı</h3>
-        </div>
-        <div className="chart-container" style={{ position: 'relative', height: '280px' }}>
-          <Doughnut data={chartData} options={chartOptions} />
-        </div>
+    <div className="card chart-card">
+      <div className="card-header">
+        <h3 className="card-title">Varlık & Kategori Dağılımı</h3>
       </div>
-
-      {/* 2. SAĞ: Portföy Varlık Özeti Tablosu */}
-      <div className="card">
-        <div className="card-header">
-          <h3>Portföy Varlık Özeti</h3>
-          {onNavigateFunds && (
-            <button className="btn-text" onClick={onNavigateFunds}>
-              Tümünü Yönet &rarr;
-            </button>
-          )}
-        </div>
-
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>FON</th>
-                <th>KATEGORİ</th>
-                <th>ADET</th>
-                <th>GÜNCEL FİYAT</th>
-                <th>TOPLAM DEĞER</th>
-                <th>KÂR / ZARAR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {funds.map((f) => {
-                const totalVal = f.shares * f.currentPrice;
-                const costVal = f.shares * f.costPrice;
-                const plTRY = totalVal - costVal;
-                const plPct = costVal > 0 ? (plTRY / costVal) * 100 : 0;
-                const isPos = plTRY >= 0;
-
-                return (
-                  <tr key={f.code}>
-                    <td>
-                      <div className="fund-cell">
-                        <span className="fund-code-badge">{f.code}</span>
-                        <span className="fund-name-text">{f.name}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="badge-category">{f.category}</span>
-                    </td>
-                    <td>{f.shares.toLocaleString('tr-TR')}</td>
-                    <td>{f.currentPrice.toFixed(4)} TL</td>
-                    <td className="font-semibold">{formatTRY(totalVal)}</td>
-                    <td className={isPos ? 'text-pos font-semibold' : 'text-neg font-semibold'}>
-                      {isPos ? '+' : ''}{formatTRY(plTRY)} ({isPos ? '+' : ''}{formatPercent(plPct)})
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {cashTL > 0 && (
-                <tr>
-                  <td>
-                    <div className="fund-cell">
-                      <span className="fund-code-badge badge-cash">NAKİT</span>
-                      <span className="fund-name-text">TL Nakit & Likit Bakiye</span>
-                    </div>
-                  </td>
-                  <td><span className="badge-category">Likit Varlık</span></td>
-                  <td>-</td>
-                  <td>1.0000 TL</td>
-                  <td className="font-semibold">{formatTRY(cashTL)}</td>
-                  <td className="text-secondary">-</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="chart-container" style={{ position: 'relative', height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {categories.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#64748B', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <PieChart size={32} opacity={0.4} />
+            <span style={{ fontSize: '0.8rem' }}>Varlık veya Nakit Bulunmuyor</span>
+          </div>
+        ) : (
+          <Doughnut data={chartData} options={chartOptions} />
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ export const PortfolioMetrics: React.FC = () => {
     return FactorAttributionEngine.calculate(funds);
   }, [funds]);
 
+  const hasFunds = funds.length > 0 || cashTL > 0;
   const isProfit = totalProfitLossTRY >= 0;
 
   return (
@@ -29,11 +30,11 @@ export const PortfolioMetrics: React.FC = () => {
         <div className="card-icon">📈</div>
         <div className="card-content">
           <span className="card-label">TOPLAM NET GETİRİ (P&L)</span>
-          <span className={`card-value ${isProfit ? 'positive' : 'negative'}`}>
+          <span className={`card-value ${hasFunds ? (isProfit ? 'positive' : 'negative') : 'neutral'}`}>
             {formatTRY(totalProfitLossTRY)}
           </span>
-          <span className={`card-sub ${isProfit ? 'positive' : 'negative'}`}>
-            {isProfit ? '+' : ''}{formatPercent(totalProfitLossPct)} Maliyet Üzerinden
+          <span className={`card-sub ${hasFunds ? (isProfit ? 'positive' : 'negative') : 'neutral'}`}>
+            {hasFunds ? `${isProfit ? '+' : ''}${formatPercent(totalProfitLossPct)} Maliyet Üzerinden` : '%0,00 Başlangıç'}
           </span>
         </div>
       </div>
@@ -53,8 +54,12 @@ export const PortfolioMetrics: React.FC = () => {
         <div className="card-icon">🎯</div>
         <div className="card-content">
           <span className="card-label">FAMA-FRENCH JENSEN'S ALPHA</span>
-          <span className="card-value text-accent">+{formatPercent(ffMetrics.jensensAlpha)}</span>
-          <span className="card-sub neutral">Beta: {ffMetrics.marketBeta}x &nbsp; R²: %{ffMetrics.rSquared}</span>
+          <span className="card-value text-accent">
+            {funds.length > 0 ? `+${formatPercent(ffMetrics.jensensAlpha)}` : '%0,00'}
+          </span>
+          <span className="card-sub neutral">
+            {funds.length > 0 ? `Beta: ${ffMetrics.marketBeta}x   R²: %${ffMetrics.rSquared}` : 'Portföy Boş'}
+          </span>
         </div>
       </div>
 
@@ -63,8 +68,10 @@ export const PortfolioMetrics: React.FC = () => {
         <div className="card-icon">🛡️</div>
         <div className="card-content">
           <span className="card-label">SHARPE ORANI & RİSK</span>
-          <span className="card-value">1.57</span>
-          <span className="card-sub neutral">Yıllık Volatilite: %22.5</span>
+          <span className="card-value">{funds.length > 0 ? '1.57' : '0.00'}</span>
+          <span className="card-sub neutral">
+            {funds.length > 0 ? 'Yıllık Volatilite: %22.5' : 'Volatilite: %0.0'}
+          </span>
         </div>
       </div>
     </div>
