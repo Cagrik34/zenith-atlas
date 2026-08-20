@@ -164,12 +164,12 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 16px;
     background: rgba(6, 9, 19, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
-    gap: 12px;
+    gap: 8px;
     width: 100%;
     box-sizing: border-box;
     flex-wrap: nowrap;
@@ -183,39 +183,40 @@ button {
 .logo {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 10px;
 }
 
 .logo-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--gradient-primary);
     border-radius: var(--radius-md);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     box-shadow: var(--shadow-glow-purple);
 }
 
 .logo-text h1 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 800;
     line-height: 1.2;
     background: linear-gradient(135deg, #FFFFFF, #CBD5E1);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    margin: 0;
 }
 
 .strategy-badge {
     display: inline-block;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--accent-secondary);
     background: rgba(139, 92, 246, 0.12);
-    padding: 2px 6px;
+    padding: 1px 5px;
     border-radius: var(--radius-full);
     border: 1px solid rgba(139, 92, 246, 0.2);
 }
@@ -223,16 +224,15 @@ button {
 .header-nav {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     background: rgba(255, 255, 255, 0.03);
-    padding: 3px;
-    border-radius: var(--radius-lg);
+    padding: 2px 4px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--glass-border);
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    flex-shrink: 1;
-    min-width: 0;
+    flex-shrink: 0;
 }
 
 .header-nav::-webkit-scrollbar {
@@ -242,15 +242,15 @@ button {
 .nav-btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 11px;
+    gap: 4px;
+    padding: 5px 8px;
     border: none;
     background: transparent;
     color: var(--text-secondary);
     font-family: var(--font-sans);
-    font-size: 0.8rem;
-    font-weight: 500;
-    border-radius: var(--radius-md);
+    font-size: 0.76rem;
+    font-weight: 600;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -269,25 +269,31 @@ button {
 }
 
 .nav-icon {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
     flex-wrap: nowrap;
+}
+
+.header-actions .btn {
+    padding: 5px 8px;
+    font-size: 0.74rem;
+    gap: 4px;
 }
 
 .last-update {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.72rem;
+    gap: 4px;
+    font-size: 0.7rem;
     color: var(--text-tertiary);
     white-space: nowrap;
-    padding: 4px 8px;
+    padding: 3px 6px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-sm);
@@ -1205,6 +1211,266 @@ button {
 }
 
 /* ==========================================================================
+   Goldman Sachs 4-Page Executive Pitchbook Styles
+   ========================================================================== */
+.pitchbook-modal-content {
+    max-width: 960px !important;
+    background: #080C1B !important;
+    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8) !important;
+}
+
+.modal-actions-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pitchbook-document-container {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 10px 0;
+}
+
+.pitchbook-page {
+    background: #0C1021;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 36px 42px;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.pitchbook-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.4);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+}
+
+.pitchbook-brand {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #A5B4FC;
+}
+
+.pitchbook-confidential {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #EF4444;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+}
+
+.pitchbook-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.pitchbook-cover-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 24px 0 36px;
+}
+
+.cover-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #818CF8;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 4px 14px;
+    border-radius: 9999px;
+    margin-bottom: 16px;
+}
+
+.cover-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+    max-width: 720px;
+    line-height: 1.3;
+    margin-bottom: 12px;
+}
+
+.cover-subtitle {
+    font-size: 0.9rem;
+    color: #94A3B8;
+    max-width: 620px;
+    line-height: 1.5;
+}
+
+.pitchbook-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.pitchbook-kpi-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+}
+
+.pitchbook-kpi-card .kpi-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #8B92A5;
+    text-transform: uppercase;
+}
+
+.pitchbook-kpi-card .kpi-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: #FFFFFF;
+}
+
+.pitchbook-page-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 16px;
+}
+
+.pitchbook-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 0.82rem;
+}
+
+.pitchbook-table th {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 12px;
+    color: #A5B4FC;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+.pitchbook-table td {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    color: #F1F3F9;
+}
+
+.pitchbook-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.pitchbook-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.box-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #C7D2FE;
+    margin-bottom: 12px;
+}
+
+.pitchbook-metric-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.82rem;
+}
+
+.pitchbook-metric-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+    padding-bottom: 4px;
+}
+
+.pitchbook-metric-list span {
+    color: #94A3B8;
+}
+
+.pitchbook-metric-list strong {
+    font-family: var(--font-mono);
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.pitchbook-text-block {
+    background: rgba(99, 102, 241, 0.06);
+    border-left: 3px solid #6366F1;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+
+.pitchbook-text-block h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #C7D2FE;
+    margin-bottom: 4px;
+}
+
+.pitchbook-text-block p {
+    font-size: 0.82rem;
+    color: #CBD5E1;
+    line-height: 1.5;
+}
+
+.pitchbook-disclaimer {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.72rem;
+    color: #64748B;
+    line-height: 1.5;
+    margin-top: 16px;
+}
+
+.pitchbook-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+    margin-top: auto;
+    font-size: 0.72rem;
+    color: #64748B;
+    font-family: var(--font-mono);
+}
+
+/* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
 @media (max-width: 1024px) {
@@ -1237,6 +1503,15 @@ button {
     .terminal-ticker-bar {
         padding: 0 14px;
     }
+    .pitchbook-page {
+        padding: 20px 16px;
+    }
+    .pitchbook-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .pitchbook-grid-2 {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1246,5 +1521,47 @@ button {
     .macro-indicators-strip {
         flex-direction: column;
         align-items: stretch;
+    }
+    .pitchbook-kpi-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media print {
+    body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+    }
+    
+    .no-print, .terminal-ticker-bar, .app-header {
+        display: none !important;
+    }
+    
+    .pitchbook-modal-overlay {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+    
+    .pitchbook-modal-content {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-height: none !important;
+    }
+    
+    .pitchbook-page {
+        page-break-after: always;
+        break-after: page;
+        background: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #E2E8F0 !important;
+        min-height: 297mm;
+        box-shadow: none !important;
+    }
+    
+    .pitchbook-page * {
+        color: #000000 !important;
     }
 }
