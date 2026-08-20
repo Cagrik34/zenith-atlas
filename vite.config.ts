@@ -1,0 +1,46 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import { VitePWA } from 'vite-plugin-pwa';
+import path from 'path';
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'manifest.webmanifest'],
+      manifest: {
+        name: 'Zenith Atlas Institutional Terminal',
+        short_name: 'ZenithAtlas',
+        description: 'Kurumsal Seviye TEFAS Fon Analitiği & Çoklu Portföy Yönetim Platformu',
+        theme_color: '#0A0E17',
+        background_color: '#0A0E17',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/favicon.svg',
+            sizes: '192x192 512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}']
+      }
+    })
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
+  server: {
+    port: 3000,
+    open: true
+  }
+});
