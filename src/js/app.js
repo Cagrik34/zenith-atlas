@@ -944,7 +944,8 @@ const PriceService = {
             
             const updateText = document.querySelector('.update-text');
             const pulseDot = document.querySelector('.pulse-dot');
-            if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${Utils.getTimestamp()}`;
+            const tefasDateStr = data.officialTefasDate ? ` (${data.officialTefasDate})` : '';
+            if (updateText) updateText.textContent = `${marketStatus.headerStatus}${tefasDateStr}: ${data.lastUpdate || Utils.getTimestamp()}`;
             if (pulseDot) pulseDot.className = marketStatus.isWeekend ? 'pulse-dot pulse-dot-warning' : 'pulse-dot';
         }
 
@@ -965,7 +966,8 @@ const PriceService = {
                     
                     const updateText = document.querySelector('.update-text');
                     const pulseDot = document.querySelector('.pulse-dot');
-                    if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${Utils.getTimestamp()}`;
+                    const tefasDateStr = data.officialTefasDate ? ` (${data.officialTefasDate})` : '';
+                    if (updateText) updateText.textContent = `${marketStatus.headerStatus}${tefasDateStr}: ${data.lastUpdate || Utils.getTimestamp()}`;
                     if (pulseDot) pulseDot.className = marketStatus.isWeekend ? 'pulse-dot pulse-dot-warning' : 'pulse-dot';
                 }
             }
@@ -1014,12 +1016,17 @@ const PriceService = {
 
         Utils.showToast('TEFAS fiyatları güncelleniyor...', 'info');
 
+        let officialDate = null;
+        let lastSyncTime = null;
+
         try {
             let res = await fetch('src/data/prices.json?t=' + Date.now(), { cache: 'no-store' });
             if (!res.ok) res = await fetch('data/prices.json?t=' + Date.now(), { cache: 'no-store' });
             if (res && res.ok) {
                 const data = await res.json();
                 if (data && data.prices) {
+                    officialDate = data.officialTefasDate;
+                    lastSyncTime = data.lastUpdate;
                     PortfolioData.funds.forEach(fund => {
                         if (data.prices[fund.code]) {
                             fund.currentPrice = data.prices[fund.code];
@@ -1045,7 +1052,8 @@ const PriceService = {
             refreshBtn.innerHTML = '<span>🔄</span> Güncelle';
         }
         if (pulseDot) pulseDot.className = marketStatus.isWeekend ? 'pulse-dot pulse-dot-warning' : 'pulse-dot';
-        if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${Utils.getTimestamp()}`;
+        const tefasDateStr = officialDate ? ` (${officialDate})` : '';
+        if (updateText) updateText.textContent = `${marketStatus.headerStatus}${tefasDateStr}: ${lastSyncTime || Utils.getTimestamp()}`;
 
         // Context-aware UX feedback toast
         Utils.showToast(marketStatus.toastMessage, marketStatus.isWeekend ? 'warning' : 'success');
