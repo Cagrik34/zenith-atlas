@@ -6,10 +6,10 @@ color 0b
 echo [*] Starting Zenith Atlas sync engine...
 echo.
 
-if exist "src\scripts\sync.py" (
+if exist "scripts\sync.py" (
+    python scripts\sync.py
+) else if exist "src\scripts\sync.py" (
     python src\scripts\sync.py
-) else if exist "src\scripts\auto_sync.py" (
-    python src\scripts\auto_sync.py
 ) else (
     python sync.py
 )

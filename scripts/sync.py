@@ -16,23 +16,27 @@ SCRIPT_DIR = pathlib.Path(__file__).parent.resolve()
 PROJECT_ROOT = SCRIPT_DIR.parent.parent if SCRIPT_DIR.parent.name == 'src' else SCRIPT_DIR.parent
 
 def get_target_data_dirs():
-    """Hedef src/data/ klasörlerini tespit eder (kurumsal src mimarisi)."""
+    """Hedef data klasörlerini tespit eder (public/data ve src/data)."""
     dirs = []
-    # 1. Mevcut proje src/data/ klasörü
-    p_data = PROJECT_ROOT / 'src' / 'data' if (PROJECT_ROOT / 'src').exists() else PROJECT_ROOT / 'data'
-    if not p_data.exists():
-        p_data.mkdir(parents=True, exist_ok=True)
-    dirs.append(p_data)
+    
+    # 1. Mevcut proje public/data/ ve src/data/ klasörleri
+    for sub in ['public/data', 'src/data', 'data']:
+        p_data = PROJECT_ROOT / sub
+        if p_data.exists():
+            dirs.append(p_data)
+        elif sub == 'public/data':
+            p_data.mkdir(parents=True, exist_ok=True)
+            dirs.append(p_data)
     
     # 2. Desktop klasörleri
     desktop = pathlib.Path.home() / 'Desktop'
     for folder_name in ['Zenith Atlas', 'zenith-atlas', 'ZenithAtlas']:
         d_dir = desktop / folder_name
         if d_dir.exists():
-            d_data = d_dir / 'src' / 'data' if (d_dir / 'src').exists() else d_dir / 'data'
-            if not d_data.exists():
-                d_data.mkdir(parents=True, exist_ok=True)
-            dirs.append(d_data)
+            for sub in ['public/data', 'src/data', 'data']:
+                d_data = d_dir / sub
+                if d_data.exists():
+                    dirs.append(d_data)
         
     return list(dict.fromkeys(dirs))
 
