@@ -26,10 +26,10 @@ export function useAutoSync() {
         }
       }
 
-      // 2. Piyasa WebSocket & JSON verilerini tazele
+      // 2. Canlı WebSocket ve Piyasa Fiyatlarını tazele
       await refreshMarkets();
     } catch (e) {
-      console.warn('AutoSync warning:', e);
+      console.warn('Otomatik senkronizasyon uyarısı:', e);
     } finally {
       setIsSyncing(false);
     }

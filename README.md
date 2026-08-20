@@ -80,34 +80,27 @@ graph TD
 
 ## 🚀 Hızlı Başlangıç (Quickstart)
 
+> **💡 Sıfır Müdahale ile Otomatik Senkronizasyon:**  
+> Projeyi ayağa kaldırdığınız anda (`npm run dev`) veya tarayıcıda açtığınızda, tüm canlı piyasa verileri (Dolar, Euro, Altın, BIST 100) ve Takasbank TEFAS fon fiyatları **arka planda %100 dinamik ve otomatik olarak güncellenir**. Kullanıcının hiçbir harici script, komut veya terminal işlemi yapmasına **gerek yoktur**.
+
 ### Gereksinimler:
-* **Node.js:** `v20+` (Önerilen: `v24+`)
-* **Python:** `v3.10+` (Opsiyonel veri senkronizasyonu için)
+* **Node.js:** `v20+` (Önerilen: `v24+ LTS`)
 
 ### Kurulum & Çalıştırma:
 
 ```bash
-# 1. Bağımlılıkları Yükleyin
+# 1. Bağımlılıkları Yükleyin (Tek Seferlik)
 npm install
 
-# 2. Geliştirme Sunucusunu Başlatın (Hot Module Replacement)
+# 2. Canlı Geliştirme Sunucusunu Başlatın (Hot Module Replacement)
 npm run dev
-# -> http://localhost:3000 adresinde anında açılır.
+# -> http://localhost:3000 adresinde anında açılır ve canlı veri akışı başlar.
 
 # 3. Üretim Paketi Derleyin (Strict TypeScript Check & PWA)
 npm run build
 
-# 4. Derleme Önizlemesi
+# 4. Üretim Paketi Önizlemesi
 npm run preview
-```
-
-### TEFAS & Piyasa Verilerini Senkronize Etme:
-```bash
-# Windows Tek Tıkla Senkronizasyon:
-sync.bat
-
-# veya Doğrudan Python İle:
-python scripts/sync.py
 ```
 
 ---
@@ -140,8 +133,7 @@ Zenith-Atlas/
 ├── 📄 index.html              # Modern Vite SPA Giriş HTML'i
 ├── 📄 package.json            # React 19, TypeScript 5.8+, Vite 6, Chart.js
 ├── 📄 tsconfig.json           # Katı Tip Denetimi Ayarları (Strict TS)
-├── 📄 vite.config.ts          # Vite 6 + React SWC + PWA Ayarları
-└── 📄 sync.bat                # Tek Tıkla Python Senkronizasyon Başlatıcı
+└── 📄 vite.config.ts          # Vite 6 + React SWC + PWA Ayarları
 ```
 
 ---

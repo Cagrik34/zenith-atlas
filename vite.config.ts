@@ -41,6 +41,14 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true
+    open: true,
+    proxy: {
+      '/api/tefas': {
+        target: 'https://www.tefas.gov.tr',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/tefas/, '/api/DB/BindHistoryInfo')
+      }
+    }
   }
 });
