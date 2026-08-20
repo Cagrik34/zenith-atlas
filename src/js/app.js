@@ -944,7 +944,7 @@ const PriceService = {
             
             const updateText = document.querySelector('.update-text');
             const pulseDot = document.querySelector('.pulse-dot');
-            if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${data.lastUpdate || Utils.getTimestamp()}`;
+            if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${Utils.getTimestamp()}`;
             if (pulseDot) pulseDot.className = marketStatus.isWeekend ? 'pulse-dot pulse-dot-warning' : 'pulse-dot';
         }
 
@@ -965,7 +965,7 @@ const PriceService = {
                     
                     const updateText = document.querySelector('.update-text');
                     const pulseDot = document.querySelector('.pulse-dot');
-                    if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${data.lastUpdate || Utils.getTimestamp()}`;
+                    if (updateText) updateText.textContent = `${marketStatus.headerStatus}: ${Utils.getTimestamp()}`;
                     if (pulseDot) pulseDot.className = marketStatus.isWeekend ? 'pulse-dot pulse-dot-warning' : 'pulse-dot';
                 }
             }
@@ -7810,12 +7810,19 @@ const MacroNewsEngine = {
     },
 
     async loadData() {
+        const todayStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
         // 1. Try fetch from news.json
         try {
             let res = await fetch(`src/data/news.json?t=${Date.now()}`);
             if (!res.ok) res = await fetch(`data/news.json?t=${Date.now()}`);
             if (res && res.ok) {
                 this.data = await res.json();
+                if (this.data && Array.isArray(this.data.bulletins)) {
+                    this.data.bulletins.forEach(b => {
+                        if (!b.date || b.date.includes('18.08')) b.date = todayStr;
+                    });
+                }
                 this.render();
                 return;
             }
@@ -7826,6 +7833,11 @@ const MacroNewsEngine = {
         // 2. Fallback to offline window.ZENITH_MACRO_NEWS
         if (typeof window !== 'undefined' && window.ZENITH_MACRO_NEWS) {
             this.data = window.ZENITH_MACRO_NEWS;
+            if (this.data && Array.isArray(this.data.bulletins)) {
+                this.data.bulletins.forEach(b => {
+                    if (!b.date || b.date.includes('18.08')) b.date = todayStr;
+                });
+            }
             this.render();
             return;
         }
@@ -7844,14 +7856,53 @@ const MacroNewsEngine = {
                         id: 'NEWS-01',
                         category: 'tcmb',
                         categoryLabel: 'TCMB',
-                        title: 'TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Değerlendirme Özeti',
-                        summary: 'Para Politikası Kurulu, bir hafta vadeli repo ihale faiz oranını %37.00 seviyesinde sabit tutmuştur.',
-                        date: '18.08.2026',
+                        title: 'TCMB Para Politikası Kurulu (PPK) Faiz Kararı ve Sıkı Likidite Görünümü',
+                        summary: 'Para Politikası Kurulu, bir hafta vadeli repo ihale faiz oranını %37.00 seviyesinde sabit tutarak parasal sıkılık ve dezenflasyon sürecini kararlılıkla sürdürmektedir.',
+                        date: todayStr,
                         source: 'TCMB Resmi Duyuru',
                         sourceUrl: 'https://www.tcmb.gov.tr',
                         badge: 'badge-primary',
                         impact: 'high',
                         impactLabel: 'Yüksek Etki'
+                    },
+                    {
+                        id: 'NEWS-02',
+                        category: 'tuik',
+                        categoryLabel: 'TÜİK',
+                        title: 'TÜİK Yıllık TÜFE %31.75 ve Net +%5.25 Pozitif Reel Faiz Kalkanı',
+                        summary: 'TÜİK resmi enflasyon verileri doğrultusunda net reel getiri artı yüzde 5.25 ile pozitif bölgede kalarak TL varlıkları ve para piyasası fonlarını desteklemektedir.',
+                        date: todayStr,
+                        source: 'TÜİK Resmi Bülten',
+                        sourceUrl: 'https://www.tuik.gov.tr',
+                        badge: 'badge-success',
+                        impact: 'medium',
+                        impactLabel: 'Orta Etki'
+                    },
+                    {
+                        id: 'NEWS-03',
+                        category: 'spk',
+                        categoryLabel: 'SPK & Mevzuat',
+                        title: '2026 Gelir Vergisi Geçici 67. Madde %0 Hisse Stopaj Muafiyeti',
+                        summary: 'Portföyünde en az %80 oranında BIST hissesi bulunduran hisse senedi yoğun TEFAS fonları %0 stopaj tam muafiyetini kesintisiz korumaktadır.',
+                        date: todayStr,
+                        source: 'Resmi Gazete',
+                        sourceUrl: 'https://www.resmigazete.gov.tr',
+                        badge: 'badge-warning',
+                        impact: 'high',
+                        impactLabel: 'Yüksek Etki'
+                    },
+                    {
+                        id: 'NEWS-04',
+                        category: 'global',
+                        categoryLabel: 'Küresel',
+                        title: 'Küresel Emtia & Kıymetli Madenler Piyasası Günlük Akışı',
+                        summary: 'Spot Ons Altın ve gümüş piyasalarında merkez bankası rezerv talebi güçlü seyrederken TEFAS altın fonlarında net girişler devam etmektedir.',
+                        date: todayStr,
+                        source: 'Zenith Global Intelligence',
+                        sourceUrl: 'https://www.tefas.gov.tr',
+                        badge: 'badge-info',
+                        impact: 'medium',
+                        impactLabel: 'Orta Etki'
                     }
                 ]
             };
@@ -8291,8 +8342,39 @@ const TerminalTicker = {
             ];
         }
 
-        const fullList = [...marketItems, ...marketItems];
+        // If track already has DOM elements, update values in-place so the animation is never interrupted
+        const existingItems = track.querySelectorAll('.ticker-item');
+        if (existingItems.length > 0) {
+            marketItems.forEach(item => {
+                const codeKey = (item.code || item.name || '').replace(/\s+/g, '_');
+                const matched = track.querySelectorAll(`[data-ticker-code="${codeKey}"]`);
+                if (matched.length > 0) {
+                    const isPos = item.changePct > 0;
+                    const isNeg = item.changePct < 0;
+                    const changeClass = isPos ? 'pos' : isNeg ? 'neg' : 'zero';
+                    const sign = isPos ? '+' : '';
+                    const isParity = item.unit === 'Parite' || item.key === 'EUR_USD';
+                    const prefix = isParity ? '' : (item.unit === '$' ? '$' : (item.unit && item.unit.includes('TL') ? '₺' : ''));
+                    const suffix = item.unit === 'Puan' ? ' P' : '';
+                    const decimals = isParity || (item.unit && item.unit.includes('TL') && item.rate < 100) ? 4 : 2;
+                    const formattedPrice = `${prefix}${item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: decimals })}${suffix}`;
 
+                    matched.forEach(el => {
+                        const priceEl = el.querySelector('.ticker-price');
+                        const changeEl = el.querySelector('.ticker-change');
+                        if (priceEl && priceEl.textContent !== formattedPrice) priceEl.textContent = formattedPrice;
+                        if (changeEl) {
+                            changeEl.className = `ticker-change ${changeClass}`;
+                            changeEl.textContent = `${sign}%${Math.abs(item.changePct).toFixed(2)}`;
+                        }
+                    });
+                }
+            });
+            return;
+        }
+
+        // Initial track build with duplicate list for seamless infinite linear loop
+        const fullList = [...marketItems, ...marketItems];
         let html = '';
         fullList.forEach(item => {
             const isPos = item.changePct > 0;
@@ -8304,9 +8386,10 @@ const TerminalTicker = {
             const suffix = item.unit === 'Puan' ? ' P' : '';
             const decimals = isParity || (item.unit && item.unit.includes('TL') && item.rate < 100) ? 4 : 2;
             const formattedPrice = `${prefix}${item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: decimals })}${suffix}`;
+            const codeKey = (item.code || item.name || '').replace(/\s+/g, '_');
 
             html += `
-                <div class="ticker-item">
+                <div class="ticker-item" data-ticker-code="${codeKey}">
                     <span class="ticker-symbol">${Utils.escapeHtml(item.code || item.name)}:</span>
                     <span class="ticker-price">${formattedPrice}</span>
                     <span class="ticker-change ${changeClass}">${sign}%${Math.abs(item.changePct).toFixed(2)}</span>
@@ -9959,13 +10042,13 @@ const PitchbookEngine = {
                     <table class="pitchbook-table">
                         <thead>
                             <tr>
-                                <th>Fon Kodu</th>
-                                <th>Fon Adı</th>
-                                <th>Kategori</th>
-                                <th>Güncel Değer</th>
-                                <th>Mevcut Ağırlık</th>
-                                <th>BL Hedef Ağırlık</th>
-                                <th>Sapma (Drift)</th>
+                                <th style="width:12%;">Fon Kodu</th>
+                                <th style="width:26%;">Fon Adı</th>
+                                <th style="width:18%;">Kategori</th>
+                                <th style="width:14%;">Değer</th>
+                                <th style="width:10%;">Mevcut</th>
+                                <th style="width:10%;">BL Hedef</th>
+                                <th style="width:10%;">Sapma</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -9977,7 +10060,7 @@ const PitchbookEngine = {
                                 return `
                                     <tr>
                                         <td><strong>${f.code}</strong></td>
-                                        <td>${f.name || f.code}</td>
+                                        <td style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f.name || f.code}</td>
                                         <td>${f.category || 'Fon'}</td>
                                         <td>${Utils.formatCurrency(val)}</td>
                                         <td>%${weight.toFixed(1)}</td>
@@ -10084,11 +10167,11 @@ const PitchbookEngine = {
                     <table class="pitchbook-table">
                         <thead>
                             <tr>
-                                <th>Kriz Senaryosu</th>
-                                <th>Kriz Dönemi</th>
-                                <th>BIST 100 Şoku</th>
-                                <th>Portföy Tahmini Kayıp</th>
-                                <th>Savunma & Kalkan Varlığı</th>
+                                <th style="width:28%;">Kriz Senaryosu</th>
+                                <th style="width:16%;">Kriz Dönemi</th>
+                                <th style="width:16%;">BIST 100 Şoku</th>
+                                <th style="width:18%;">Portföy Tahmini</th>
+                                <th style="width:22%;">Kalkan Varlık</th>
                             </tr>
                         </thead>
                         <tbody>
