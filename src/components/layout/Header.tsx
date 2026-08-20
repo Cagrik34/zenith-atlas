@@ -115,11 +115,11 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         <button
-          className="btn btn-ghost"
+          className={`btn btn-ghost ${isSyncing ? 'btn-syncing' : ''}`}
           onClick={() => triggerAutoSync()}
           title="Canlı Verileri Yenile"
         >
-          <span>🔄</span> {isSyncing ? 'Güncelleniyor...' : 'Güncelle'}
+          <span style={{ display: 'inline-block', transform: isSyncing ? 'rotate(180deg)' : 'none', transition: 'transform 0.5s ease' }}>🔄</span> Güncelle
         </button>
 
         <button
