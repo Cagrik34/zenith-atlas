@@ -359,30 +359,100 @@ button {
     flex-grow: 1;
     overflow: hidden;
     position: relative;
-    mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+    display: flex;
+    align-items: center;
 }
 
 .ticker-track {
     display: flex;
     align-items: center;
-    gap: var(--space-lg);
+    gap: 28px;
     white-space: nowrap;
     will-change: transform;
-    animation: tickerScroll 35s linear infinite;
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    perspective: 1000px;
+    animation: tickerMarquee 45s linear infinite;
 }
 
-@keyframes tickerScroll {
-    0% { transform: translate3d(0, 0, 0); }
-    100% { transform: translate3d(-50%, 0, 0); }
+.terminal-ticker-bar:hover .ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes tickerMarquee {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(-50%, 0, 0);
+    }
 }
 
 .ticker-item {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
+    gap: 8px;
+    font-size: 0.76rem;
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* 🌊 Canlı Renk Dalgası (Price Tick Color Wave Animations) */
+.ticker-item.price-flash-up {
+    animation: priceFlashGreenWave 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ticker-item.price-flash-down {
+    animation: priceFlashRedWave 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes priceFlashGreenWave {
+    0% {
+        background: rgba(16, 185, 129, 0.45);
+        border-color: #10B981;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
+        transform: scale(1.05);
+    }
+    50% {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+    }
+    100% {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.04);
+        box-shadow: none;
+        transform: scale(1);
+    }
+}
+
+@keyframes priceFlashRedWave {
+    0% {
+        background: rgba(239, 68, 68, 0.45);
+        border-color: #EF4444;
+        box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+        transform: scale(1.05);
+    }
+    50% {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+    }
+    100% {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.04);
+        box-shadow: none;
+        transform: scale(1);
+    }
 }
 
 .ticker-symbol {
@@ -393,6 +463,7 @@ button {
 .ticker-price {
     font-weight: 600;
     color: var(--text-primary);
+    letter-spacing: -0.01em;
 }
 
 .ticker-change {

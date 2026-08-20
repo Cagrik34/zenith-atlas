@@ -1,11 +1,67 @@
-import React from 'react';
+import React, { useRef, useEffect, useState, memo } from 'react';
 import { useMarket } from '../../context/MarketContext';
+
+interface TickerItemData {
+  key: string;
+  code: string;
+  name: string;
+  rate: number;
+  changePct: number;
+  unit: string;
+}
+
+// Performans Optimize Edilmiş & Canlı Renk Dalgası (Price Flash Wave) Destekli Ticker Elemanı
+const TickerItem: React.FC<{ item: TickerItemData }> = memo(({ item }) => {
+  const prevRateRef = useRef<number>(item.rate);
+  const [flashClass, setFlashClass] = useState<string>('');
+
+  useEffect(() => {
+    if (prevRateRef.current !== item.rate && prevRateRef.current > 0) {
+      if (item.rate > prevRateRef.current) {
+        setFlashClass('price-flash-up');
+      } else if (item.rate < prevRateRef.current) {
+        setFlashClass('price-flash-down');
+      }
+
+      prevRateRef.current = item.rate;
+
+      const timer = setTimeout(() => {
+        setFlashClass('');
+      }, 1400);
+
+      return () => clearTimeout(timer);
+    } else {
+      prevRateRef.current = item.rate;
+    }
+  }, [item.rate]);
+
+  const isPos = item.changePct > 0;
+  const isNeg = item.changePct < 0;
+  const changeClass = isPos ? 'pos' : isNeg ? 'neg' : 'zero';
+  const sign = isPos ? '+' : '';
+
+  return (
+    <div className={`ticker-item ${flashClass}`}>
+      <span className="ticker-symbol">{item.code}:</span>
+      <span className="ticker-price">
+        {item.unit === 'TL' ? `₺${item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` :
+         item.unit === '$' ? `$${item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` :
+         item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+      <span className={`ticker-change ${changeClass}`}>
+        {sign}%{Math.abs(item.changePct).toFixed(2)}
+      </span>
+    </div>
+  );
+});
+
+TickerItem.displayName = 'TickerItem';
 
 export const TerminalTicker: React.FC = () => {
   const { instruments, marketData, isSocketConnected } = useMarket();
 
-  // Canlı WebSocket ve Piyasa Enstrümanları Listesi (Anlık Reaktif Güncelleme)
-  const liveList = React.useMemo(() => {
+  // Canlı WebSocket ve Piyasa Enstrümanları Listesi (Stabil Reaktif Akış)
+  const liveList: TickerItemData[] = React.useMemo(() => {
     const baseItems = [
       { key: 'USD', code: 'USD/TRY', name: 'Amerikan Doları', rate: 48.1110, changePct: 0.12, unit: 'TL' },
       { key: 'EUR', code: 'EUR/TRY', name: 'Euro', rate: 56.0560, changePct: 0.25, unit: 'TL' },
@@ -30,6 +86,11 @@ export const TerminalTicker: React.FC = () => {
     });
   }, [instruments, marketData]);
 
+  // Kesintisiz Sonsuz Döngü İçin Çift Liste
+  const trackItems = React.useMemo(() => {
+    return [...liveList, ...liveList];
+  }, [liveList]);
+
   return (
     <div className="terminal-ticker-bar" id="terminalTickerBar">
       <div className="ticker-countdown-badge" id="tefasCountdownBadge">
@@ -42,26 +103,12 @@ export const TerminalTicker: React.FC = () => {
 
       <div className="ticker-track-wrapper">
         <div className="ticker-track" id="tickerTrack">
-          {liveList.concat(liveList).map((item, idx) => {
-            const isPos = item.changePct > 0;
-            const isNeg = item.changePct < 0;
-            const changeClass = isPos ? 'pos' : isNeg ? 'neg' : 'zero';
-            const sign = isPos ? '+' : '';
-
-            return (
-              <div key={`${item.key}-${idx}`} className="ticker-item">
-                <span className="ticker-symbol">{item.code}:</span>
-                <span className="ticker-price">
-                  {item.unit === 'TL' ? `₺${item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` :
-                   item.unit === '$' ? `$${item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` :
-                   item.rate.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className={`ticker-change ${changeClass}`}>
-                  {sign}%{Math.abs(item.changePct).toFixed(2)}
-                </span>
-              </div>
-            );
-          })}
+          {trackItems.map((item, idx) => (
+            <TickerItem
+              key={`${item.key}-${idx < liveList.length ? 'a' : 'b'}`}
+              item={item}
+            />
+          ))}
         </div>
       </div>
     </div>
