@@ -47,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="header-left">
         <div className="logo">
           <div className="logo-icon" style={{ background: 'transparent', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg viewBox="0 0 128 128" width="30" height="30" style={{ display: 'block' }}>
+            <svg viewBox="0 0 128 128" width="28" height="28" style={{ display: 'block' }}>
               <defs>
                 <linearGradient id="zenithHdrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#6366F1" />
@@ -88,9 +88,9 @@ export const Header: React.FC<HeaderProps> = ({
       </nav>
 
       <div className="header-actions">
-        <div className="last-update" id="lastUpdate">
+        <div className="last-update" id="lastUpdate" title="Son Resmi TEFAS Kapanış Seansı">
           <span className="pulse-dot"></span>
-          <span className="update-text">TEFAS ({officialTefasDate})</span>
+          <span className="update-text">{officialTefasDate}</span>
         </div>
 
         <button
@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenQrTeleport}
           title="P2P Mobil Işınlama & QR Teleport"
         >
-          <span>📲</span> Işınla
+          <span>📲</span> <span className="btn-label-hide-md">Işınla</span>
         </button>
 
         <button
@@ -106,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenMarketSessions}
           title="Dünya Borsaları & TEFAS Seansları"
         >
-          <span>🌐</span> Borsalar
+          <span>🌐</span> <span className="btn-label-hide-md">Borsalar</span>
         </button>
 
         <button
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenVoiceBriefing}
           title="Zenith Voice AI Sesli Sabah Bülteni"
         >
-          <span>🎙️</span> Sesli Bülten
+          <span>🎙️</span> <span className="btn-label-hide-md">Sesli</span>
         </button>
 
         <button
@@ -122,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenPitchbook}
           title="Goldman Sachs Stili Kurumsal Pitchbook (A4 PDF)"
         >
-          <span>📑</span> Pitchbook
+          <span>📑</span> <span className="btn-label-hide-sm">Pitchbook</span>
         </button>
 
         <button
@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onOpenExecutiveReport}
           title="Yönetici Özeti & Rapor"
         >
-          <span>🖨</span> Rapor
+          <span>🖨</span> <span className="btn-label-hide-sm">Rapor</span>
         </button>
 
         <button

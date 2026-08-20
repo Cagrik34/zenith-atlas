@@ -281,9 +281,31 @@ button {
 }
 
 .header-actions .btn {
-    padding: 5px 8px;
-    font-size: 0.74rem;
+    padding: 4px 7px;
+    font-size: 0.73rem;
     gap: 4px;
+}
+
+@media (max-width: 1600px) {
+    .btn-label-hide-md {
+        display: none;
+    }
+    .header-actions .btn {
+        padding: 4px 6px;
+    }
+}
+
+@media (max-width: 1350px) {
+    .btn-label-hide-sm {
+        display: none;
+    }
+    .strategy-badge {
+        display: none;
+    }
+    .nav-btn {
+        padding: 4px 6px;
+        font-size: 0.74rem;
+    }
 }
 
 .last-update {
