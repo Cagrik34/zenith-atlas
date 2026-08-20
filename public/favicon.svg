@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="zenithGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Rounded Badge -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="2" />
+  
+  <!-- Dynamic Orbit Rings -->
+  <circle cx="64" cy="64" r="42" fill="none" stroke="url(#zenithGrad)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.4" />
+  <circle cx="64" cy="64" r="30" fill="none" stroke="url(#zenithGrad)" stroke-width="2" opacity="0.8" />
+  
+  <!-- Zenith Atlas Z-Prism Symbol -->
+  <path d="M42 42 L86 42 L42 86 L86 86" fill="none" stroke="url(#zenithGrad)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  
+  <!-- Trajectory Point Star -->
+  <circle cx="86" cy="42" r="4" fill="#38BDF8" filter="url(#glow)" />
+  <circle cx="42" cy="86" r="4" fill="#EC4899" filter="url(#glow)" />
+</svg>
