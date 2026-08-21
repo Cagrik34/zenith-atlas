@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PortfolioProvider } from './context/PortfolioContext';
 import { MarketProvider } from './context/MarketContext';
+import { AgentHiveProvider } from './context/AgentHiveContext';
 import { useAutoSync } from './hooks/useAutoSync';
 import { useLivePrices } from './hooks/useLivePrices';
 
@@ -83,7 +84,9 @@ export const App: React.FC = () => {
   return (
     <MarketProvider>
       <PortfolioProvider>
-        <AppContent />
+        <AgentHiveProvider>
+          <AppContent />
+        </AgentHiveProvider>
       </PortfolioProvider>
     </MarketProvider>
   );

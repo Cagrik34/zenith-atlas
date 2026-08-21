@@ -1,6 +1,8 @@
 import React from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { useAgentHive } from '../../context/AgentHiveContext';
 import { exportPortfolioToCsv } from '../../utils/excelExport';
+import { Bot, Shield, ShieldAlert } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -26,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing,
 }) => {
   const { funds, cashTL, activePortfolio, officialTefasDate } = usePortfolio();
+  const { agents, breakerStatus, setIsBreakerModalOpen } = useAgentHive();
 
   const handleExportExcel = () => {
     exportPortfolioToCsv(funds, cashTL, activePortfolio.name);
@@ -39,8 +42,10 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'quant', label: 'Kantitatif Masa', icon: '🧮' },
     { id: 'strategy', label: 'Strateji', icon: '🎯' },
     { id: 'execution-plan', label: 'Uygulama Planı', icon: '📋' },
-    { id: 'zenith-ai', label: 'Zenith AI', icon: '🤖' },
+    { id: 'zenith-ai', label: 'Ajan Masası & AI', icon: '🤖' },
   ];
+
+  const isBreakerTripped = breakerStatus.level === 'TRIPPED';
 
   return (
     <header className="app-header">
@@ -88,6 +93,22 @@ export const Header: React.FC<HeaderProps> = ({
       </nav>
 
       <div className="header-actions">
+        {/* Ajan Masası Canlı Nabız Rozeti */}
+        <button
+          className="btn btn-ghost"
+          onClick={() => setActiveTab('zenith-ai')}
+          title="Zenith Quant Hive: 5 Otonom Ajan Nöbette"
+          style={{
+            background: isBreakerTripped ? 'rgba(239, 68, 68, 0.15)' : 'rgba(99, 102, 241, 0.12)',
+            border: isBreakerTripped ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(99, 102, 241, 0.25)',
+            color: isBreakerTripped ? '#EF4444' : '#818CF8',
+            padding: '4px 8px'
+          }}
+        >
+          <span className="pulse-dot" style={{ background: isBreakerTripped ? '#EF4444' : '#10B981', marginRight: '4px' }}></span>
+          <span className="btn-label-hide-md">Hive (5/5)</span>
+        </button>
+
         <div className="last-update" id="lastUpdate" title="Son Resmi TEFAS Kapanış Seansı">
           <span className="pulse-dot"></span>
           <span className="update-text">{officialTefasDate}</span>
@@ -120,33 +141,34 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           className="btn btn-ghost"
           onClick={onOpenPitchbook}
-          title="Goldman Sachs Stili Kurumsal Pitchbook (A4 PDF)"
+          title="Goldman Sachs Standartlarında 4 Sayfalık PDF Pitchbook"
         >
-          <span>📑</span> <span className="btn-label-hide-sm">Pitchbook</span>
+          <span>📑</span> <span className="btn-label-hide-md">Pitchbook</span>
         </button>
 
         <button
           className="btn btn-ghost"
           onClick={onOpenExecutiveReport}
-          title="Yönetici Özeti & Rapor"
+          title="Üst Yönetim Portföy İcra Özeti"
         >
-          <span>🖨</span> <span className="btn-label-hide-sm">Rapor</span>
-        </button>
-
-        <button
-          className={`btn btn-ghost ${isSyncing ? 'btn-syncing' : ''}`}
-          onClick={() => triggerAutoSync()}
-          title="Canlı Verileri Yenile"
-        >
-          <span style={{ display: 'inline-block', transform: isSyncing ? 'rotate(180deg)' : 'none', transition: 'transform 0.5s ease' }}>🔄</span> Güncelle
+          <span>🖨</span> <span className="btn-label-hide-md">Rapor</span>
         </button>
 
         <button
           className="btn btn-primary"
-          onClick={handleExportExcel}
-          title="Excel Olarak İndir"
+          onClick={triggerAutoSync}
+          disabled={isSyncing}
+          title="Canlı TEFAS & Piyasa Fiyatlarını Senkronize Et"
         >
-          <span>📥</span> Excel
+          <span>{isSyncing ? '⏳' : '🔄'}</span> <span className="btn-label-hide-sm">{isSyncing ? 'Senkron...' : 'Güncelle'}</span>
+        </button>
+
+        <button
+          className="btn btn-secondary"
+          onClick={handleExportExcel}
+          title="Kurumsal Excel & CSV Portföy Raporu İndir"
+        >
+          <span>📥</span> <span className="btn-label-hide-sm">Excel</span>
         </button>
       </div>
     </header>
