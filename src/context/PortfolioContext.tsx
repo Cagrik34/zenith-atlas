@@ -22,6 +22,7 @@ interface PortfolioContextType {
   deletePortfolio: (id: string) => void;
   loadDemoPortfolio: () => void;
   clearPortfolio: () => void;
+  importAccount: (account: PortfolioAccount) => void;
   importPortfolioJson: (jsonStr: string) => boolean;
   exportPortfolioJson: () => string;
   totalFundValue: number;
@@ -233,6 +234,21 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   }, [updateActiveAccount]);
 
+  // Portföy Hesabını Doğrudan Yükle (P2P Teleport / QR)
+  const importAccount = useCallback((account: PortfolioAccount) => {
+    setStoredData(prev => {
+      const existsIndex = prev.portfolios.findIndex(p => p.id === account.id);
+      let updatedPortfolios: PortfolioAccount[];
+      if (existsIndex >= 0) {
+        updatedPortfolios = [...prev.portfolios];
+        updatedPortfolios[existsIndex] = account;
+      } else {
+        updatedPortfolios = [...prev.portfolios, account];
+      }
+      return { activeId: account.id, portfolios: updatedPortfolios };
+    });
+  }, []);
+
   // JSON Yedeğini Geri Yükle
   const importPortfolioJson = useCallback((jsonStr: string): boolean => {
     try {
@@ -337,6 +353,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deletePortfolio,
         loadDemoPortfolio,
         clearPortfolio,
+        importAccount,
         importPortfolioJson,
         exportPortfolioJson,
         totalFundValue,
