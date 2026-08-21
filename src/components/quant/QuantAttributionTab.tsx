@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { useAgentHive } from '../../context/AgentHiveContext';
 import { FactorAttributionEngine } from '../../engines/FactorAttributionEngine';
 import { RollingCorrelationEngine } from '../../engines/RollingCorrelationEngine';
 import { SyntheticStressEngine } from '../../engines/SyntheticStressEngine';
 import { TaxLossHarvestingEngine } from '../../engines/TaxLossHarvestingEngine';
 import { formatTRY, formatPercent } from '../../utils/formatters';
-import { Target, Zap, Activity, Sliders, Scissors, ShieldAlert, CheckCircle } from 'lucide-react';
+import { Target, Zap, Activity, Sliders, Scissors, ShieldAlert, CheckCircle, Bot } from 'lucide-react';
 
 export const QuantAttributionTab: React.FC = () => {
   const { funds } = usePortfolio();
+  const { sendMessage } = useAgentHive();
 
   // 1. Fama-French
   const ffResults = useMemo(() => FactorAttributionEngine.calculate(funds), [funds]);
@@ -30,6 +32,11 @@ export const QuantAttributionTab: React.FC = () => {
   // 4. Tax-Loss Harvesting
   const taxSummary = useMemo(() => TaxLossHarvestingEngine.calculate(funds), [funds]);
 
+  const handleApplyTaxHarvest = () => {
+    sendMessage('TAX_HARVESTER', 'BROADCAST', 'inform', 'Vergi Hasadı Stratejisi Onaylandı', `Toplam ${taxSummary.lots.length} adet fon için HIFO vergi mahsup satışı hazırlandı.`);
+    alert('Vergi hasadı direktifi Ajan Masası (Hive) posta kutusuna iletildi.');
+  };
+
   return (
     <div className="tab-pane active" id="tab-quant">
       <div className="tab-header-actions">
@@ -37,6 +44,10 @@ export const QuantAttributionTab: React.FC = () => {
           <h2>Kantitatif Analitik & Faktöriyel Risk Masası</h2>
           <p className="tab-sub">Fama-French 5-Faktör Alfa, Yuvarlanan Çapraz Korelasyon, Kriz Simülasyonu ve Vergi Hasadı.</p>
         </div>
+
+        <span className="badge badge-primary" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#A5B4FC', padding: '6px 12px' }}>
+          <span>🧮</span> LeadQuant & RiskBreaker Matematiksel Motoru
+        </span>
       </div>
 
       {/* 1. Fama-French 5-Faktör Masası */}
@@ -58,65 +69,53 @@ export const QuantAttributionTab: React.FC = () => {
           </div>
           <div className="ff-metric-item">
             <span className="ff-label">Piyasa Betası (β_mkt):</span>
-            <span className="ff-val">{ffResults.marketBeta}x</span>
+            <span className="ff-val">{ffResults.marketBeta.toFixed(2)}x</span>
           </div>
           <div className="ff-metric-item">
             <span className="ff-label">Büyüklük Primi (SMB):</span>
-            <span className="ff-val">{ffResults.smbBeta}</span>
+            <span className="ff-val">{ffResults.smbBeta.toFixed(2)}</span>
           </div>
           <div className="ff-metric-item">
             <span className="ff-label">Değer Primi (HML):</span>
-            <span className="ff-val">{ffResults.hmlBeta}</span>
+            <span className="ff-val">{ffResults.hmlBeta.toFixed(2)}</span>
           </div>
           <div className="ff-metric-item">
-            <span className="ff-label">Kârlılık Primi (RMW):</span>
-            <span className="ff-val">{ffResults.rmwBeta}</span>
+            <span className="ff-label">Kârlılık (RMW):</span>
+            <span className="ff-val">{ffResults.rmwBeta.toFixed(2)}</span>
           </div>
           <div className="ff-metric-item">
-            <span className="ff-label">Yatırım Primi (CMA):</span>
-            <span className="ff-val">{ffResults.cmaBeta}</span>
+            <span className="ff-label">Yatırım Tutumu (CMA):</span>
+            <span className="ff-val">{ffResults.cmaBeta.toFixed(2)}</span>
           </div>
           <div className="ff-metric-item">
-            <span className="ff-label">Açıklayıcılık (R²):</span>
-            <span className="ff-val">%{ffResults.rSquared}</span>
+            <span className="ff-label">Model R² Gücü:</span>
+            <span className="ff-val font-semibold">%{ffResults.rSquared.toFixed(1)}</span>
           </div>
-          <div className="ff-metric-item">
-            <span className="ff-label">Aktif Pay (Active Share):</span>
-            <span className="ff-val">%{ffResults.activeShare}</span>
-          </div>
-        </div>
-
-        <div className="quant-interpretation-box">
-          <p><strong>💡 Kantitatif Değerlendirme:</strong> {ffResults.interpretation}</p>
         </div>
       </div>
 
-      {/* 2. Yuvarlanan Çapraz Korelasyon & PCA */}
+      {/* 2. Yuvarlanan Çapraz Korelasyon */}
       <div className="card quant-card">
         <div className="card-header">
           <div className="card-title-group">
-            <Activity size={18} className="text-info" />
-            <h3 className="card-title">Yuvarlanan Çapraz Varlık Korelasyonu & PCA Absorpsiyon Oranı</h3>
+            <Activity size={18} className="text-accent" />
+            <h3 className="card-title">Dinamik Yuvarlanan Korelasyon Matrisi</h3>
           </div>
-          <div className="toggle-group">
-            <button className={`toggle-btn ${windowDays === 30 ? 'active' : ''}`} onClick={() => setWindowDays(30)}>30 Günlük</button>
-            <button className={`toggle-btn ${windowDays === 90 ? 'active' : ''}`} onClick={() => setWindowDays(90)}>90 Günlük</button>
-            <button className={`toggle-btn ${windowDays === 365 ? 'active' : ''}`} onClick={() => setWindowDays(365)}>365 Günlük</button>
-          </div>
-        </div>
-
-        <div className="pca-strip">
-          <div className="pca-badge">
-            <span>PCA Absorpsiyon Oranı (Sistemik Risk): </span>
-            <strong>%{corrData.pcaAbsorptionRatio}</strong>
-          </div>
-          <div className="pca-badge">
-            <span>Çeşitlendirme Katsayısı: </span>
-            <strong>{corrData.diversificationRatio}x</strong>
+          <div className="window-select-group">
+            <span>Pencere:</span>
+            {[30, 90, 180, 360].map(days => (
+              <button
+                key={days}
+                className={`btn-tag ${windowDays === days ? 'active' : ''}`}
+                onClick={() => setWindowDays(days)}
+              >
+                {days} Gün
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="correlation-matrix-container">
+        <div className="table-responsive">
           <table className="correlation-table">
             <thead>
               <tr>
@@ -125,17 +124,18 @@ export const QuantAttributionTab: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {corrData.matrix.map((row, i) => (
-                <tr key={corrData.assets[i]}>
-                  <td className="font-bold">{corrData.assets[i]}</td>
-                  {row.map((val, j) => {
-                    const isDiag = i === j;
-                    const isPos = val > 0.4 && !isDiag;
-                    const isNeg = val < 0;
+              {corrData.matrix.map((row, rIdx) => (
+                <tr key={corrData.assets[rIdx]}>
+                  <td className="font-bold">{corrData.assets[rIdx]}</td>
+                  {row.map((val, cIdx) => {
+                    const isSelf = rIdx === cIdx;
+                    const bgAlpha = isSelf ? 0.1 : Math.abs(val) * 0.35;
+                    const bgColor = isSelf ? '#64748B' : val > 0 ? `rgba(16, 185, 129, ${bgAlpha})` : `rgba(239, 68, 68, ${bgAlpha})`;
                     return (
                       <td
-                        key={j}
-                        className={`corr-cell ${isDiag ? 'diag' : isPos ? 'high-corr' : isNeg ? 'neg-corr' : ''}`}
+                        key={cIdx}
+                        style={{ backgroundColor: bgColor, color: '#FFFFFF', fontWeight: isSelf ? 400 : 700 }}
+                        className="corr-cell"
                       >
                         {val.toFixed(2)}
                       </td>
@@ -148,36 +148,35 @@ export const QuantAttributionTab: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Sentetik Makro Şok Simülatörü */}
+      {/* 3. Sentetik Stres Simülasyonu */}
       <div className="card quant-card">
         <div className="card-header">
           <div className="card-title-group">
-            <Sliders size={18} className="text-warning" />
-            <h3 className="card-title">İnteraktif Sentetik Makro Şok Jeneratörü (What-If Stress Test)</h3>
+            <Sliders size={18} className="text-accent" />
+            <h3 className="card-title">Sentetik Kriz & Şok Simülatörü</h3>
           </div>
-          <span className="badge badge-warning">Canlı Portföy Duyarlılığı</span>
+          <span className="badge badge-primary">Monte Carlo & Çapraz Şok Motoru</span>
         </div>
 
         <div className="stress-sliders-grid">
-          <div className="slider-item">
-            <div className="slider-label-row">
-              <span>USD/TRY Sıçraması:</span>
-              <strong>{formatPercent(usdShock)}</strong>
+          <div className="slider-box">
+            <div className="slider-header">
+              <span>USD/TRY Kuru Şoku:</span>
+              <strong>{usdShock >= 0 ? '+' : ''}%{usdShock}</strong>
             </div>
             <input
               type="range"
-              min="-20"
+              min="-30"
               max="50"
               value={usdShock}
-              onChange={(e) => setUsdShock(parseFloat(e.target.value))}
-              className="stress-range-slider"
+              onChange={e => setUsdShock(Number(e.target.value))}
             />
           </div>
 
-          <div className="slider-item">
-            <div className="slider-label-row">
-              <span>TCMB Faiz Şoku (Bps):</span>
-              <strong>+{rateShock} bps</strong>
+          <div className="slider-box">
+            <div className="slider-header">
+              <span>TCMB Faiz Şoku (bps):</span>
+              <strong>{rateShock >= 0 ? '+' : ''}{rateShock} bps</strong>
             </div>
             <input
               type="range"
@@ -185,126 +184,108 @@ export const QuantAttributionTab: React.FC = () => {
               max="1000"
               step="50"
               value={rateShock}
-              onChange={(e) => setRateShock(parseFloat(e.target.value))}
-              className="stress-range-slider"
+              onChange={e => setRateShock(Number(e.target.value))}
             />
           </div>
 
-          <div className="slider-item">
-            <div className="slider-label-row">
+          <div className="slider-box">
+            <div className="slider-header">
               <span>BIST 100 Endeks Şoku:</span>
-              <strong>{formatPercent(bistShock)}</strong>
+              <strong>{bistShock >= 0 ? '+' : ''}%{bistShock}</strong>
             </div>
             <input
               type="range"
-              min="-40"
-              max="30"
+              min="-50"
+              max="50"
               value={bistShock}
-              onChange={(e) => setBistShock(parseFloat(e.target.value))}
-              className="stress-range-slider"
+              onChange={e => setBistShock(Number(e.target.value))}
             />
           </div>
 
-          <div className="slider-item">
-            <div className="slider-label-row">
-              <span>Spot Ons Altın Şoku:</span>
-              <strong>{formatPercent(goldShock)}</strong>
+          <div className="slider-box">
+            <div className="slider-header">
+              <span>Ons Altın ($) Şoku:</span>
+              <strong>{goldShock >= 0 ? '+' : ''}%{goldShock}</strong>
             </div>
             <input
               type="range"
               min="-30"
-              max="30"
+              max="50"
               value={goldShock}
-              onChange={(e) => setGoldShock(parseFloat(e.target.value))}
-              className="stress-range-slider"
+              onChange={e => setGoldShock(Number(e.target.value))}
             />
           </div>
         </div>
 
-        <div className="stress-result-summary">
-          <div className="stress-stat">
-            <span className="stress-stat-label">Tahmini Net Portföy Etkisi:</span>
-            <span className={`stress-stat-val ${stressResult.portfolioLossTRY >= 0 ? 'text-pos' : 'text-neg'}`}>
-              {formatTRY(stressResult.portfolioLossTRY)} ({formatPercent(stressResult.portfolioLossPct)})
+        <div className="stress-result-banner" style={{ background: stressResult.portfolioLossPct >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: stressResult.portfolioLossPct >= 0 ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)' }}>
+          <div className="stress-res-left">
+            <ShieldAlert size={24} className={stressResult.portfolioLossPct >= 0 ? 'text-pos' : 'text-neg'} />
+            <div>
+              <h4>Tahmini Portföy Etkisi: {stressResult.scenarioName}</h4>
+              <p>Dayanıklılık Skoru: <strong>%{stressResult.resilienceScore}</strong> • En Defansif Varlık: <strong>{stressResult.topDefensiveAsset}</strong></p>
+            </div>
+          </div>
+          <div className="stress-res-right">
+            <span className={`stress-pct ${stressResult.portfolioLossPct >= 0 ? 'text-pos' : 'text-neg'}`}>
+              {stressResult.portfolioLossPct >= 0 ? '+' : ''}{formatPercent(stressResult.portfolioLossPct)}
             </span>
-          </div>
-
-          <div className="stress-stat">
-            <span className="stress-stat-label">Portföy Dayanıklılık Skoru:</span>
-            <span className="stress-stat-val text-accent">{stressResult.resilienceScore} / 100</span>
-          </div>
-
-          <div className="stress-stat">
-            <span className="stress-stat-label">En Güçlü Savunma Varlığı:</span>
-            <span className="stress-stat-val">{stressResult.topDefensiveAsset}</span>
+            <span className="stress-tl">
+              ({stressResult.portfolioLossTRY >= 0 ? '+' : ''}{formatTRY(stressResult.portfolioLossTRY)})
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 4. Vergi Kayıp Hasadı (Tax-Loss Harvesting) */}
+      {/* 4. Vergi Kaybı Hasadı (Tax-Loss Harvesting) */}
       <div className="card quant-card">
         <div className="card-header">
           <div className="card-title-group">
-            <Scissors size={18} className="text-success" />
-            <h3 className="card-title">2026 Stopaj Rejimi Vergi Kayıp Hasadı & HIFO Optimizasyonu</h3>
+            <Scissors size={18} className="text-accent" />
+            <h3 className="card-title">Vergi Kaybı Hasadı & İkame Fon Haritası (GVK 67)</h3>
           </div>
-          <span className="badge badge-success">GVK Geçici 67. Madde</span>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleApplyTaxHarvest}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Bot size={14} />
+            <span>Ajan Masasına İlet</span>
+          </button>
         </div>
 
-        <div className="tax-summary-strip">
-          <div className="tax-badge-item">
-            <span>Hasat Edilebilir Zarar: </span>
-            <strong>{formatTRY(taxSummary.totalHarvestableLossTRY)}</strong>
+        <div className="tax-harvest-grid">
+          <div className="tax-stat-box">
+            <span className="tax-stat-lbl">Toplam Zararda Olan Pozisyon:</span>
+            <strong className="tax-stat-val text-neg">{formatTRY(taxSummary.totalHarvestableLossTRY)}</strong>
           </div>
-          <div className="tax-badge-item">
-            <span>Yasal Vergi Kalkanı (%17.5): </span>
-            <strong className="text-pos">{formatTRY(taxSummary.totalTaxSavingsTRY)}</strong>
-          </div>
-          <div className="tax-badge-item">
-            <span>HIFO Metodu Ek Avantajı: </span>
-            <strong className="text-accent">+{formatTRY(taxSummary.hifoAdvantageTRY)}</strong>
+          <div className="tax-stat-box">
+            <span className="tax-stat-lbl">Kazanılabilir Stopaj Avantajı:</span>
+            <strong className="tax-stat-val text-pos">{formatTRY(taxSummary.totalTaxSavingsTRY)}</strong>
           </div>
         </div>
 
-        {taxSummary.lots.length > 0 ? (
-          <div className="table-responsive">
+        {taxSummary.lots.length > 0 && (
+          <div className="table-responsive" style={{ marginTop: '12px' }}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Fon Kodu</th>
-                  <th>Alış Fiyatı</th>
-                  <th>Güncel Fiyat</th>
-                  <th>Zarar (TL)</th>
-                  <th>Vergi Tasarrufu</th>
-                  <th>Önerilen İkame Fonlar (Surrogates)</th>
+                  <th>Zarardaki Fon</th>
+                  <th>Mevcut Zarar</th>
+                  <th>Önerilen İkame Fon</th>
+                  <th>Kategori & Neden</th>
                 </tr>
               </thead>
               <tbody>
-                {taxSummary.lots.map(l => (
-                  <tr key={l.lotId}>
-                    <td className="font-bold">{l.fundCode}</td>
-                    <td>{l.buyPrice.toFixed(4)} TL</td>
-                    <td>{l.currentPrice.toFixed(4)} TL</td>
-                    <td className="text-neg font-semibold">-{formatTRY(l.unrealizedLossTRY)}</td>
-                    <td className="text-pos font-semibold">+{formatTRY(l.taxShieldTRY)}</td>
-                    <td>
-                      <div className="surrogate-tags">
-                        {l.surrogateFunds.map(s => (
-                          <span key={s.code} className="badge badge-info" title={s.reason}>
-                            {s.code} (Corr: {s.correlation})
-                          </span>
-                        ))}
-                      </div>
-                    </td>
+                {taxSummary.lots.map(h => (
+                  <tr key={h.fundCode}>
+                    <td className="font-bold">{h.fundCode}</td>
+                    <td className="text-neg font-bold">{formatTRY(h.unrealizedLossTRY)}</td>
+                    <td className="font-bold text-accent">{h.surrogateFunds[0]?.code || '-'}</td>
+                    <td>{h.surrogateFunds[0]?.reason || 'Korelasyonlu defansif ikame'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <CheckCircle size={24} className="text-pos mb-2" />
-            <p>Portföyünüzde vergi hasadı gerektiren zararda lot bulunmuyor. Tüm varlıklar kârlı bölgede!</p>
           </div>
         )}
       </div>

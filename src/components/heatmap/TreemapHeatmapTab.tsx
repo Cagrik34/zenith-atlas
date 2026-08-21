@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { TreemapNode } from '../../types/quant';
 import { SquarifiedTreemapEngine } from '../../engines/SquarifiedTreemapEngine';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { useAgentHive } from '../../context/AgentHiveContext';
 import { formatPercent, formatTRY } from '../../utils/formatters';
-import { Plus, Sparkles, FolderPlus, Info } from 'lucide-react';
+import { Plus, Sparkles, FolderPlus, Info, Bot, Activity } from 'lucide-react';
 
 interface TreemapItemData {
   id: string;
@@ -17,6 +18,7 @@ interface TreemapItemData {
 
 export const TreemapHeatmapTab: React.FC = () => {
   const { funds, loadDemoPortfolio } = usePortfolio();
+  const { sendMessage } = useAgentHive();
   const [viewMode, setViewMode] = useState<'portfolio' | 'tefas' | 'bist'>('portfolio');
   const [metricMode, setMetricMode] = useState<'daily' | '1y'>('daily');
   const [containerSize, setContainerSize] = useState({ width: 900, height: 500 });
@@ -62,95 +64,83 @@ export const TreemapHeatmapTab: React.FC = () => {
         code: f.code,
         name: f.name,
         category: f.category,
-        value: Math.max(f.shares * f.currentPrice, 100),
-        dailyPct: f.dailyReturnPct !== undefined ? f.dailyReturnPct : fallback.daily,
-        yearlyPct: f.performance1Y !== undefined ? f.performance1Y : fallback.yearly
+        value: f.shares * f.currentPrice,
+        dailyPct: fallback.daily,
+        yearlyPct: fallback.yearly
       };
     });
   }, [funds]);
 
-  // 2. BIST 100 Sektör Ağır Topları (Canlı & Yıllık Getiriler)
-  const bistItems: TreemapItemData[] = useMemo(() => [
-    { id: 'THYAO', code: 'THYAO', name: 'Türk Hava Yolları', category: 'Ulaştırma', value: 380, dailyPct: 1.45, yearlyPct: 84.20 },
-    { id: 'ASELS', code: 'ASELS', name: 'Aselsan Savunma', category: 'Savunma & Teknoloji', value: 340, dailyPct: 2.10, yearlyPct: 96.50 },
-    { id: 'GARAN', code: 'GARAN', name: 'Garanti BBVA', category: 'Bankacılık', value: 320, dailyPct: -0.85, yearlyPct: 128.40 },
-    { id: 'AKBNK', code: 'AKBNK', name: 'Akbank', category: 'Bankacılık', value: 300, dailyPct: -1.20, yearlyPct: 115.20 },
-    { id: 'KCHOL', code: 'KCHOL', name: 'Koç Holding', category: 'Holding', value: 290, dailyPct: 0.65, yearlyPct: 68.40 },
-    { id: 'TUPRS', code: 'TUPRS', name: 'Tüpraş Rafineri', category: 'Enerji', value: 270, dailyPct: 0.20, yearlyPct: 72.10 },
-    { id: 'BIMAS', code: 'BIMAS', name: 'BİM Mağazalar', category: 'Perakende', value: 250, dailyPct: 0.10, yearlyPct: 88.90 },
-    { id: 'ISCTR', code: 'ISCTR', name: 'İş Bankası (C)', category: 'Bankacılık', value: 230, dailyPct: -0.95, yearlyPct: 94.60 },
-    { id: 'EREGL', code: 'EREGL', name: 'Ereğli Demir Çelik', category: 'Metal Sanayi', value: 210, dailyPct: -0.40, yearlyPct: 42.50 },
-    { id: 'SISE', code: 'SISE', name: 'Şişecam', category: 'Cam & Kimya', value: 190, dailyPct: 0.35, yearlyPct: 51.20 },
-    { id: 'SAHOL', code: 'SAHOL', name: 'Sabancı Holding', category: 'Holding', value: 180, dailyPct: 0.55, yearlyPct: 76.80 },
-    { id: 'FROTO', code: 'FROTO', name: 'Ford Otosan', category: 'Otomotiv', value: 170, dailyPct: 0.80, yearlyPct: 62.30 }
+  // 2. TEFAS Liderleri
+  const tefasLeadersItems: TreemapItemData[] = useMemo(() => [
+    { id: 'TI3', code: 'TI3', name: 'İş Portföy İhracatçı Hisse', category: 'Hisse Senedi Yoğun', value: 12450000000, dailyPct: 1.85, yearlyPct: 118.50 },
+    { id: 'MAC', code: 'MAC', name: 'Marmara Capital Hisse', category: 'Hisse Senedi Yoğun', value: 9850000000, dailyPct: 1.15, yearlyPct: 104.80 },
+    { id: 'IIH', code: 'IIH', name: 'İstanbul Portföy Üçüncü Hisse', category: 'Hisse Senedi Yoğun', value: 8900000000, dailyPct: 1.40, yearlyPct: 112.40 },
+    { id: 'AFT', code: 'AFT', name: 'Ak Portföy Yeni Teknolojiler', category: 'Yabancı Hisse', value: 16800000000, dailyPct: 0.90, yearlyPct: 78.20 },
+    { id: 'KZL', code: 'KZL', name: 'Kuveyt Türk Altın Katılım', category: 'Kıymetli Madenler', value: 14200000000, dailyPct: 0.65, yearlyPct: 64.10 },
+    { id: 'TP2', code: 'TP2', name: 'Tera Portföy Para Piyasası', category: 'Para Piyasası', value: 24500000000, dailyPct: 0.14, yearlyPct: 55.80 },
+    { id: 'IJC', code: 'IJC', name: 'İş Portföy BIST 100 Dışı', category: 'Hisse Senedi Yoğun', value: 6500000000, dailyPct: 0.75, yearlyPct: 92.50 },
+    { id: 'AIS', code: 'AIS', name: 'Ak Portföy Para Piyasası', category: 'Para Piyasası', value: 18900000000, dailyPct: 0.12, yearlyPct: 53.40 }
   ], []);
 
-  // 3. TEFAS Lider Fonları (Canlı & Yıllık Getiriler)
-  const tefasItems: TreemapItemData[] = useMemo(() => [
-    { id: 'IIH', code: 'IIH', name: 'İstanbul Portföy Üçüncü Hisse', category: 'Hisse Senedi', value: 280, dailyPct: 1.40, yearlyPct: 112.40 },
-    { id: 'MAC', code: 'MAC', name: 'Marmara Capital Hisse', category: 'Hisse Senedi', value: 250, dailyPct: 1.15, yearlyPct: 104.80 },
-    { id: 'TI3', code: 'TI3', name: 'İş Portföy BIST Dışı Şirketler', category: 'Hisse Senedi', value: 230, dailyPct: 1.85, yearlyPct: 98.20 },
-    { id: 'IJC', code: 'IJC', name: 'İş Portföy BIST 100 Dışı', category: 'Hisse Senedi', value: 210, dailyPct: 0.75, yearlyPct: 92.50 },
-    { id: 'TTE', code: 'TTE', name: 'İş Portföy BIST Teknoloji', category: 'Hisse Senedi', value: 200, dailyPct: 2.10, yearlyPct: 89.60 },
-    { id: 'AFT', code: 'AFT', name: 'Ak Portföy Yeni Teknolojiler', category: 'Fon Sepeti', value: 190, dailyPct: 0.90, yearlyPct: 78.20 },
-    { id: 'YAY', code: 'YAY', name: 'Yapı Kredi Yabancı Teknoloji', category: 'Yabancı Hisse', value: 180, dailyPct: 0.85, yearlyPct: 74.50 },
-    { id: 'KZL', code: 'KZL', name: 'Kuveyt Türk Altın Katılım', category: 'Kıymetli Madenler', value: 170, dailyPct: 0.65, yearlyPct: 64.10 },
-    { id: 'TP2', code: 'TP2', name: 'Tera Portföy Para Piyasası', category: 'Para Piyasası', value: 160, dailyPct: 0.14, yearlyPct: 55.80 },
-    { id: 'AIS', code: 'AIS', name: 'Ak Portföy Para Piyasası', category: 'Para Piyasası', value: 150, dailyPct: 0.12, yearlyPct: 53.40 }
+  // 3. BIST 100 Sektörleri
+  const bistSectorsItems: TreemapItemData[] = useMemo(() => [
+    { id: 'XBANK', code: 'XBANK', name: 'Bankacılık Sektörü', category: 'Finans', value: 385000000000, dailyPct: 1.45, yearlyPct: 94.20 },
+    { id: 'XUSIN', code: 'XUSIN', name: 'Sınai İmalat Sektörü', category: 'Sanayi', value: 520000000000, dailyPct: 0.68, yearlyPct: 72.80 },
+    { id: 'XHOLD', code: 'XHOLD', name: 'Holding ve Yatırım', category: 'Holding', value: 310000000000, dailyPct: 0.82, yearlyPct: 81.50 },
+    { id: 'XULAS', code: 'XULAS', name: 'Ulaştırma & Havacılık', category: 'Ulaştırma', value: 240000000000, dailyPct: -0.35, yearlyPct: 62.40 },
+    { id: 'XILTM', code: 'XILTM', name: 'İletişim & Telekom', category: 'Teknoloji', value: 145000000000, dailyPct: 1.10, yearlyPct: 88.90 },
+    { id: 'XELKT', code: 'XELKT', name: 'Elektrik & Enerji', category: 'Enerji', value: 195000000000, dailyPct: 0.45, yearlyPct: 58.60 },
+    { id: 'XGIDA', code: 'XGIDA', name: 'Gıda ve İçecek', category: 'Tüketim', value: 160000000000, dailyPct: 0.25, yearlyPct: 66.30 },
+    { id: 'XGMYO', code: 'XGMYO', name: 'Gayrimenkul Yatırım Ort.', category: 'GYO', value: 110000000000, dailyPct: -0.55, yearlyPct: 49.20 }
   ], []);
 
-  // Aktif Seçime Göre Ham Düğümleri Çözümleme
-  const rawNodes: TreemapNode[] = useMemo(() => {
-    let sourceList: TreemapItemData[] = [];
-    if (viewMode === 'portfolio') {
-      sourceList = portfolioItems;
-    } else if (viewMode === 'bist') {
-      sourceList = bistItems;
-    } else {
-      sourceList = tefasItems;
-    }
+  // Aktif Veri Seti
+  const activeDataset = useMemo(() => {
+    if (viewMode === 'portfolio') return portfolioItems;
+    if (viewMode === 'bist') return bistSectorsItems;
+    return tefasLeadersItems;
+  }, [viewMode, portfolioItems, bistSectorsItems, tefasLeadersItems]);
 
-    return sourceList.map(item => ({
-      id: item.id,
-      code: item.code,
-      name: item.name,
-      category: item.category,
-      value: item.value,
-      changePct: metricMode === 'daily' ? item.dailyPct : item.yearlyPct
-    }));
-  }, [viewMode, metricMode, portfolioItems, bistItems, tefasItems]);
+  // Squarified Treemap Algoritması
+  const treemapNodes: TreemapNode[] = useMemo(() => {
+    if (activeDataset.length === 0) return [];
+    return SquarifiedTreemapEngine.layout(
+      activeDataset.map(item => ({
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        category: item.category,
+        value: item.value,
+        changePct: metricMode === 'daily' ? item.dailyPct : item.yearlyPct
+      })),
+      containerSize.width,
+      containerSize.height
+    );
+  }, [activeDataset, metricMode, containerSize]);
 
-  // Squarified Yerleşim Hesabı
-  const layoutTiles = useMemo(() => {
-    return SquarifiedTreemapEngine.layout(rawNodes, containerSize.width, containerSize.height);
-  }, [rawNodes, containerSize]);
-
-  // Dinamik HSL Renk Skalası (Günlük vs 1 Yıllık Dinamik Duyarlılık)
-  const getTileBackground = (changePct: number): string => {
-    const maxRange = metricMode === 'daily' ? 2.5 : 110.0;
-    const norm = Math.min(Math.abs(changePct) / maxRange, 1.0);
-
-    if (changePct > 0) {
-      const lightness = 28 - (norm * 12);
-      return `hsl(158, 85%, ${lightness}%)`; // Yeşil / Emerald
-    } else if (changePct < 0) {
-      const lightness = 35 - (norm * 12);
-      return `hsl(0, 75%, ${lightness}%)`; // Kırmızı / Ruby
-    }
-    return '#1E293B'; // Nötr Gri
+  // HSL Renk Skalası
+  const getNodeColor = (pct: number) => {
+    if (pct > 2.0) return '#059669';
+    if (pct > 0.5) return '#10B981';
+    if (pct >= 0) return '#34D399';
+    if (pct > -1.0) return '#F87171';
+    return '#DC2626';
   };
 
-  const isPortfolioEmpty = viewMode === 'portfolio' && funds.length === 0;
-
   return (
-    <div className="tab-pane active" id="tab-heatmap" ref={containerRef}>
+    <div className="tab-pane active" id="tab-heatmap">
       <div className="tab-header-actions">
         <div className="tab-title-block">
           <h2>Squarified Finviz / S&P 500 Stili Finansal Isı Haritası</h2>
-          <p className="tab-sub">Varlık büyüklüklerine orantılı kare karolar ve dinamik getiri renk skalası.</p>
+          <p className="tab-sub">Varlık büyüklüklerine orantılı kare karolar ve getiri renk skalası.</p>
         </div>
 
-        <div className="action-buttons-row">
+        <div className="toggle-controls-group">
+          <span className="badge badge-primary" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#A5B4FC', padding: '6px 12px' }}>
+            <span>🗺️</span> LeadQuant & SyncSentinel Isı Haritası Motoru
+          </span>
+
           <div className="toggle-group">
             <button
               className={`toggle-btn ${viewMode === 'portfolio' ? 'active' : ''}`}
@@ -189,79 +179,85 @@ export const TreemapHeatmapTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="card treemap-container-card">
-        {isPortfolioEmpty ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', color: '#818CF8' }}>
+      <div className="card heatmap-container-card" ref={containerRef}>
+        {viewMode === 'portfolio' && funds.length === 0 ? (
+          <div style={{ height: '480px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '30px' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', color: '#818CF8' }}>
               <FolderPlus size={28} />
             </div>
-            <h3 style={{ color: '#F1F5F9', fontWeight: '700', fontSize: '1.1rem', marginBottom: '8px' }}>
-              Portföyünüzde Henüz Fon Bulunmuyor
+            <h3 style={{ color: '#F1F5F9', fontWeight: '700', fontSize: '1.05rem', marginBottom: '8px' }}>
+              Portföy Isı Haritası Boş
             </h3>
-            <p style={{ color: '#94A3B8', fontSize: '0.86rem', maxWidth: '440px', margin: '0 auto 24px', lineHeight: '1.6' }}>
-              Isı haritasında kendi fonlarınızı görmek için fon ekleyebilir veya yukarıdaki <strong>BIST 100 Sektörler</strong> / <strong>TEFAS Liderleri</strong> sekmelerini inceleyebilirsiniz.
+            <p style={{ color: '#94A3B8', fontSize: '0.84rem', maxWidth: '400px', margin: '0 auto 20px', lineHeight: '1.5' }}>
+              Portföyünüzde henüz fon bulunmuyor. Diğer sekmeleri inceleyebilir veya örnek portföyü yükleyebilirsiniz.
             </p>
             <button
-              className="btn btn-secondary"
+              className="btn btn-ghost"
               onClick={loadDemoPortfolio}
-              style={{ padding: '10px 20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.25)', color: '#C7D2FE' }}
             >
-              <Sparkles size={16} color="#F59E0B" />
-              <span>Örnek Portföyü Yükle (Demo)</span>
+              <Sparkles size={14} />
+              <span>Örnek Portföyü Yükle</span>
             </button>
           </div>
         ) : (
           <div
-            className="treemap-viewport"
+            className="squarified-treemap-viewport"
             style={{
               position: 'relative',
-              width: `${containerSize.width}px`,
-              height: `${containerSize.height}px`,
+              width: '100%',
+              height: '520px',
               overflow: 'hidden',
-              borderRadius: '12px',
-              background: '#080C1A'
+              borderRadius: '8px',
+              background: '#070A18'
             }}
           >
-            {layoutTiles.map(tile => {
-              const tileW = (tile.x1 || 0) - (tile.x0 || 0);
-              const tileH = (tile.y1 || 0) - (tile.y0 || 0);
-              const isSmall = tileW < 75 || tileH < 50;
+            {treemapNodes.map(node => {
+              const isPos = node.changePct >= 0;
+              const x = node.x0 || 0;
+              const y = node.y0 || 0;
+              const w = Math.max((node.x1 || 0) - x - 2, 0);
+              const h = Math.max((node.y1 || 0) - y - 2, 0);
+              const color = getNodeColor(node.changePct);
 
               return (
                 <div
-                  key={tile.id}
+                  key={node.id}
                   className="treemap-tile"
                   style={{
                     position: 'absolute',
-                    left: `${tile.x0}px`,
-                    top: `${tile.y0}px`,
-                    width: `${Math.max(tileW - 2, 0)}px`,
-                    height: `${Math.max(tileH - 2, 0)}px`,
-                    backgroundColor: getTileBackground(tile.changePct),
+                    left: `${x}px`,
+                    top: `${y}px`,
+                    width: `${w}px`,
+                    height: `${h}px`,
+                    backgroundColor: color,
+                    borderRadius: '6px',
+                    padding: '8px',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '4px',
-                    color: '#FFFFFF',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    overflow: 'hidden',
                     cursor: 'pointer',
-                    transition: 'transform 0.2s ease, filter 0.2s ease',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '6px'
+                    boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.12)',
+                    transition: 'transform 0.15s ease, filter 0.15s ease'
                   }}
-                  title={`${tile.code} - ${tile.name} (${tile.category}): %${tile.changePct.toFixed(2)} (${metricMode === 'daily' ? 'Günlük Değişim' : '1 Yıllık Getiri'})`}
+                  title={`${node.code} - ${node.name}\nBüyüklük: ${formatTRY(node.value)}\n${metricMode === 'daily' ? 'Günlük' : '1 Yıllık'}: ${isPos ? '+' : ''}${node.changePct.toFixed(2)}%`}
                 >
-                  <span className="treemap-tile-code" style={{ fontSize: isSmall ? '10px' : '13px', fontWeight: 700 }}>
-                    {tile.code}
-                  </span>
-                  {!isSmall && (
-                    <span className="treemap-tile-name" style={{ fontSize: '10px', opacity: 0.85, textAlign: 'center', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {tile.name}
+                  <strong style={{ fontSize: w > 120 ? '1.05rem' : '0.85rem', color: '#FFFFFF', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+                    {node.code}
+                  </strong>
+                  {h > 45 && (
+                    <span style={{ fontSize: w > 120 ? '0.82rem' : '0.72rem', fontWeight: 700, color: '#FFFFFF', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                      {isPos ? '+' : ''}{node.changePct.toFixed(2)}%
                     </span>
                   )}
-                  <span className="treemap-tile-pct" style={{ fontSize: isSmall ? '9px' : '11px', fontWeight: 600 }}>
-                    {formatPercent(tile.changePct)}
-                  </span>
+                  {w > 130 && h > 75 && (
+                    <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.85)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                      {node.name}
+                    </span>
+                  )}
                 </div>
               );
             })}

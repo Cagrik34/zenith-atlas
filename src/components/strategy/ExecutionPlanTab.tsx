@@ -1,10 +1,12 @@
 import React from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { useAgentHive } from '../../context/AgentHiveContext';
 import { formatTRY, formatPercent } from '../../utils/formatters';
-import { ListOrdered, CheckCircle2, Clock, ArrowRightCircle, ShieldAlert } from 'lucide-react';
+import { ListOrdered, CheckCircle2, Clock, ArrowRightCircle, ShieldAlert, Bot, Send } from 'lucide-react';
 
 export const ExecutionPlanTab: React.FC = () => {
   const { funds, cashTL, totalPortfolioValue } = usePortfolio();
+  const { sendMessage } = useAgentHive();
 
   // Hedef model ağırlıkları (Dengeli Portföy)
   const targetWeights: Record<string, number> = {
@@ -42,6 +44,19 @@ export const ExecutionPlanTab: React.FC = () => {
     });
   }, [funds, totalPortfolioValue]);
 
+  const handleDispatchOrdersToHive = () => {
+    const buyCount = rebalanceActions.filter(a => a.action === 'AL').length;
+    const sellCount = rebalanceActions.filter(a => a.action === 'SAT').length;
+    sendMessage(
+      'RISK_BREAKER',
+      'BROADCAST',
+      'request',
+      'Yeniden Dengeleme Emirleri Onaylandı',
+      `Toplam ${buyCount} ALIM ve ${sellCount} SATIM emri TEFAS valör takvimine (T+1/T+2/T+3) göre icra kuyruğuna alındı. Vergi kalkanı doğrulandı.`
+    );
+    alert('Yeniden dengeleme emirleri Ajan Masası (Hive) posta kutusuna başarıyla iletildi!');
+  };
+
   return (
     <div className="tab-pane active" id="tab-execution-plan">
       <div className="tab-header-actions">
@@ -50,9 +65,19 @@ export const ExecutionPlanTab: React.FC = () => {
           <p className="tab-sub">Stratejik hedef ağırlıklara ulaşmak için optimize edilmiş kademeli alım/satım emirleri.</p>
         </div>
 
-        <div className="badge badge-primary">
-          <Clock size={14} className="mr-1 inline" />
-          <span>TEFAS Seansı: 10:00 - 18:15 (T+0 Alım Emri)</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span className="badge badge-primary" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#A5B4FC', padding: '6px 12px' }}>
+            <span>🛡️</span> RiskBreaker & TaxHarvester Emir Kalkanı
+          </span>
+
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={handleDispatchOrdersToHive}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Bot size={14} />
+            <span>Ajan Masasına Emirleri İlet</span>
+          </button>
         </div>
       </div>
 
@@ -64,43 +89,41 @@ export const ExecutionPlanTab: React.FC = () => {
                 <th>Fon</th>
                 <th>Mevcut Ağırlık</th>
                 <th>Hedef Ağırlık</th>
+                <th>Fark (TL)</th>
+                <th>Tahmini Pay</th>
                 <th>Önerilen İşlem</th>
-                <th>İşlem Tutarı (TL)</th>
-                <th>Tahmini Pay Adedi</th>
-                <th>Valör Süresi</th>
-                <th>Durum</th>
+                <th>Takas Valörü</th>
               </tr>
             </thead>
             <tbody>
-              {rebalanceActions.map(item => {
-                const isBuy = item.action === 'AL';
-                const isSell = item.action === 'SAT';
-                const actionBadgeClass = isBuy ? 'badge-success' : isSell ? 'badge-danger' : 'badge-secondary';
+              {rebalanceActions.map(act => {
+                const isBuy = act.action === 'AL';
+                const isSell = act.action === 'SAT';
+                const isHold = act.action === 'TUT';
 
                 return (
-                  <tr key={item.code}>
+                  <tr key={act.code}>
                     <td>
                       <div className="fund-cell">
-                        <span className="fund-code-badge">{item.code}</span>
-                        <span className="fund-name-text">{item.name}</span>
+                        <span className="fund-code-badge">{act.code}</span>
+                        <span className="fund-name-text">{act.name}</span>
                       </div>
                     </td>
-                    <td>%{item.curWeight.toFixed(1)}</td>
-                    <td className="font-semibold text-accent">%{item.targetWeight.toFixed(1)}</td>
+                    <td>%{act.curWeight.toFixed(1)}</td>
+                    <td className="font-bold">%{act.targetWeight.toFixed(1)}</td>
+                    <td className={act.diffVal > 0 ? 'text-pos font-bold' : act.diffVal < 0 ? 'text-neg font-bold' : ''}>
+                      {act.diffVal > 0 ? '+' : ''}{formatTRY(act.diffVal)}
+                    </td>
+                    <td className="font-semibold">
+                      {Math.abs(act.diffShares).toLocaleString('tr-TR')} Adet
+                    </td>
                     <td>
-                      <span className={`badge ${actionBadgeClass}`}>
-                        {item.action}
+                      <span className={`badge ${isBuy ? 'badge-success' : isSell ? 'badge-danger' : 'badge-category'}`} style={{ fontWeight: 700 }}>
+                        {act.action}
                       </span>
                     </td>
-                    <td className={isBuy ? 'text-pos font-semibold' : isSell ? 'text-neg font-semibold' : ''}>
-                      {item.action !== 'TUT' ? formatTRY(Math.abs(item.diffVal)) : '0,00 TL'}
-                    </td>
                     <td>
-                      {item.action !== 'TUT' ? `${Math.abs(item.diffShares).toLocaleString('tr-TR')} Pay` : '-'}
-                    </td>
-                    <td><span className="badge badge-info">{item.valort}</span></td>
-                    <td>
-                      <span className="badge badge-warning">Beklemede</span>
+                      <span className="badge badge-category">{act.valort}</span>
                     </td>
                   </tr>
                 );
@@ -108,16 +131,6 @@ export const ExecutionPlanTab: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="card notice-card mt-4">
-        <div className="notice-header">
-          <ShieldAlert size={18} className="text-warning mr-2 inline" />
-          <h4 className="notice-title">Valör ve Likidite Yönetimi Hatırlatması</h4>
-        </div>
-        <p className="notice-text">
-          Yabancı fonlar (AFT vb.) satıldığında nakit hesaba <strong>T+3 iş gününde</strong> geçerken, BIST Hisse fonlarında (MAC, IJC) <strong>T+2 valör</strong> uygulanır. Para Piyasası Fonları (AIS, TP2) ise <strong>T+0 aynı gün anında</strong> nakde döner. Kademeli geçiş önerilir.
-        </p>
       </div>
     </div>
   );

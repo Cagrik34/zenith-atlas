@@ -3,20 +3,42 @@ import { PortfolioMetrics } from './PortfolioMetrics';
 import { AssetDistribution } from './AssetDistribution';
 import { MacroNewsStrip } from './MacroNewsStrip';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { useAgentHive } from '../../context/AgentHiveContext';
 import { formatTRY, formatPercent } from '../../utils/formatters';
-import { Plus, Sparkles, FolderPlus } from 'lucide-react';
+import { Plus, Sparkles, FolderPlus, Bot, Shield } from 'lucide-react';
 
 interface DashboardTabProps {
   onNavigateTab: (tabId: string) => void;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => {
-  const { funds, cashTL, totalPortfolioValue, loadDemoPortfolio } = usePortfolio();
+  const { funds, cashTL, loadDemoPortfolio } = usePortfolio();
+  const { breakerStatus, agents } = useAgentHive();
 
   const isPortfolioEmpty = funds.length === 0 && cashTL === 0;
 
   return (
     <div className="tab-pane active" id="tab-dashboard">
+      {/* 0. Ajan Masası Canlı Koruma Bandı */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="badge badge-primary" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#A5B4FC', padding: '6px 12px' }}>
+            <span>🏛️</span> LeadQuant Nöbette (5/5 Otonom Ajan Aktif)
+          </span>
+          <span className="badge badge-category" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}>
+            <span>🛡️</span> Devre Kesici: <strong style={{ color: breakerStatus.level === 'HEALTHY' ? '#10B981' : '#EF4444' }}>{breakerStatus.level}</strong>
+          </span>
+        </div>
+        <button
+          className="btn btn-ghost"
+          onClick={() => onNavigateTab('zenith-ai')}
+          style={{ fontSize: '0.74rem', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Bot size={13} />
+          <span>Ajan Komuta Merkezine Git →</span>
+        </button>
+      </div>
+
       {/* 1. Üst KPI Kartları */}
       <PortfolioMetrics />
 
@@ -59,8 +81,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   onClick={loadDemoPortfolio}
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
                 >
-                  <Sparkles size={14} color="#F59E0B" />
-                  <span>Örnek Portföyü Yükle</span>
+                  <Sparkles size={14} />
+                  <span>Örnek Portföy Yükle</span>
                 </button>
               </div>
             </div>
@@ -78,11 +100,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                   </tr>
                 </thead>
                 <tbody>
-                  {funds.map(f => {
-                    const val = f.shares * f.currentPrice;
-                    const cost = f.shares * f.costPrice;
-                    const pnl = val - cost;
-                    const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
+                  {funds.map((f) => {
+                    const curVal = f.shares * f.currentPrice;
+                    const costVal = f.shares * f.costPrice;
+                    const pnl = curVal - costVal;
+                    const pnlPct = costVal > 0 ? (pnl / costVal) * 100 : 0;
+                    const isPos = pnl >= 0;
 
                     return (
                       <tr key={f.code}>
@@ -93,30 +116,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
                           </div>
                         </td>
                         <td><span className="badge badge-category">{f.category}</span></td>
-                        <td>{f.shares.toLocaleString('tr-TR')}</td>
+                        <td className="font-semibold">{f.shares.toLocaleString('tr-TR')}</td>
                         <td>{f.currentPrice.toFixed(4)} TL</td>
-                        <td className="font-semibold">{formatTRY(val)}</td>
-                        <td className={pnl >= 0 ? 'text-pos font-semibold' : 'text-neg font-semibold'}>
-                          {formatTRY(pnl)} ({formatPercent(pnlPct)})
+                        <td className="font-bold">{formatTRY(curVal)}</td>
+                        <td className={isPos ? 'text-pos font-bold' : 'text-neg font-bold'}>
+                          {isPos ? '+' : ''}{formatTRY(pnl)} ({isPos ? '+' : ''}{formatPercent(pnlPct)})
                         </td>
                       </tr>
                     );
                   })}
-                  {cashTL > 0 && (
-                    <tr className="cash-row">
-                      <td>
-                        <div className="fund-cell">
-                          <span className="fund-code-badge badge-cash">NAKİT</span>
-                          <span className="fund-name-text">TL Nakit & Likit Bakiye</span>
-                        </div>
-                      </td>
-                      <td><span className="badge badge-info">Likit</span></td>
-                      <td>-</td>
-                      <td>-</td>
-                      <td className="font-semibold">{formatTRY(cashTL)}</td>
-                      <td className="text-secondary">-</td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
@@ -124,7 +132,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ onNavigateTab }) => 
         </div>
       </div>
 
-      {/* 3. Alt Bölüm: Resmi Makroekonomi & Kurum Bültenleri */}
+      {/* 3. Alt Bölüm: Resmi Kurum Senkronizasyonlu Makro Bülten */}
       <MacroNewsStrip />
     </div>
   );
