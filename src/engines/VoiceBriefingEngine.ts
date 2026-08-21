@@ -31,11 +31,15 @@ export class VoiceBriefingEngine {
       bistStr = `${Math.round(markets.categories.bist.items.XU100.rate).toLocaleString('tr-TR')} puan`;
     }
 
+    const portfolioSummaryStr = totalVal > 0
+      ? `Portföyünüzün toplam net aktif büyüklüğü nakit dahil ${Math.round(totalVal).toLocaleString('tr-TR')} Türk Lirasıdır. Fama-French faktör modeline göre portföyünüz yıllıklaştırılmış artı yüzde ${Math.abs(jensensAlpha).toFixed(1)} alfa getirisi üretmektedir.`
+      : `Henüz portföyünüze fon eklenmemiş durumdadır. Terminal üzerinden dilediğiniz TEFAS fonunu ekleyerek kantitatif analizlerinizi hemen başlatabilirsiniz.`;
+
     const script = `Günaydın. Bugün ${today}. Zenith Atlas yapay zeka destekli sabah finans bültenine hoş geldiniz.
 
 Piyasalarda son duruma baktığımızda; Dolar kuru ${usdStr}, Kapalıçarşı serbest piyasada 24 ayar gram altın ${goldStr} ve Borsa İstanbul 100 endeksi ${bistStr} seviyesinden işlem görmektedir.
 
-Portföyünüzün toplam net aktif büyüklüğü nakit dahil ${Math.round(totalVal).toLocaleString('tr-TR')} Türk Lirasıdır. Fama-French faktör modeline göre portföyünüz yıllıklaştırılmış artı yüzde ${Math.abs(jensensAlpha).toFixed(1)} alfa getirisi üretmektedir.
+${portfolioSummaryStr}
 
 TCMB politika faizi yüzde 37 seviyesinde ve dezenflasyon süreci devam ederken, BIST hisse yoğun fonlarınızdaki yüzde 0 stopaj muafiyet kalkanı korunmaktadır.
 

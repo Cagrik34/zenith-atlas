@@ -29,11 +29,20 @@ export class MonteCarloEngine {
     simulationsCount: number = 2000
   ): MonteCarloResult {
     const months = horizonYears * 12;
+    const timeStepsMonths = Array.from({ length: months + 1 }, (_, i) => i);
+
+    if (initialCapitalTRY <= 0 && monthlyContributionTRY <= 0) {
+      const zeros = Array(months + 1).fill(0);
+      return {
+        percentiles: { p5: zeros, p25: zeros, p50: zeros, p75: zeros, p95: zeros },
+        finalDistribution: { expectedValueTRY: 0, worstCase5PctTRY: 0, bestCase95PctTRY: 0, successRatePct: 0 },
+        timeStepsMonths
+      };
+    }
+
     const dt = 1.0 / 12.0;
     const mu = annualExpectedReturnPct / 100.0;
     const sigma = annualVolatilityPct / 100.0;
-
-    const timeStepsMonths = Array.from({ length: months + 1 }, (_, i) => i);
     const paths: number[][] = Array.from({ length: simulationsCount }, () => {
       const path = [initialCapitalTRY];
       let val = initialCapitalTRY;
