@@ -10,7 +10,7 @@ interface TickerItemData {
   unit: string;
 }
 
-// Performans Optimize Edilmiş & Canlı Renk Dalgası (Price Flash Wave) Destekli Ticker Elemanı
+// Performans Optimize Edilmiş & Canlı Renk Dalgası Destekli Ticker Elemanı
 const TickerItem: React.FC<{ item: TickerItemData }> = memo(({ item }) => {
   const prevRateRef = useRef<number>(item.rate);
   const [flashClass, setFlashClass] = useState<string>('');
@@ -96,9 +96,8 @@ export const TerminalTicker: React.FC = () => {
       <div className="ticker-countdown-badge" id="tefasCountdownBadge">
         <span className={`ticker-pulse-dot ${isSocketConnected ? 'connected' : ''}`}></span>
         <span className="ticker-countdown-text">
-          {isSocketConnected ? '🟢 CANLI PİYASA' : '🟡 PİYASA AKIŞI'}: BIST & TEFAS
+          {isSocketConnected ? 'CANLI' : 'PİYASA'}
         </span>
-        <span className="ticker-badge-arrow">▾</span>
       </div>
 
       <div className="ticker-track-wrapper">

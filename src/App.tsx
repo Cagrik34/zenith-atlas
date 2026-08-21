@@ -10,6 +10,8 @@ import { CheckCircle2, Sparkles, X } from 'lucide-react';
 // Layout & Navigation
 import { Header } from './components/layout/Header';
 import { TerminalTicker } from './components/layout/TerminalTicker';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
+import { MobileNavDrawer } from './components/layout/MobileNavDrawer';
 
 // Tabs
 import { DashboardTab } from './components/dashboard/DashboardTab';
@@ -38,6 +40,7 @@ const AppContent: React.FC = () => {
   const [isExecReportOpen, setIsExecReportOpen] = useState(false);
   const [isSessionsOpen, setIsSessionsOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [teleportToast, setTeleportToast] = useState<string | null>(null);
 
   // Background hooks
@@ -63,7 +66,6 @@ const AppContent: React.FC = () => {
           if (account && account.funds && account.funds.length > 0) {
             importAccount(account);
             setTeleportToast(`🚀 "${account.name}" (${account.funds.length} Fon) Mobil Cihazınıza Başarıyla Işınlandı!`);
-            // Clean hash from URL bar cleanly without reload
             window.history.replaceState(null, '', window.location.pathname);
             setTimeout(() => setTeleportToast(null), 5000);
           }
@@ -107,7 +109,7 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
-      {/* 1. Sabit Üst Header Bar (Titreme/Kayma Engelli) */}
+      {/* 1. Sabit Üst Header Bar (Titreme/Kayma Engelli & Mobil Uyumlu) */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -116,6 +118,7 @@ const AppContent: React.FC = () => {
         onOpenExecutiveReport={() => setIsExecReportOpen(true)}
         onOpenMarketSessions={() => setIsSessionsOpen(true)}
         onOpenQrTeleport={() => setIsQrOpen(true)}
+        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         triggerAutoSync={triggerSync}
         isSyncing={isSyncing}
       />
@@ -135,7 +138,29 @@ const AppContent: React.FC = () => {
         {activeTab === 'zenith-ai' && <ZenithAiTab />}
       </main>
 
-      {/* 4. Global Modallar */}
+      {/* 4. Mobil Alt Navigasyon Dock (Sadece Mobil Ekranlarda Görünür) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenMenu={() => setIsMobileMenuOpen(true)}
+      />
+
+      {/* 5. Mobil Çekmece Menüsü */}
+      <MobileNavDrawer
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenPitchbook={() => setIsPitchbookOpen(true)}
+        onOpenVoiceBriefing={() => setIsVoiceOpen(true)}
+        onOpenExecutiveReport={() => setIsExecReportOpen(true)}
+        onOpenMarketSessions={() => setIsSessionsOpen(true)}
+        onOpenQrTeleport={() => setIsQrOpen(true)}
+        triggerAutoSync={triggerSync}
+        isSyncing={isSyncing}
+      />
+
+      {/* 6. Global Modallar */}
       <PitchbookModal isOpen={isPitchbookOpen} onClose={() => setIsPitchbookOpen(false)} />
       <VoiceBriefingModal isOpen={isVoiceOpen} onClose={() => setIsVoiceOpen(false)} />
       <ExecutiveReportModal isOpen={isExecReportOpen} onClose={() => setIsExecReportOpen(false)} />

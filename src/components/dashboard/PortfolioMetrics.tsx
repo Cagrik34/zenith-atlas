@@ -14,12 +14,12 @@ export const PortfolioMetrics: React.FC = () => {
   const isProfit = totalProfitLossTRY >= 0;
 
   return (
-    <div className="summary-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+    <div className="summary-cards">
       {/* 1. TOPLAM PORTFÖY BÜYÜKLÜĞÜ */}
       <div className="summary-card card card-glow-purple">
         <div className="card-icon">💰</div>
         <div className="card-content">
-          <span className="card-label">TOPLAM PORTFÖY BÜYÜKLÜĞÜ</span>
+          <span className="card-label">TOPLAM PORTFÖY</span>
           <span className="card-value">{formatTRY(totalPortfolioValue)}</span>
           <span className="card-sub neutral">{funds.length} Fon + {formatTRY(cashTL)} Nakit</span>
         </div>
@@ -29,12 +29,12 @@ export const PortfolioMetrics: React.FC = () => {
       <div className="summary-card card card-glow-green">
         <div className="card-icon">📈</div>
         <div className="card-content">
-          <span className="card-label">TOPLAM NET GETİRİ (P&L)</span>
+          <span className="card-label">NET GETİRİ (P&L)</span>
           <span className={`card-value ${hasFunds ? (isProfit ? 'positive' : 'negative') : 'neutral'}`}>
             {formatTRY(totalProfitLossTRY)}
           </span>
           <span className={`card-sub ${hasFunds ? (isProfit ? 'positive' : 'negative') : 'neutral'}`}>
-            {hasFunds ? `${isProfit ? '+' : ''}${formatPercent(totalProfitLossPct)} Maliyet Üzerinden` : '%0,00 Başlangıç'}
+            {hasFunds ? `${isProfit ? '+' : ''}${formatPercent(totalProfitLossPct)}` : '%0,00 Başlangıç'}
           </span>
         </div>
       </div>
@@ -53,12 +53,12 @@ export const PortfolioMetrics: React.FC = () => {
       <div className="summary-card card card-glow-orange">
         <div className="card-icon">🎯</div>
         <div className="card-content">
-          <span className="card-label">FAMA-FRENCH JENSEN'S ALPHA</span>
+          <span className="card-label">JENSEN'S ALPHA</span>
           <span className="card-value text-accent">
             {funds.length > 0 ? `+${formatPercent(ffMetrics.jensensAlpha)}` : '%0,00'}
           </span>
           <span className="card-sub neutral">
-            {funds.length > 0 ? `Beta: ${ffMetrics.marketBeta}x   R²: %${ffMetrics.rSquared}` : 'Portföy Boş'}
+            {funds.length > 0 ? `Beta: ${ffMetrics.marketBeta}x` : 'Portföy Boş'}
           </span>
         </div>
       </div>
@@ -67,10 +67,10 @@ export const PortfolioMetrics: React.FC = () => {
       <div className="summary-card card card-glow-purple">
         <div className="card-icon">🛡️</div>
         <div className="card-content">
-          <span className="card-label">SHARPE ORANI & RİSK</span>
+          <span className="card-label">SHARPE ORANI</span>
           <span className="card-value">{funds.length > 0 ? '1.57' : '0.00'}</span>
           <span className="card-sub neutral">
-            {funds.length > 0 ? 'Yıllık Volatilite: %22.5' : 'Volatilite: %0.0'}
+            {funds.length > 0 ? 'Volatilite: %22.5' : 'Volatilite: %0.0'}
           </span>
         </div>
       </div>
