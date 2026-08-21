@@ -9,6 +9,8 @@ interface QrTeleportModalProps {
   onClose: () => void;
 }
 
+const GITHUB_PAGES_LIVE_URL = 'https://cagrik34.github.io/zenith-atlas';
+
 export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClose }) => {
   const { activePortfolio, importAccount } = usePortfolio();
   const [copied, setCopied] = useState(false);
@@ -25,10 +27,12 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
     return P2pLiveSyncEngine.generateExportPayload(activePortfolio, salt || undefined);
   }, [activePortfolio, salt]);
 
-  // Generate web deep-link URL (Opens mobile browser and instantly beams portfolio on scan)
+  // Generate web deep-link URL (If running on localhost, intelligently uses the live GitHub Pages domain so mobile phones connect seamlessly from anywhere!)
   const teleportUrl = useMemo(() => {
-    if (typeof window === 'undefined') return rawPayload;
-    return `${window.location.origin}${window.location.pathname}#import=${rawPayload}`;
+    if (typeof window === 'undefined') return `${GITHUB_PAGES_LIVE_URL}/#import=${rawPayload}`;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseUrl = isLocalhost ? GITHUB_PAGES_LIVE_URL : `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}`;
+    return `${baseUrl}/#import=${rawPayload}`;
   }, [rawPayload]);
 
   const qrDataToEncode = qrMode === 'URL' ? teleportUrl : rawPayload;
@@ -79,7 +83,6 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
     e.preventDefault();
     try {
       setImportError('');
-      // If user pasted a full URL with #import=
       let text = importText.trim();
       if (text.includes('#import=')) {
         text = text.split('#import=')[1];
@@ -127,7 +130,7 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
               style={{ flex: 1, fontSize: '0.76rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
               <Globe size={14} />
-              <span>🌐 Web Linki Modu (Kamerayla Tıkla & Aç)</span>
+              <span>🌐 Canlı Web Linki (GitHub Pages)</span>
             </button>
             <button
               className={`btn btn-sm ${qrMode === 'RAW' ? 'btn-primary' : 'btn-ghost'}`}
@@ -135,7 +138,7 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
               style={{ flex: 1, fontSize: '0.76rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
               <KeyRound size={14} />
-              <span>🔑 Ham Anahtar Modu</span>
+              <span>🔑 Ham Anahtar Modu (Safe)</span>
             </button>
           </div>
 
@@ -148,13 +151,13 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
             <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: '#10B981', fontSize: '0.84rem', fontWeight: 600 }}>
               <Smartphone size={16} />
               <span>
-                {qrMode === 'URL' ? 'Telefonunuzun kamerası ile okutup çıkan linke tıklayın' : 'Anahtar kodunu kopyalayıp mobilde yapıştırın'}
+                {qrMode === 'URL' ? 'Telefonunuzun kamerası ile okutup çıkan canlı linke tıklayın' : 'Ham anahtarı mobildeki terminale yapıştırın'}
               </span>
             </div>
-            <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: 'var(--text-secondary)', maxWidth: '420px', lineHeight: 1.4 }}>
+            <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: 'var(--text-secondary)', maxWidth: '440px', lineHeight: 1.4 }}>
               {qrMode === 'URL' 
-                ? 'Kamera linki doğrudan algılar; tarayıcınızda açıldığı an portföyünüz tek saniyede mobilde hazır olur.'
-                : 'Mobilde veya başka bir tarayıcıda açık olan Zenith Atlas terminaline yapıştırarak içe aktarabilirsiniz.'}
+                ? 'Telefon kamerası doğrudan resmi GitHub Pages canlı sitesini açar; portföyünüz saniyesinde mobilde açılır.'
+                : 'Mobilde veya başka bir tarayıcıda açık olan Zenith Atlas terminaline yapıştırarak doğrudan içe aktarın.'}
             </p>
           </div>
 
@@ -163,7 +166,7 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <ShieldCheck size={14} className="text-pos" />
-                <span>Oturuma Özel Işınlama Verisi ({activePortfolio.funds.length} Fon)</span>
+                <span>Işınlama Verisi ({activePortfolio.funds.length} Fon)</span>
               </span>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button className="btn btn-secondary btn-sm" onClick={handleRegenerateKey} title="Yeni Oturum Anahtarı Üret" style={{ padding: '4px 8px', fontSize: '0.74rem' }}>
@@ -171,11 +174,11 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={handleCopyLink} title="Işınlama Linkini Kopyala" style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   {copiedLink ? <Check size={14} className="text-pos" /> : <Globe size={14} />}
-                  <span>{copiedLink ? 'Link Kopyalandı!' : 'Linki Kopyala'}</span>
+                  <span>{copiedLink ? 'Link Kopyalandı!' : 'Canlı Linki Kopyala'}</span>
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={handleCopyKey} title="Ham Anahtarı Kopyala" style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   {copied ? <Check size={14} className="text-pos" /> : <Copy size={14} />}
-                  <span>{copied ? 'Kopyalandı!' : 'Anahtarı Kopyala'}</span>
+                  <span>{copied ? 'Kopyalandı!' : 'Ham Anahtarı Kopyala'}</span>
                 </button>
               </div>
             </div>
@@ -207,7 +210,7 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
-                placeholder="Mobilden veya başka cihazdan gelen link/anahtarı buraya yapıştırın..."
+                placeholder="Mobilden veya başka cihazdan kopyalanan anahtar veya linki buraya yapıştırın..."
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
                 className="form-input"
