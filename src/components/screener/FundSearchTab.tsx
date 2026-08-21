@@ -42,9 +42,10 @@ export const FundSearchTab: React.FC = () => {
 
   const filteredFunds = useMemo(() => {
     return fundsDb.filter(f => {
+      const fundTitle = f.name || f.title || '';
       const matchSearch = searchTerm === '' ||
         f.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (f.name && f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        fundTitle.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchCat = selectedCategory === 'ALL' || f.category === selectedCategory;
       return matchSearch && matchCat;
@@ -59,12 +60,14 @@ export const FundSearchTab: React.FC = () => {
   }, [fundsDb, searchTerm, selectedCategory, sortField, sortAsc]);
 
   const handleQuickAdd = (fund: TefasFund) => {
+    const fundName = fund.name || fund.title || `${fund.code} Fonu`;
     addFund({
       code: fund.code,
-      name: fund.name,
+      name: fundName,
       category: fund.category,
       shares: 1000,
       costPrice: fund.price,
+      currentPrice: fund.price,
       performance1Y: fund.performance1Y || 65.0,
       ter: fund.managementFee || 2.0
     });
@@ -73,7 +76,7 @@ export const FundSearchTab: React.FC = () => {
     setTimeout(() => setAddedCode(null), 2500);
 
     // Notify Agent Hive
-    sendMessage('SYNC_SENTINEL', 'BROADCAST', 'inform', 'Portföye Fon Eklendi', `Portföye yeni fon tahsisatı yapıldı: ${fund.code} - ${fund.name} (${fund.category})`);
+    sendMessage('SYNC_SENTINEL', 'BROADCAST', 'inform', 'Portföye Fon Eklendi', `Portföye yeni fon tahsisatı yapıldı: ${fund.code} - ${fundName} (${fund.category}) • Takasbank Fiyatı: ${fund.price.toFixed(6)} TL`);
   };
 
   return (

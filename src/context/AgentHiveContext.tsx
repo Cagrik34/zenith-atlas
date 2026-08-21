@@ -26,7 +26,7 @@ interface AgentHiveContextType {
 const AgentHiveContext = createContext<AgentHiveContextType | null>(null);
 
 export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { funds, cashTL } = usePortfolio();
+  const { funds, cashTL, syncLivePrices } = usePortfolio();
   const { marketData, socketStats, reconnectSocket } = useMarket();
 
   const [engine] = useState(() => new AgentHiveEngine());
@@ -38,10 +38,34 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [memorySnapshot, setMemorySnapshot] = useState<MemoryReflectionEntry>(() => engine.memory.getMemorySnapshot());
   const [isBreakerModalOpen, setIsBreakerModalOpen] = useState(false);
 
+  // Load 1,051 official TEFAS database prices into engine cache on boot & apply initial synchronization
+  useEffect(() => {
+    const loadPrices = async () => {
+      try {
+        let res = await fetch('/data/prices.json?t=' + Date.now());
+        if (!res.ok) res = await fetch('src/data/prices.json?t=' + Date.now());
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data && data.prices) {
+            engine.setTefasPricesCache(data.prices);
+            syncLivePrices(data.prices, data.officialTefasDate);
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading TEFAS prices cache into Hive Engine:', e);
+      }
+    };
+    loadPrices();
+  }, [engine, syncLivePrices]);
+
   // Background Autonomous Sentinel Heartbeat Loop (smooth and non-flickering)
   useEffect(() => {
     const tick = () => {
-      engine.runSentinelTick(funds, cashTL, marketData, socketStats);
+      const result = engine.runSentinelTick(funds, cashTL, marketData, socketStats);
+      if (result && result.priceCorrections) {
+        syncLivePrices(result.priceCorrections);
+      }
+
       setAgents(engine.getAgents());
       setMessages(engine.getMessages());
       setToolSpans(engine.getToolSpans());
@@ -58,7 +82,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     tick();
     const interval = setInterval(tick, 2000);
     return () => clearInterval(interval);
-  }, [engine, funds, cashTL, marketData, socketStats]);
+  }, [engine, funds, cashTL, marketData, socketStats, syncLivePrices]);
 
   const sendMessage = useCallback((from: AgentRole, to: AgentRole | 'BROADCAST', act: MessageAct, subject: string, body: string, data?: Record<string, any>) => {
     engine.sendMessage(from, to, act, subject, body, data);

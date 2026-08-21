@@ -1,6 +1,8 @@
 export interface TefasFund {
   code: string;
   name: string;
+  title?: string;
+  founder?: string;
   category: string;
   price: number;
   dailyReturnPct: number;

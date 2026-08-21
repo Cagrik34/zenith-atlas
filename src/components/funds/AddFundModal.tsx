@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { X, Plus, DollarSign } from 'lucide-react';
+import { X, Plus, DollarSign, Sparkles, CheckCircle2 } from 'lucide-react';
+import type { TefasFund } from '../../types/tefas';
 
 interface AddFundModalProps {
   isOpen: boolean;
@@ -15,6 +16,47 @@ export const AddFundModal: React.FC<AddFundModalProps> = ({ isOpen, onClose }) =
   const [category, setCategory] = useState('Hisse Senedi');
   const [shares, setShares] = useState('');
   const [costPrice, setCostPrice] = useState('');
+  const [fundsDb, setFundsDb] = useState<Record<string, TefasFund>>({});
+  const [matchedFund, setMatchedFund] = useState<TefasFund | null>(null);
+
+  useEffect(() => {
+    const loadDb = async () => {
+      try {
+        let res = await fetch('/data/funds_db.json?t=' + Date.now());
+        if (!res.ok) res = await fetch('src/data/funds_db.json?t=' + Date.now());
+        if (res && res.ok) {
+          const raw = await res.json();
+          const list: TefasFund[] = raw.funds || (Array.isArray(raw) ? raw : []);
+          const map: Record<string, TefasFund> = {};
+          list.forEach(f => {
+            map[f.code.toUpperCase()] = f;
+          });
+          setFundsDb(map);
+        }
+      } catch (e) {
+        console.warn('funds_db load error in AddFundModal:', e);
+      }
+    };
+    loadDb();
+  }, []);
+
+  // Auto-lookup TEFAS database on code change
+  const handleCodeChange = (rawCode: string) => {
+    const upper = rawCode.trim().toUpperCase();
+    setCode(upper);
+
+    if (fundsDb[upper]) {
+      const found = fundsDb[upper];
+      setMatchedFund(found);
+      setName(found.title || found.name || `${upper} Fonu`);
+      setCategory(found.category || 'Hisse Senedi');
+      if (!costPrice) {
+        setCostPrice(found.price.toFixed(6));
+      }
+    } else {
+      setMatchedFund(null);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -22,20 +64,24 @@ export const AddFundModal: React.FC<AddFundModalProps> = ({ isOpen, onClose }) =
     e.preventDefault();
     if (!code || !shares || !costPrice) return;
 
+    const currentOfficialPrice = matchedFund?.price || parseFloat(costPrice) || 1.0;
+
     addFund({
       code: code.trim().toUpperCase(),
       name: name.trim() || `${code.toUpperCase()} Fonu`,
       category,
       shares: parseFloat(shares) || 0,
       costPrice: parseFloat(costPrice) || 0,
-      performance1Y: 65.0,
-      ter: 2.0
+      currentPrice: currentOfficialPrice,
+      performance1Y: matchedFund?.performance1Y || 65.0,
+      ter: matchedFund?.managementFee || 2.0
     });
 
     setCode('');
     setName('');
     setShares('');
     setCostPrice('');
+    setMatchedFund(null);
     onClose();
   };
 
@@ -45,7 +91,7 @@ export const AddFundModal: React.FC<AddFundModalProps> = ({ isOpen, onClose }) =
         <div className="modal-header">
           <div className="modal-title-group">
             <Plus size={20} className="modal-header-icon" />
-            <h3 className="modal-title">Portföye Yeni Fon / Varlık Ekle</h3>
+            <h3 className="modal-title">Portföye Yeni TEFAS Fonu Ekle</h3>
           </div>
           <button className="modal-close-btn" onClick={onClose}>
             <X size={18} />
@@ -58,12 +104,18 @@ export const AddFundModal: React.FC<AddFundModalProps> = ({ isOpen, onClose }) =
             <input
               type="text"
               className="form-input"
-              placeholder="Örn: MAC, TI3, KZL, AFT"
+              placeholder="Örn: MAC, TI3, KZL, AFT, IIH, BIO"
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              onChange={(e) => handleCodeChange(e.target.value)}
               required
               maxLength={6}
             />
+            {matchedFund && (
+              <div style={{ marginTop: '6px', fontSize: '0.74rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 size={13} />
+                <span>Takasbank TEFAS Resmi Fiyatı: <strong>{matchedFund.price.toFixed(6)} TL</strong> ({matchedFund.category})</span>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -84,13 +136,15 @@ export const AddFundModal: React.FC<AddFundModalProps> = ({ isOpen, onClose }) =
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              <option value="Hisse Senedi">Hisse Senedi Yoğun Fon</option>
+              <option value="Hisse Senedi Yoğun">Hisse Senedi Yoğun Fon (%0 Stopaj)</option>
+              <option value="Hisse Senedi">Hisse Senedi Fonu</option>
               <option value="Değişken">Değişken Fon</option>
               <option value="Fon Sepeti">Fon Sepeti Fonu</option>
               <option value="Kıymetli Madenler">Kıymetli Madenler (Altın/Gümüş)</option>
               <option value="Borçlanma Araçları">Borçlanma Araçları (Tahvil/Eurobond)</option>
               <option value="Para Piyasası">Para Piyasası (Likit TL)</option>
               <option value="Katılım">Katılım (Faizsiz) Fonu</option>
+              <option value="Serbest Fon">Serbest Fon</option>
             </select>
           </div>
 

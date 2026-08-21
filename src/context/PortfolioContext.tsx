@@ -10,7 +10,7 @@ interface PortfolioContextType {
   funds: PortfolioFund[];
   cashTL: number;
   pendingOrders: PendingOrder[];
-  addFund: (fund: Omit<PortfolioFund, 'currentPrice'>) => void;
+  addFund: (fund: Omit<PortfolioFund, 'currentPrice'> & { currentPrice?: number }) => void;
   updateFund: (code: string, updates: Partial<PortfolioFund>) => void;
   removeFund: (code: string) => void;
   addLot: (fundCode: string, lot: Omit<FundLot, 'id' | 'totalCost'>) => void;
@@ -74,7 +74,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   }, []);
 
-  const addFund = useCallback((newFundData: Omit<PortfolioFund, 'currentPrice'>) => {
+  const addFund = useCallback((newFundData: Omit<PortfolioFund, 'currentPrice'> & { currentPrice?: number }) => {
     updateActiveAccount(acc => {
       const existsIndex = acc.funds.findIndex(f => f.code === newFundData.code);
       if (existsIndex >= 0) {
@@ -88,13 +88,14 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updatedFunds[existsIndex] = {
           ...existing,
           shares: newShares,
-          costPrice: avgCost
+          costPrice: avgCost,
+          currentPrice: newFundData.currentPrice || existing.currentPrice || newFundData.costPrice
         };
         return { ...acc, funds: updatedFunds };
       } else {
         const created: PortfolioFund = {
           ...newFundData,
-          currentPrice: newFundData.costPrice
+          currentPrice: newFundData.currentPrice || newFundData.costPrice
         };
         return { ...acc, funds: [...acc.funds, created] };
       }
