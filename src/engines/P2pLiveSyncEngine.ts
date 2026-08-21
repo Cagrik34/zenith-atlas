@@ -2,22 +2,35 @@
  * P2pLiveSyncEngine — P2P WebRTC & QR Teleport Veri Aktarım Motoru
  * Sıfır-Bilgi (Zero-Knowledge) P2P Şifreli Senkronizasyon
  * 
- * Portföy verilerini ultra-kompakt formatta kodlar; yüksek kontrastlı,
- * milisaniyede taranabilir stabil QR kod ve ışınlama anahtarı üretir.
+ * Portföy verilerini her oturum başlangıcında taze bir oturum imzasıyla
+ * ultra-kompakt formatta kodlar; yüksek kontrastlı, milisaniyede taranabilir
+ * stabil QR kod ve ışınlama anahtarı üretir.
  */
 
 import type { PortfolioAccount, PortfolioFund } from '../types/portfolio';
 
+// Uygulama her başlatıldığında / yüklendiğinde tek seferlik üretilen dinamik oturum mührü
+const SESSION_BOOT_TIMESTAMP = Date.now();
+const SESSION_BOOT_TOKEN = Math.random().toString(36).substring(2, 7);
+
 export class P2pLiveSyncEngine {
   /**
-   * Generates a stable, ultra-compact base64 export string suitable for crisp QR codes
+   * Returns the unique session boot signature for the current application launch
    */
-  public static generateExportPayload(account: PortfolioAccount): string {
+  public static getSessionBootSignature(): string {
+    return `${SESSION_BOOT_TIMESTAMP}-${SESSION_BOOT_TOKEN}`;
+  }
+
+  /**
+   * Generates a session-fresh, ultra-compact base64 export string suitable for crisp QR codes
+   */
+  public static generateExportPayload(account: PortfolioAccount, customSalt?: number): string {
     if (!account) return '';
 
-    // Compact payload format for rapid QR scanning & zero-flicker key stability
+    // Compact payload format with unique boot session signature
     const compact = {
       v: '2.2',
+      boot: customSalt || SESSION_BOOT_TIMESTAMP,
       id: account.id || 'port-main',
       name: account.name || 'Ana Portföy',
       cash: account.cashTL || 0,

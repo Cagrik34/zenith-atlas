@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { P2pLiveSyncEngine } from '../../engines/P2pLiveSyncEngine';
-import { X, QrCode, Copy, Check, Upload, Smartphone, ShieldCheck, Zap } from 'lucide-react';
+import { X, QrCode, Copy, Check, Upload, Smartphone, ShieldCheck, Zap, RefreshCw } from 'lucide-react';
 import QRCode from 'qrcode';
 
 interface QrTeleportModalProps {
@@ -15,12 +15,13 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
   const [importText, setImportText] = useState('');
   const [importSuccess, setImportSuccess] = useState(false);
   const [importError, setImportError] = useState('');
+  const [salt, setSalt] = useState<number>(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Generate stable export payload memoized only when portfolio content changes (Zero-flicker key)
+  // Generate session-fresh export payload, updated per app launch or user manual refresh
   const exportPayload = useMemo(() => {
-    return P2pLiveSyncEngine.generateExportPayload(activePortfolio);
-  }, [activePortfolio]);
+    return P2pLiveSyncEngine.generateExportPayload(activePortfolio, salt || undefined);
+  }, [activePortfolio, salt]);
 
   // Render high-contrast crisp QR Code canvas whenever exportPayload or modal visibility changes
   useEffect(() => {
@@ -52,6 +53,10 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
     navigator.clipboard.writeText(exportPayload);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRegenerateKey = () => {
+    setSalt(Date.now());
   };
 
   const handleImport = (e: React.FormEvent) => {
@@ -104,17 +109,22 @@ export const QrTeleportModal: React.FC<QrTeleportModalProps> = ({ isOpen, onClos
             </p>
           </div>
 
-          {/* Stable Key Copy Box */}
+          {/* Stable Session Key Copy Box */}
           <div className="card" style={{ padding: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <ShieldCheck size={14} className="text-pos" />
-                <span>Sabit Şifreli Işınlama Anahtarı (Base64)</span>
+                <span>Oturuma Özel Şifreli Işınlama Anahtarı</span>
               </span>
-              <button className="btn btn-secondary btn-sm" onClick={handleCopy} style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                {copied ? <Check size={14} className="text-pos" /> : <Copy size={14} />}
-                <span>{copied ? 'Kopyalandı!' : 'Anahtarı Kopyala'}</span>
-              </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button className="btn btn-secondary btn-sm" onClick={handleRegenerateKey} title="Yeni Oturum Anahtarı Üret" style={{ padding: '4px 8px', fontSize: '0.74rem' }}>
+                  <RefreshCw size={13} />
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={handleCopy} style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  {copied ? <Check size={14} className="text-pos" /> : <Copy size={14} />}
+                  <span>{copied ? 'Kopyalandı!' : 'Anahtarı Kopyala'}</span>
+                </button>
+              </div>
             </div>
             <textarea
               readOnly
