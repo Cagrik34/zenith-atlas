@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import type { MacroNewsData, MacroBulletin } from '../../types/news';
 import { ExternalLink, Flame, ShieldAlert, BookOpen } from 'lucide-react';
+import initialNewsData from '../../data/news.json';
 
 export const MacroNewsStrip: React.FC = () => {
-  const [newsData, setNewsData] = useState<MacroNewsData | null>(null);
+  const [newsData, setNewsData] = useState<MacroNewsData | null>(() => initialNewsData as unknown as MacroNewsData);
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        let res = await fetch('/data/news.json?t=' + Date.now());
-        if (!res.ok) res = await fetch('src/data/news.json?t=' + Date.now());
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        let res = await fetch(`${cleanBase}data/news.json?t=${Date.now()}`);
+        if (!res.ok) res = await fetch('data/news.json?t=' + Date.now());
         if (res && res.ok) {
           const data: MacroNewsData = await res.json();
           setNewsData(data);
         }
       } catch (e) {
-        console.warn('News load error:', e);
+        console.warn('News fallback notice:', e);
       }
     };
     fetchNews();

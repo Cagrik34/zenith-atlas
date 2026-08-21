@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { X, Plus, DollarSign, Sparkles, CheckCircle2 } from 'lucide-react';
 import type { TefasFund } from '../../types/tefas';
+import initialFundsData from '../../data/funds_db.json';
 
 interface AddFundModalProps {
   isOpen: boolean;
@@ -16,25 +17,37 @@ export const AddFundModal: React.FC<AddFundModalProps> = ({ isOpen, onClose }) =
   const [category, setCategory] = useState('Hisse Senedi');
   const [shares, setShares] = useState('');
   const [costPrice, setCostPrice] = useState('');
-  const [fundsDb, setFundsDb] = useState<Record<string, TefasFund>>({});
+  const [fundsDb, setFundsDb] = useState<Record<string, TefasFund>>(() => {
+    const raw = initialFundsData as any;
+    const list: TefasFund[] = raw.funds || (Array.isArray(raw) ? raw : []);
+    const map: Record<string, TefasFund> = {};
+    list.forEach(f => {
+      map[f.code.toUpperCase()] = f;
+    });
+    return map;
+  });
   const [matchedFund, setMatchedFund] = useState<TefasFund | null>(null);
 
   useEffect(() => {
     const loadDb = async () => {
       try {
-        let res = await fetch('/data/funds_db.json?t=' + Date.now());
-        if (!res.ok) res = await fetch('src/data/funds_db.json?t=' + Date.now());
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        let res = await fetch(`${cleanBase}data/funds_db.json?t=${Date.now()}`);
+        if (!res.ok) res = await fetch('data/funds_db.json?t=' + Date.now());
         if (res && res.ok) {
           const raw = await res.json();
           const list: TefasFund[] = raw.funds || (Array.isArray(raw) ? raw : []);
-          const map: Record<string, TefasFund> = {};
-          list.forEach(f => {
-            map[f.code.toUpperCase()] = f;
-          });
-          setFundsDb(map);
+          if (list.length > 0) {
+            const map: Record<string, TefasFund> = {};
+            list.forEach(f => {
+              map[f.code.toUpperCase()] = f;
+            });
+            setFundsDb(map);
+          }
         }
       } catch (e) {
-        console.warn('funds_db load error in AddFundModal:', e);
+        console.warn('funds_db fallback notice in AddFundModal:', e);
       }
     };
     loadDb();

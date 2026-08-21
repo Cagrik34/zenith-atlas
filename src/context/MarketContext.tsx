@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { MarketDataState, MarketInstrument } from '../types/market';
+import initialMarketsData from '../data/markets.json';
 
 export interface SocketStats {
   status: 'CONNECTED' | 'RECONNECTING' | 'DISCONNECTED';
@@ -42,16 +43,29 @@ const CANLI_DOVIZ_ID_MAP: Record<string, string[]> = {
 };
 
 export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [marketData, setMarketData] = useState<MarketDataState | null>(null);
-  const [instruments, setInstruments] = useState<Record<string, MarketInstrument>>({
-    'USD': { key: 'USD', code: 'USD/TRY', name: 'Amerikan Doları', buying: 48.112, selling: 48.114, rate: 48.114, changePct: 0.12, unit: 'TL', source: 'Serbest Piyasa' },
-    'EUR': { key: 'EUR', code: 'EUR/TRY', name: 'Euro', buying: 56.078, selling: 56.080, rate: 56.080, changePct: 0.25, unit: 'TL', source: 'Serbest Piyasa' },
-    'GBP': { key: 'GBP', code: 'GBP/TRY', name: 'İngiliz Sterlini', buying: 65.498, selling: 65.501, rate: 65.501, changePct: 0.18, unit: 'TL', source: 'Serbest Piyasa' },
-    'GA': { key: 'GA', code: 'Gram Altın', name: '24 Ayar Gram Altın', buying: 6975.20, selling: 6977.45, rate: 6977.45, changePct: 0.65, unit: 'TL', source: 'Harem Altın' },
-    'XAU/USD': { key: 'XAU/USD', code: 'Ons Altın', name: 'Spot Ons Altın', buying: 4524.03, selling: 4524.65, rate: 4524.65, changePct: 0.53, unit: '$', source: 'LBMA' },
-    'XU100': { key: 'XU100', code: 'BIST 100', name: 'BIST 100 Endeksi', buying: 14396.54, selling: 14396.54, rate: 14396.54, changePct: -0.43, unit: 'Puan', source: 'BIST' },
-    'GAG': { key: 'GAG', code: 'Gümüş/TL', name: 'Gümüş Gram', buying: 66.28, selling: 66.31, rate: 66.31, changePct: 0.85, unit: 'TL', source: 'Serbest Piyasa' },
-    'BTC': { key: 'BTC', code: 'BTC/USD', name: 'Bitcoin', buying: 72681.93, selling: 72688.50, rate: 72688.50, changePct: 2.10, unit: '$', source: 'Binance' }
+  const [marketData, setMarketData] = useState<MarketDataState | null>(() => initialMarketsData as unknown as MarketDataState);
+  const [instruments, setInstruments] = useState<Record<string, MarketInstrument>>(() => {
+    const flat: Record<string, MarketInstrument> = {
+      'USD': { key: 'USD', code: 'USD/TRY', name: 'Amerikan Doları', buying: 48.112, selling: 48.114, rate: 48.114, changePct: 0.12, unit: 'TL', source: 'Serbest Piyasa' },
+      'EUR': { key: 'EUR', code: 'EUR/TRY', name: 'Euro', buying: 56.078, selling: 56.080, rate: 56.080, changePct: 0.25, unit: 'TL', source: 'Serbest Piyasa' },
+      'GBP': { key: 'GBP', code: 'GBP/TRY', name: 'İngiliz Sterlini', buying: 65.498, selling: 65.501, rate: 65.501, changePct: 0.18, unit: 'TL', source: 'Serbest Piyasa' },
+      'GA': { key: 'GA', code: 'Gram Altın', name: '24 Ayar Gram Altın', buying: 6975.20, selling: 6977.45, rate: 6977.45, changePct: 0.65, unit: 'TL', source: 'Harem Altın' },
+      'XAU/USD': { key: 'XAU/USD', code: 'Ons Altın', name: 'Spot Ons Altın', buying: 4524.03, selling: 4524.65, rate: 4524.65, changePct: 0.53, unit: '$', source: 'LBMA' },
+      'XU100': { key: 'XU100', code: 'BIST 100', name: 'BIST 100 Endeksi', buying: 14396.54, selling: 14396.54, rate: 14396.54, changePct: -0.43, unit: 'Puan', source: 'BIST' },
+      'GAG': { key: 'GAG', code: 'Gümüş/TL', name: 'Gümüş Gram', buying: 66.28, selling: 66.31, rate: 66.31, changePct: 0.85, unit: 'TL', source: 'Serbest Piyasa' },
+      'BTC': { key: 'BTC', code: 'BTC/USD', name: 'Bitcoin', buying: 72681.93, selling: 72688.50, rate: 72688.50, changePct: 2.10, unit: '$', source: 'Binance' }
+    };
+    if (initialMarketsData && (initialMarketsData as any).categories) {
+      Object.values((initialMarketsData as any).categories).forEach((cat: any) => {
+        if (cat && cat.items) {
+          Object.entries(cat.items).forEach(([k, item]: [string, any]) => {
+            flat[k] = item;
+            if (item.code) flat[item.code] = item;
+          });
+        }
+      });
+    }
+    return flat;
   });
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(true);
   const [socketStats, setSocketStats] = useState<SocketStats>({
@@ -67,11 +81,13 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const pendingUpdatesRef = useRef<Record<string, Partial<MarketInstrument>>>({});
   const rafRef = useRef<number | null>(null);
 
-  // 1. Yerel JSON dosyasından başlangıç verisi yükleme
+  // 1. Yerel JSON dosyasından dinamik tazeleme
   const loadInitialMarkets = useCallback(async () => {
     try {
-      let res = await fetch('/data/markets.json?t=' + Date.now());
-      if (!res.ok) res = await fetch('src/data/markets.json?t=' + Date.now());
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      let res = await fetch(`${cleanBase}data/markets.json?t=${Date.now()}`);
+      if (!res.ok) res = await fetch('data/markets.json?t=' + Date.now());
       if (res && res.ok) {
         const data: MarketDataState = await res.json();
         setMarketData(data);
@@ -90,7 +106,7 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setInstruments(prev => ({ ...flat, ...prev }));
       }
     } catch (e) {
-      console.warn('Initial markets load error:', e);
+      console.warn('Initial markets fallback notice:', e);
     }
   }, []);
 

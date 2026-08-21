@@ -1,30 +1,33 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { TefasFund } from '../../types/tefas';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAgentHive } from '../../context/AgentHiveContext';
-import { formatPercent, formatTRY } from '../../utils/formatters';
+import { TefasFund } from '../../types/tefas';
+import { formatTRY, formatPercent } from '../../utils/formatters';
 import { 
-  Search, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown, 
-  TrendingUp, CheckCircle, Bot, Sparkles, ShieldCheck, 
-  Info, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2,
-  SlidersHorizontal, X
+  Search, Filter, Plus, CheckCircle, ArrowUpDown, ArrowUp, ArrowDown, 
+  ExternalLink, Layers, ShieldCheck, Sparkles, RefreshCw, CheckCircle2,
+  Info, X, ChevronLeft, ChevronRight, Calculator, PieChart
 } from 'lucide-react';
+import initialFundsData from '../../data/funds_db.json';
 
 export const FundSearchTab: React.FC = () => {
-  const { addFund } = usePortfolio();
-  const { sendMessage, toolSpans } = useAgentHive();
-  
-  const [fundsDb, setFundsDb] = useState<TefasFund[]>([]);
+  const { addFund, activePortfolio } = usePortfolio();
+  const { sendMessage } = useAgentHive();
+
+  const [fundsDb, setFundsDb] = useState<TefasFund[]>(() => {
+    const raw = initialFundsData as any;
+    return (raw.funds || (Array.isArray(raw) ? raw : [])) as TefasFund[];
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [sortField, setSortField] = useState<'1y' | 'daily' | 'price' | 'size' | 'fee' | 'name'>('1y');
-  const [sortAsc, setSortAsc] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [sortField, setSortField] = useState<'name' | 'price' | 'daily' | '1y' | 'size' | 'fee'>('1y');
+  const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [addedCode, setAddedCode] = useState<string | null>(null);
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditMessage, setAuditMessage] = useState<string | null>(null);
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(25);
 
   // Detail Modal
@@ -32,19 +35,23 @@ export const FundSearchTab: React.FC = () => {
   const [customShares, setCustomShares] = useState<string>('1000');
   const [customCost, setCustomCost] = useState<string>('');
 
-  // Load 1,051 TEFAS database
+  // Dynamic refresh with relative base URL
   useEffect(() => {
     const loadDb = async () => {
       try {
-        let res = await fetch('/data/funds_db.json?t=' + Date.now());
-        if (!res.ok) res = await fetch('src/data/funds_db.json?t=' + Date.now());
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        let res = await fetch(`${cleanBase}data/funds_db.json?t=${Date.now()}`);
+        if (!res.ok) res = await fetch('data/funds_db.json?t=' + Date.now());
         if (res && res.ok) {
           const raw = await res.json();
           const list = raw.funds || (Array.isArray(raw) ? raw : []);
-          setFundsDb(list);
+          if (list.length > 0) {
+            setFundsDb(list);
+          }
         }
       } catch (e) {
-        console.warn('funds_db load error:', e);
+        console.warn('funds_db load fallback notice:', e);
       }
     };
     loadDb();

@@ -7,6 +7,7 @@ import type { AgentDescriptor, HiveMessage, ToolExecutionSpan, CircuitBreakerSta
 import { AgentHiveEngine } from '../engines/AgentHiveEngine';
 import { usePortfolio } from './PortfolioContext';
 import { useMarket } from './MarketContext';
+import initialPricesData from '../data/prices.json';
 
 interface AgentHiveContextType {
   agents: AgentDescriptor[];
@@ -38,12 +39,22 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [memorySnapshot, setMemorySnapshot] = useState<MemoryReflectionEntry>(() => engine.memory.getMemorySnapshot());
   const [isBreakerModalOpen, setIsBreakerModalOpen] = useState(false);
 
-  // Load 1,051 official TEFAS database prices into engine cache on boot & apply initial synchronization
+  // Pre-load static prices on initialization
+  useEffect(() => {
+    if (initialPricesData && (initialPricesData as any).prices) {
+      engine.setTefasPricesCache((initialPricesData as any).prices);
+      syncLivePrices((initialPricesData as any).prices, (initialPricesData as any).officialTefasDate);
+    }
+  }, [engine, syncLivePrices]);
+
+  // Dynamic refresh with relative base URL
   useEffect(() => {
     const loadPrices = async () => {
       try {
-        let res = await fetch('/data/prices.json?t=' + Date.now());
-        if (!res.ok) res = await fetch('src/data/prices.json?t=' + Date.now());
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        let res = await fetch(`${cleanBase}data/prices.json?t=${Date.now()}`);
+        if (!res.ok) res = await fetch('data/prices.json?t=' + Date.now());
         if (res && res.ok) {
           const data = await res.json();
           if (data && data.prices) {
@@ -52,7 +63,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }
         }
       } catch (e) {
-        console.warn('Error loading TEFAS prices cache into Hive Engine:', e);
+        console.warn('Fallback loading TEFAS prices cache into Hive Engine:', e);
       }
     };
     loadPrices();

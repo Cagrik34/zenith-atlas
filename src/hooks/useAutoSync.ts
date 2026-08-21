@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useMarket } from '../context/MarketContext';
+import initialPricesData from '../data/prices.json';
 
 /**
  * Sıfır-Müdahale Arka Plan Otomatik Senkronizasyon Kancası
@@ -14,9 +15,16 @@ export function useAutoSync() {
   const performSync = useCallback(async () => {
     setIsSyncing(true);
     try {
-      // 1. prices.json'dan resmi TEFAS fiyatlarını çek
-      let res = await fetch('/data/prices.json?t=' + Date.now());
-      if (!res.ok) res = await fetch('src/data/prices.json?t=' + Date.now());
+      // 1. Statik veritabanını anında uygula (sıfır gecikme)
+      if (initialPricesData && (initialPricesData as any).prices) {
+        syncLivePrices((initialPricesData as any).prices, (initialPricesData as any).officialTefasDate);
+      }
+
+      // 2. prices.json'dan resmi TEFAS fiyatlarını göreli URL ile dinamik çek
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      const cleanBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+      let res = await fetch(`${cleanBase}data/prices.json?t=${Date.now()}`);
+      if (!res.ok) res = await fetch('data/prices.json?t=' + Date.now());
       if (res && res.ok) {
         const data = await res.json();
         if (data && data.prices) {
@@ -24,7 +32,7 @@ export function useAutoSync() {
         }
       }
 
-      // 2. Canlı WebSocket ve Piyasa Fiyatlarını tazele
+      // 3. Canlı WebSocket ve Piyasa Fiyatlarını tazele
       await refreshMarkets();
     } catch (e) {
       console.warn('Otomatik senkronizasyon uyarısı:', e);
