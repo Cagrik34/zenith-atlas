@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { TefasFund } from '../../types/tefas';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { formatTRY, formatPercent } from '../../utils/formatters';
-import { Search, Filter, Plus, ArrowUpDown, TrendingUp } from 'lucide-react';
+import { useAgentHive } from '../../context/AgentHiveContext';
+import { formatPercent, formatTRY } from '../../utils/formatters';
+import { Search, Filter, Plus, ArrowUpDown, TrendingUp, CheckCircle, Bot, Sparkles, ShieldCheck } from 'lucide-react';
 
 export const FundSearchTab: React.FC = () => {
   const { addFund } = usePortfolio();
+  const { sendMessage } = useAgentHive();
   const [fundsDb, setFundsDb] = useState<TefasFund[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [sortField, setSortField] = useState<'daily' | '1y' | 'size' | 'name'>('1y');
   const [sortAsc, setSortAsc] = useState(false);
+  const [addedCode, setAddedCode] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDb = async () => {
@@ -41,7 +44,7 @@ export const FundSearchTab: React.FC = () => {
     return fundsDb.filter(f => {
       const matchSearch = searchTerm === '' ||
         f.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.name.toLowerCase().includes(searchTerm.toLowerCase());
+        (f.name && f.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchCat = selectedCategory === 'ALL' || f.category === selectedCategory;
       return matchSearch && matchCat;
@@ -65,6 +68,12 @@ export const FundSearchTab: React.FC = () => {
       performance1Y: fund.performance1Y || 65.0,
       ter: fund.managementFee || 2.0
     });
+
+    setAddedCode(fund.code);
+    setTimeout(() => setAddedCode(null), 2500);
+
+    // Notify Agent Hive
+    sendMessage('SYNC_SENTINEL', 'BROADCAST', 'inform', 'Portföye Fon Eklendi', `Portföye yeni fon tahsisatı yapıldı: ${fund.code} - ${fund.name} (${fund.category})`);
   };
 
   return (
@@ -75,8 +84,13 @@ export const FundSearchTab: React.FC = () => {
           <p className="tab-sub">Tüm resmi TEFAS fonlarını getiri, kategori, fon büyüklüğü ve risk skoruna göre filtreleyin.</p>
         </div>
 
-        <div className="screener-count-badge">
-          Toplam <strong>{filteredFunds.length}</strong> / {fundsDb.length} Fon Listeleniyor
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span className="badge badge-primary" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#A5B4FC', padding: '6px 12px' }}>
+            <span>🛰️</span> SyncSentinel Nöbette (1.051 Fon Canlı)
+          </span>
+          <div className="screener-count-badge">
+            Toplam <strong>{filteredFunds.length}</strong> / {fundsDb.length} Fon Listeleniyor
+          </div>
         </div>
       </div>
 
@@ -86,7 +100,7 @@ export const FundSearchTab: React.FC = () => {
           <input
             type="text"
             className="search-input"
-            placeholder="Fon Kodu veya Adı Ara (Örn: MAC, TI3, AFT, Altın, Teknoloji)..."
+            placeholder="Fon Kodu veya Adı Ara (Örn: MAC, TI3, AFT, Altın, Teknoloji, Ak Portföy)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -134,35 +148,37 @@ export const FundSearchTab: React.FC = () => {
               {filteredFunds.slice(0, 100).map(f => {
                 const isDailyPos = (f.dailyReturnPct || 0) >= 0;
                 const is1YPos = (f.performance1Y || 0) >= 0;
+                const isAdded = addedCode === f.code;
 
                 return (
                   <tr key={f.code}>
                     <td>
                       <div className="fund-cell">
                         <span className="fund-code-badge">{f.code}</span>
-                        <span className="fund-name-text">{f.name}</span>
+                        <span className="fund-name-text" style={{ fontSize: '0.82rem', fontWeight: 600, color: '#F1F5F9' }}>{f.name}</span>
                       </div>
                     </td>
                     <td><span className="badge badge-category">{f.category}</span></td>
-                    <td className="font-semibold">{f.price.toFixed(4)} TL</td>
-                    <td className={isDailyPos ? 'text-pos font-semibold' : 'text-neg font-semibold'}>
-                      {formatPercent(f.dailyReturnPct || 0)}
+                    <td className="font-semibold" style={{ fontFamily: 'var(--font-mono)' }}>{f.price.toFixed(4)} TL</td>
+                    <td className={isDailyPos ? 'text-pos font-semibold' : 'text-neg font-semibold'} style={{ fontFamily: 'var(--font-mono)' }}>
+                      {isDailyPos ? '+' : ''}{formatPercent(f.dailyReturnPct || 0)}
                     </td>
-                    <td className={is1YPos ? 'text-pos font-semibold' : 'text-neg font-semibold'}>
-                      {formatPercent(f.performance1Y || 0)}
+                    <td className={is1YPos ? 'text-pos font-semibold' : 'text-neg font-semibold'} style={{ fontFamily: 'var(--font-mono)' }}>
+                      {is1YPos ? '+' : ''}{formatPercent(f.performance1Y || 0)}
                     </td>
-                    <td>
-                      {f.portfolioSize ? `₺${(f.portfolioSize / 1e6).toFixed(1)}M` : '-'}
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#94A3B8' }}>
+                      {f.portfolioSize ? (f.portfolioSize >= 1e9 ? `₺${(f.portfolioSize / 1e9).toFixed(2)} Milyar` : `₺${(f.portfolioSize / 1e6).toFixed(0)} Milyon`) : '-'}
                     </td>
-                    <td>%{f.managementFee?.toFixed(2) || '2.00'}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)' }}>%{f.managementFee?.toFixed(2) || '2.00'}</td>
                     <td>
                       <button
-                        className="btn btn-sm btn-secondary add-quick-btn"
+                        className={`btn btn-sm ${isAdded ? 'btn-primary' : 'btn-secondary'} add-quick-btn`}
                         onClick={() => handleQuickAdd(f)}
                         title="Portföye Hızlı Ekle (1000 Adet)"
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                       >
-                        <Plus size={14} />
-                        <span>Ekle</span>
+                        {isAdded ? <CheckCircle size={14} /> : <Plus size={14} />}
+                        <span>{isAdded ? 'Eklendi!' : 'Ekle'}</span>
                       </button>
                     </td>
                   </tr>
