@@ -38,9 +38,14 @@ export const AgentHivePanel: React.FC = () => {
             <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, background: 'linear-gradient(135deg, #FFFFFF, #CBD5E1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Zenith Quant Hive — Otonom Ajan Masası & Devre Kesici
             </h3>
-            <span style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
-              5 Otonom Nöbetçi Ajan • Canlı Arka Plan Senkronizasyonu • Devre Kesici: <strong style={{ color: breakerStatus.level === 'HEALTHY' ? '#10B981' : '#EF4444' }}>{breakerStatus.level}</strong>
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
+                5 Otonom Nöbetçi Ajan • Devre Kesici: <strong style={{ color: breakerStatus.level === 'HEALTHY' ? '#10B981' : '#EF4444' }}>{breakerStatus.level}</strong>
+              </span>
+              <span className="badge badge-primary" style={{ fontSize: '0.65rem', padding: '2px 8px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6EE7B7' }}>
+                🛰️ WebSocket: wss://s.canlidoviz.com (60 FPS Canlı)
+              </span>
+            </div>
           </div>
         </div>
 

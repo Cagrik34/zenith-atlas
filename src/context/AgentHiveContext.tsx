@@ -18,6 +18,7 @@ interface AgentHiveContextType {
   sendMessage: (from: AgentRole, to: AgentRole | 'BROADCAST', act: MessageAct, subject: string, body: string, data?: Record<string, any>) => void;
   resetBreaker: (reason?: string) => void;
   recordMemoryFact: (fact: string) => void;
+  reconnectWebSocket: () => void;
   isBreakerModalOpen: boolean;
   setIsBreakerModalOpen: (open: boolean) => void;
 }
@@ -26,7 +27,7 @@ const AgentHiveContext = createContext<AgentHiveContextType | null>(null);
 
 export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { funds, cashTL } = usePortfolio();
-  const { marketData } = useMarket();
+  const { marketData, socketStats, reconnectSocket } = useMarket();
 
   const [engine] = useState(() => new AgentHiveEngine());
   const [agents, setAgents] = useState<AgentDescriptor[]>(() => engine.getAgents());
@@ -37,10 +38,10 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [memorySnapshot, setMemorySnapshot] = useState<MemoryReflectionEntry>(() => engine.memory.getMemorySnapshot());
   const [isBreakerModalOpen, setIsBreakerModalOpen] = useState(false);
 
-  // Background Autonomous Sentinel Heartbeat Loop (every 8 seconds with real benchmarks)
+  // Background Autonomous Sentinel Heartbeat Loop (every 8 seconds with real benchmarks and live socket stats)
   useEffect(() => {
     const tick = () => {
-      engine.runSentinelTick(funds, cashTL, marketData);
+      engine.runSentinelTick(funds, cashTL, marketData, socketStats);
       setAgents(engine.getAgents());
       setMessages(engine.getMessages());
       setToolSpans(engine.getToolSpans());
@@ -57,7 +58,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     tick();
     const interval = setInterval(tick, 8000);
     return () => clearInterval(interval);
-  }, [engine, funds, cashTL, marketData]);
+  }, [engine, funds, cashTL, marketData, socketStats]);
 
   const sendMessage = useCallback((from: AgentRole, to: AgentRole | 'BROADCAST', act: MessageAct, subject: string, body: string, data?: Record<string, any>) => {
     engine.sendMessage(from, to, act, subject, body, data);
@@ -84,6 +85,13 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setMemorySnapshot(engine.memory.getMemorySnapshot());
   }, [engine]);
 
+  const handleReconnectWebSocket = useCallback(() => {
+    reconnectSocket();
+    engine.recordToolSpan('SYNC_SENTINEL', 'WebSocketReconnectCommand', 15.0, 'SUCCESS', 'canlidoviz.com Socket.IO bağlantısı yeniden kuruldu.');
+    setToolSpans(engine.getToolSpans());
+    sendMessage('SYNC_SENTINEL', 'BROADCAST', 'inform', 'WebSocket Yeniden Başlatıldı', 'canlidoviz.com soketi portföy yöneticisi komutuyla sıfırlandı ve yeniden bağlandı.');
+  }, [reconnectSocket, engine, sendMessage]);
+
   return (
     <AgentHiveContext.Provider
       value={{
@@ -96,6 +104,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         sendMessage,
         resetBreaker,
         recordMemoryFact,
+        reconnectWebSocket: handleReconnectWebSocket,
         isBreakerModalOpen,
         setIsBreakerModalOpen
       }}

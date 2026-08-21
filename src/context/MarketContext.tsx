@@ -1,15 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { MarketDataState, MarketInstrument } from '../types/market';
+
+export interface SocketStats {
+  status: 'CONNECTED' | 'RECONNECTING' | 'DISCONNECTED';
+  packetsReceived: number;
+  lastPacketTime: string;
+  latencyMs: number;
+  endpoint: string;
+}
 
 interface MarketContextType {
   marketData: MarketDataState | null;
   instruments: Record<string, MarketInstrument>;
   isSocketConnected: boolean;
+  socketStats: SocketStats;
   bist100: MarketInstrument | null;
   usdTry: MarketInstrument | null;
   eurTry: MarketInstrument | null;
   gramGold: MarketInstrument | null;
   refreshMarkets: () => Promise<void>;
+  reconnectSocket: () => void;
 }
 
 const MarketContext = createContext<MarketContextType | null>(null);
@@ -44,6 +54,16 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     'BTC': { key: 'BTC', code: 'BTC/USD', name: 'Bitcoin', buying: 72681.93, selling: 72688.50, rate: 72688.50, changePct: 2.10, unit: '$', source: 'Binance' }
   });
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
+  const [socketStats, setSocketStats] = useState<SocketStats>({
+    status: 'DISCONNECTED',
+    packetsReceived: 0,
+    lastPacketTime: '-',
+    latencyMs: 2.5,
+    endpoint: 'wss://s.canlidoviz.com/socket.io/'
+  });
+
+  const packetCountRef = useRef(0);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // 1. Yerel JSON dosyasından başlangıç verisi yükleme
   const loadInitialMarkets = useCallback(async () => {
@@ -77,96 +97,126 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [loadInitialMarkets]);
 
   // 2. Canlı WebSocket Bağlantısı & Kod Çözümleyici (s.canlidoviz.com)
-  useEffect(() => {
-    let ws: WebSocket | null = null;
-    let reconnectTimeout: any = null;
-
-    const connectWebSocket = () => {
-      try {
-        ws = new WebSocket('wss://s.canlidoviz.com/socket.io/?EIO=4&transport=websocket');
-
-        ws.onopen = () => {
-          setIsSocketConnected(true);
-        };
-
-        ws.onmessage = (event) => {
-          const msg = event.data;
-          if (typeof msg === 'string') {
-            if (msg.startsWith('0')) {
-              // Socket.io handshake cevabı -> Kanal aboneliği
-              ws?.send('40');
-              const subPayload = {
-                t: ['CURRENCY', 'GOLD', 'COIN', 'EMTIA', 'PARITY', 'STOCK'],
-                c: ['USD', 'EUR', 'GA', 'EUR/USD', 'GBP', 'CAD', 'CHF', 'AUD', 'JPY', 'SAR', 'GAG', 'XAU/USD', 'XBRUSD', 'BTC', 'XU100', 'XU030', 'XBANK', 'XUSIN'],
-                m: false
-              };
-              ws?.send(`42["us",${JSON.stringify(subPayload)}]`);
-            } else if (msg.startsWith('42')) {
-              try {
-                const parsed = JSON.parse(msg.slice(2));
-                if (parsed[0] === 'c' && Array.isArray(parsed[1])) {
-                  setInstruments(prev => {
-                    const next = { ...prev };
-                    parsed[1].forEach((itemStr: string) => {
-                      const parts = itemStr.split('|');
-                      if (parts.length >= 3) {
-                        const rawCode = parts[0];
-                        const buy = parseFloat(parts[1]) || 0;
-                        const sell = parseFloat(parts[2]) || buy;
-                        const changePct = parts[3] ? parseFloat(parts[3]) : undefined;
-
-                        const targetKeys = CANLI_DOVIZ_ID_MAP[rawCode] || [rawCode];
-
-                        targetKeys.forEach(targetKey => {
-                          const existing = next[targetKey] || {
-                            key: targetKey,
-                            code: targetKey,
-                            name: targetKey,
-                            unit: targetKey.includes('BTC') || targetKey.includes('XAU') ? '$' : 'TL'
-                          };
-
-                          next[targetKey] = {
-                            ...existing,
-                            buying: buy > 0 ? buy : existing.buying,
-                            selling: sell > 0 ? sell : existing.selling,
-                            rate: sell > 0 ? sell : existing.rate,
-                            changePct: changePct !== undefined && !isNaN(changePct) ? changePct : existing.changePct
-                          };
-                        });
-                      }
-                    });
-                    return next;
-                  });
-                }
-              } catch {
-                // Ignore parse errors
-              }
-            } else if (msg === '2') {
-              ws?.send('3'); // Ping/Pong heartbeat
-            }
-          }
-        };
-
-        ws.onclose = () => {
-          setIsSocketConnected(false);
-          reconnectTimeout = setTimeout(connectWebSocket, 5000);
-        };
-
-        ws.onerror = () => {
-          ws?.close();
-        };
-      } catch {
-        setIsSocketConnected(false);
+  const connectWebSocket = useCallback(() => {
+    try {
+      if (wsRef.current) {
+        wsRef.current.close();
       }
-    };
 
+      setSocketStats(prev => ({ ...prev, status: 'RECONNECTING' }));
+      const ws = new WebSocket('wss://s.canlidoviz.com/socket.io/?EIO=4&transport=websocket');
+      wsRef.current = ws;
+
+      const tStart = performance.now();
+
+      ws.onopen = () => {
+        const lat = Math.round(performance.now() - tStart);
+        setIsSocketConnected(true);
+        setSocketStats(prev => ({
+          ...prev,
+          status: 'CONNECTED',
+          latencyMs: Math.max(lat, 2)
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        const msg = event.data;
+        if (typeof msg === 'string') {
+          if (msg.startsWith('0')) {
+            ws?.send('40');
+            const subPayload = {
+              t: ['CURRENCY', 'GOLD', 'COIN', 'EMTIA', 'PARITY', 'STOCK'],
+              c: ['USD', 'EUR', 'GA', 'EUR/USD', 'GBP', 'CAD', 'CHF', 'AUD', 'JPY', 'SAR', 'GAG', 'XAU/USD', 'XBRUSD', 'BTC', 'XU100', 'XU030', 'XBANK', 'XUSIN'],
+              m: false
+            };
+            ws?.send(`42["us",${JSON.stringify(subPayload)}]`);
+          } else if (msg.startsWith('42')) {
+            try {
+              const parsed = JSON.parse(msg.slice(2));
+              if (parsed[0] === 'c' && Array.isArray(parsed[1])) {
+                packetCountRef.current += parsed[1].length;
+                const nowTime = new Date().toLocaleTimeString('tr-TR');
+
+                setSocketStats(prev => ({
+                  ...prev,
+                  packetsReceived: packetCountRef.current,
+                  lastPacketTime: nowTime
+                }));
+
+                setInstruments(prev => {
+                  const next = { ...prev };
+                  parsed[1].forEach((itemStr: string) => {
+                    const parts = itemStr.split('|');
+                    if (parts.length >= 3) {
+                      const rawCode = parts[0];
+                      const buy = parseFloat(parts[1]) || 0;
+                      const sell = parseFloat(parts[2]) || buy;
+                      const changePct = parts[3] ? parseFloat(parts[3]) : undefined;
+
+                      const targetKeys = CANLI_DOVIZ_ID_MAP[rawCode] || [rawCode];
+
+                      targetKeys.forEach(targetKey => {
+                        const existing = next[targetKey] || {
+                          key: targetKey,
+                          code: targetKey,
+                          name: targetKey,
+                          unit: targetKey.includes('BTC') || targetKey.includes('XAU') ? '$' : 'TL'
+                        };
+
+                        next[targetKey] = {
+                          ...existing,
+                          buying: buy > 0 ? buy : existing.buying,
+                          selling: sell > 0 ? sell : existing.selling,
+                          rate: sell > 0 ? sell : existing.rate,
+                          changePct: changePct !== undefined && !isNaN(changePct) ? changePct : existing.changePct
+                        };
+                      });
+                    }
+                  });
+                  return next;
+                });
+              }
+            } catch {
+              // Ignore parse errors
+            }
+          } else if (msg === '2') {
+            ws?.send('3'); // Ping/Pong heartbeat
+          }
+        }
+      };
+
+      ws.onclose = () => {
+        setIsSocketConnected(false);
+        setSocketStats(prev => ({ ...prev, status: 'DISCONNECTED' }));
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    } catch {
+      setIsSocketConnected(false);
+      setSocketStats(prev => ({ ...prev, status: 'DISCONNECTED' }));
+    }
+  }, []);
+
+  useEffect(() => {
     connectWebSocket();
+    const interval = setInterval(() => {
+      if (!isSocketConnected) {
+        connectWebSocket();
+      }
+    }, 8000);
 
     return () => {
-      if (ws) ws.close();
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      clearInterval(interval);
+      if (wsRef.current) wsRef.current.close();
     };
-  }, []);
+  }, [connectWebSocket, isSocketConnected]);
+
+  const refreshMarkets = useCallback(async () => {
+    await loadInitialMarkets();
+    connectWebSocket();
+  }, [loadInitialMarkets, connectWebSocket]);
 
   const bist100 = instruments['XU100'] || instruments['BIST 100'] || null;
   const usdTry = instruments['USD'] || instruments['USD/TRY'] || null;
@@ -179,11 +229,13 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         marketData,
         instruments,
         isSocketConnected,
+        socketStats,
         bist100,
         usdTry,
         eurTry,
         gramGold,
-        refreshMarkets: loadInitialMarkets
+        refreshMarkets,
+        reconnectSocket: connectWebSocket
       }}
     >
       {children}
