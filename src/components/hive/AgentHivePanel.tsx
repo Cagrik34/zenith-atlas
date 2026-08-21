@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useAgentHive } from '../../context/AgentHiveContext';
 import { ToolWaterfall } from './ToolWaterfall';
-import { Bot, Shield, Activity, Database, Send, Radio, AlertTriangle, CheckCircle, Sparkles, BookOpen, Layers, Terminal } from 'lucide-react';
+import { Bot, Shield, Activity, Database, Send, Radio, AlertTriangle, CheckCircle, Sparkles, BookOpen, Layers, Terminal, ArrowRight } from 'lucide-react';
 import { formatTRY } from '../../utils/formatters';
 
 export const AgentHivePanel: React.FC = () => {
@@ -19,6 +19,11 @@ export const AgentHivePanel: React.FC = () => {
     if (!customMsg.trim()) return;
     sendMessage('LEAD_QUANT', 'BROADCAST', 'request', 'Yatırım Komitesi Direktifi', customMsg);
     setCustomMsg('');
+  };
+
+  const handleQuickDirective = (directiveText: string) => {
+    sendMessage('LEAD_QUANT', 'BROADCAST', 'request', 'Yatırım Komitesi Direktifi', directiveText);
+    setActiveTab('dialogue');
   };
 
   return (
@@ -63,7 +68,7 @@ export const AgentHivePanel: React.FC = () => {
             className={`toggle-btn ${activeTab === 'memory' ? 'active' : ''}`}
             onClick={() => setActiveTab('memory')}
           >
-            <BookOpen size={13} /> Hafıza ({memorySnapshot.pinnedFacts.length})
+            <BookOpen size={13} /> Hafıza ({memorySnapshot.pinnedFacts.length + memorySnapshot.recentObservations.length})
           </button>
           <button
             className={`toggle-btn ${activeTab === 'blackboard' ? 'active' : ''}`}
@@ -118,6 +123,47 @@ export const AgentHivePanel: React.FC = () => {
               ))}
             </div>
 
+            {/* Hızlı Direktif Gönderme Butonları */}
+            <div style={{ marginBottom: '16px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '10px 14px' }}>
+              <span style={{ fontSize: '0.72rem', color: '#818CF8', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                ⚡ Hızlı Yatırım Komitesi Direktifleri:
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDirective('Tüm ajanlar güncel portföy ve risk durumunu raporlasın.')}
+                  className="btn btn-ghost"
+                  style={{ padding: '4px 10px', fontSize: '0.74rem', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.25)', color: '#C7D2FE' }}
+                >
+                  📊 Durum Raporu İste
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDirective('Devre kesici ve risk limitlerini analiz edin.')}
+                  className="btn btn-ghost"
+                  style={{ padding: '4px 10px', fontSize: '0.74rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#FCA5A5' }}
+                >
+                  🛡️ Risk & Devre Kesici
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDirective('GVK Geçici 67 vergi kalkanı ve stopaj muafiyetlerini kontrol edin.')}
+                  className="btn btn-ghost"
+                  style={{ padding: '4px 10px', fontSize: '0.74rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6EE7B7' }}
+                >
+                  📜 Vergi Kalkanı Raporu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickDirective('TCMB %37 faiz kararı ve makro piyasa dengesini özetleyin.')}
+                  className="btn btn-ghost"
+                  style={{ padding: '4px 10px', fontSize: '0.74rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#FCD34D' }}
+                >
+                  🎙️ Makroekonomi Özeti
+                </button>
+              </div>
+            </div>
+
             {/* Devre Kesici & Acil Durum Çubuğu */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0, 0, 0, 0.4)', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '8px', padding: '12px 16px', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -140,32 +186,34 @@ export const AgentHivePanel: React.FC = () => {
         {/* TAB 2: AJAN POSTA KUTUSU & DİYALOG AKIŞI */}
         {activeTab === 'dialogue' && (
           <div>
-            <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px', paddingRight: '4px' }}>
+            <div style={{ maxHeight: '360px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px', paddingRight: '4px' }}>
               {messages.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#64748B', padding: '30px' }}>
-                  Henüz ajan mesajlaşması bulunmuyor. Ajanlar arka planda görev icra ettikçe burada akacaktır.
+                  Henüz ajan mesajlaşması bulunmuyor. Aşağıdan bir direktif göndererek 5 ajanın anlık raporunu alabilirsiniz.
                 </div>
               ) : (
                 messages.map(m => (
                   <div
                     key={m.id}
                     style={{
-                      background: m.act === 'alert' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                      border: m.act === 'alert' ? '1px solid rgba(239, 68, 68, 0.25)' : '1px solid rgba(255, 255, 255, 0.05)',
+                      background: m.act === 'alert' ? 'rgba(239, 68, 68, 0.08)' : m.from === 'LEAD_QUANT' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+                      border: m.act === 'alert' ? '1px solid rgba(239, 68, 68, 0.25)' : m.from === 'LEAD_QUANT' ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255, 255, 255, 0.05)',
                       borderRadius: '8px',
                       padding: '10px 14px'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>{m.from}</span>
+                        <span className={`badge ${m.from === 'LEAD_QUANT' ? 'badge-primary' : m.from === 'RISK_BREAKER' ? 'badge-danger' : m.from === 'TAX_HARVESTER' ? 'badge-success' : 'badge-category'}`} style={{ fontSize: '0.65rem' }}>
+                          {m.from}
+                        </span>
                         <span style={{ fontSize: '0.7rem', color: '#64748B' }}>&rarr; {m.to}</span>
                         <span className="badge badge-category" style={{ fontSize: '0.62rem' }}>{m.act.toUpperCase()}</span>
                       </div>
                       <span style={{ fontSize: '0.68rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>{m.timestamp}</span>
                     </div>
                     <strong style={{ fontSize: '0.82rem', color: '#FFFFFF', display: 'block', marginBottom: '2px' }}>{m.subject}</strong>
-                    <p style={{ fontSize: '0.78rem', color: '#94A3B8', margin: 0, lineHeight: '1.4' }}>{m.body}</p>
+                    <p style={{ fontSize: '0.78rem', color: '#CBD5E1', margin: 0, lineHeight: '1.4' }}>{m.body}</p>
                   </div>
                 ))
               )}
@@ -207,6 +255,22 @@ export const AgentHivePanel: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {memorySnapshot.recentObservations.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ fontSize: '0.84rem', color: '#38BDF8', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  ⚡ Canlı Gözlemler (Live Dynamic Observations)
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {memorySnapshot.recentObservations.map((obs, idx) => (
+                    <div key={idx} style={{ background: 'rgba(56, 189, 248, 0.06)', borderLeft: '3px solid #38BDF8', padding: '8px 12px', borderRadius: '0 6px 6px 0', fontSize: '0.78rem', color: '#CBD5E1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span><strong>{obs.topic}:</strong> {obs.content}</span>
+                      <span style={{ fontSize: '0.68rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>{obs.timestamp}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {memorySnapshot.condensedHistory.length > 0 && (
               <div>

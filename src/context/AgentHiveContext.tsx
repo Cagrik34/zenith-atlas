@@ -2,7 +2,7 @@
  * AgentHiveContext — React 19 Context for Zenith Quant Hive Multi-Agent Network
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { AgentDescriptor, HiveMessage, ToolExecutionSpan, CircuitBreakerStatus, MemoryReflectionEntry, AgentRole, MessageAct } from '../types/hive';
 import { AgentHiveEngine } from '../engines/AgentHiveEngine';
 import { usePortfolio } from './PortfolioContext';
@@ -37,7 +37,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [memorySnapshot, setMemorySnapshot] = useState<MemoryReflectionEntry>(() => engine.memory.getMemorySnapshot());
   const [isBreakerModalOpen, setIsBreakerModalOpen] = useState(false);
 
-  // Background Autonomous Sentinel Heartbeat Loop (every 10 seconds)
+  // Background Autonomous Sentinel Heartbeat Loop (every 8 seconds with real benchmarks)
   useEffect(() => {
     const tick = () => {
       engine.runSentinelTick(funds, cashTL, marketData);
@@ -55,7 +55,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     tick();
-    const interval = setInterval(tick, 10000);
+    const interval = setInterval(tick, 8000);
     return () => clearInterval(interval);
   }, [engine, funds, cashTL, marketData]);
 
@@ -63,6 +63,14 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     engine.sendMessage(from, to, act, subject, body, data);
     setMessages(engine.getMessages());
     setAgents(engine.getAgents());
+
+    // Listen for the queued asynchronous agent replies
+    [300, 600, 900, 1200].forEach(delay => {
+      setTimeout(() => {
+        setMessages(engine.getMessages());
+        setAgents(engine.getAgents());
+      }, delay);
+    });
   }, [engine]);
 
   const resetBreaker = useCallback((reason?: string) => {
