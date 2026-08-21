@@ -1,6 +1,6 @@
 /**
  * FinancialMemoryReflector — Bounded 3-Region Semantic Financial Memory
- * Directly adapted from munder-difflin/src/main/reflect.ts architecture
+ * Zenith 3-Region Semantic Financial Memory Model
  * 
  * Manages long-term investor preferences, strategy learnings, and observation condensation.
  */

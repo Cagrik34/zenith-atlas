@@ -1,6 +1,6 @@
 /**
  * AgentHiveEngine — Autonomous Multi-Agent Hive Coordination Engine
- * Directly adapted from munder-difflin/src/main/hive.ts architecture
+ * Zenith Atlas Multi-Agent Autonomous Quant Architecture
  * 
  * Coordinates multi-agent workflows, inter-agent mailboxes, shared blackboard state,
  * and autonomous sentinel loops.
@@ -101,7 +101,7 @@ export class AgentHiveEngine {
   }
 
   /**
-   * Dispatches a typed inter-agent message (Adapted from munder-difflin router)
+   * Dispatches a typed inter-agent message (Zenith Quant Hive Message Router)
    */
   public sendMessage(
     from: AgentRole,

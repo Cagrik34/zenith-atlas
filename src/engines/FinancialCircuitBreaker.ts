@@ -1,6 +1,6 @@
 /**
  * FinancialCircuitBreaker — Adaptive Quantitative Risk Breaker
- * Directly adapted from munder-difflin/src/main/breaker.ts architecture
+ * Zenith Adaptive Quantitative Circuit Breaker
  * 
  * Protects investor capital against runaway drawdowns, high volatility surges,
  * and anomalous multi-agent loop storms.
@@ -65,7 +65,7 @@ export class FinancialCircuitBreaker {
     this.lastVolatilityPct = annualVolatilityPct;
     const now = Date.now();
 
-    // 1. Signal & Loop Tracking (from munder-difflin)
+    // 1. Signal & Loop Tracking (Zenith Quantitative Telemetry)
     if (errorSignal) {
       if (errorSignal === this.lastSignalKey) {
         this.repeatCount += 1;

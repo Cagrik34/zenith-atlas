@@ -1,6 +1,6 @@
 /**
  * CircuitBreakerModal — Human-In-The-Loop (HITL) Emergency Risk & Rebalancing Gate
- * Adapted from munder-difflin/src/main/control.ts architecture
+ * Zenith Institutional HITL Risk Authorization Gate
  */
 
 import React from 'react';

@@ -1,6 +1,6 @@
 /**
  * ToolWaterfall — Visual Tool Execution Timeline & Telemetry
- * Directly adapted from munder-difflin/src/renderer/src/components/ToolWaterfall.tsx
+ * Zenith Telemetry Timeline & Tool Waterfall Engine
  */
 
 import React from 'react';
@@ -20,7 +20,7 @@ export const ToolWaterfall: React.FC<ToolWaterfallProps> = ({ spans }) => {
 
   return (
     <div className="tool-waterfall-card card">
-      {/* 1. Header Telemetri Bandı (from munder-difflin) */}
+      {/* 1. Header Telemetri Bandı (Zenith Quantitative Telemetry) */}
       <div className="waterfall-header-band">
         <div className="waterfall-title-group">
           <Activity size={16} className="text-accent" />

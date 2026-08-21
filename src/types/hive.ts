@@ -1,6 +1,6 @@
 /**
  * Zenith Quant Hive — Multi-Agent Types & Protocols
- * Adapted from munder-difflin multi-agent harness architecture
+ * Zenith Atlas Institutional Multi-Agent Protocols
  */
 
 export type AgentRole =

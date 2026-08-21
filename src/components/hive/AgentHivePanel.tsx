@@ -1,6 +1,6 @@
 /**
  * AgentHivePanel — Quant War Room & Multi-Agent Autonomous Command Center
- * Directly adapted from munder-difflin/src/renderer/src/components/CommandCenterPanel.tsx
+ * Zenith Quant War Room & Command Center
  */
 
 import React, { useState } from 'react';

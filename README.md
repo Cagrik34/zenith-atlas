@@ -132,9 +132,9 @@ Zenith-Atlas/
 │   ├── 📁 types/              # Katı TypeScript Tip Tanımları (.ts)
 │   ├── 📁 utils/              # formatters.ts, excelExport.ts, storage.ts
 │   ├── App.tsx                # Ana Uygulama Düzeni ve Sekme Yönlendirici
-│   └── main.tsx               # React 19 Giriş Noktası (Root)
+│   └── main.tsx               # React 19 ş Noktası (Root)
 │
-├── 📄 index.html              # Modern Vite SPA Giriş HTML'i
+├── 📄 index.html              # Modern Vite SPA ş HTML'i
 ├── 📄 package.json            # React 19, TypeScript 5.8+, Vite 6, Chart.js
 ├── 📄 requirements.txt        # Python crawler kütüphaneleri (tefas-crawler, websockets)
 ├── 📄 start.bat               # Windows tek tıkla başlatıcı
