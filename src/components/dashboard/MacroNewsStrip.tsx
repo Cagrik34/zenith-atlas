@@ -43,6 +43,9 @@ export const MacroNewsStrip: React.FC = () => {
           <span className="macro-sync-badge">
             <span className="dot"></span>Resmi Kurum Senkronizasyonu
           </span>
+          <span className="badge badge-primary" style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#A5B4FC' }}>
+            <span>🎙️</span> MacroStrategist Nöbette
+          </span>
         </div>
 
         {/* Gösterge Şeridi */}
