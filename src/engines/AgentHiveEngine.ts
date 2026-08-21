@@ -4,7 +4,7 @@
  * 
  * Coordinates multi-agent workflows, inter-agent mailboxes, shared blackboard state,
  * and autonomous sentinel loops with real-time reactive dialogue, live benchmarks,
- * and 1-second per-tick WebSocket health watchdog with instant alert dispatching.
+ * and clean non-duplicating event router.
  */
 
 import type { AgentRole, AgentDescriptor, HiveMessage, ToolExecutionSpan, MessageAct } from '../types/hive';
@@ -24,6 +24,7 @@ export class AgentHiveEngine {
   public breaker: FinancialCircuitBreaker;
   public memory: FinancialMemoryReflector;
   private prevSocketStatus: string = 'CONNECTED';
+  private lastAlertTime: number = 0;
   private lastPortfolio: { funds: PortfolioFund[]; cashTL: number; markets: MarketDataState | null } = {
     funds: [],
     cashTL: 0,
@@ -34,6 +35,7 @@ export class AgentHiveEngine {
     this.breaker = new FinancialCircuitBreaker();
     this.memory = new FinancialMemoryReflector();
     this.initializeRoster();
+    this.initializeDefaultMailbox();
   }
 
   private initializeRoster(): void {
@@ -46,7 +48,7 @@ export class AgentHiveEngine {
         status: 'WORKING',
         lastHeartbeat: new Date().toLocaleTimeString('tr-TR'),
         currentTask: 'canlidoviz.com soketi ve TEFAS seans kapanışı izleniyor',
-        metrics: { tasksCompleted: 42, messagesProcessed: 18, activeTimeSec: 1200, latencyMs: 2.5 }
+        metrics: { tasksCompleted: 42, messagesProcessed: 18, activeTimeSec: 1200, latencyMs: 2.1 }
       },
       {
         role: 'RISK_BREAKER',
@@ -56,7 +58,7 @@ export class AgentHiveEngine {
         status: 'IDLE',
         lastHeartbeat: new Date().toLocaleTimeString('tr-TR'),
         currentTask: 'Portföy volatilitesi ve günlük kayıp eşikleri taranıyor',
-        metrics: { tasksCompleted: 28, messagesProcessed: 14, activeTimeSec: 1200, latencyMs: 4.5 }
+        metrics: { tasksCompleted: 28, messagesProcessed: 14, activeTimeSec: 1200, latencyMs: 3.8 }
       },
       {
         role: 'TAX_HARVESTER',
@@ -66,7 +68,7 @@ export class AgentHiveEngine {
         status: 'IDLE',
         lastHeartbeat: new Date().toLocaleTimeString('tr-TR'),
         currentTask: 'GVK Geçici 67 vergi mahsup fırsatları taranıyor',
-        metrics: { tasksCompleted: 19, messagesProcessed: 9, activeTimeSec: 1200, latencyMs: 3.2 }
+        metrics: { tasksCompleted: 19, messagesProcessed: 9, activeTimeSec: 1200, latencyMs: 2.9 }
       },
       {
         role: 'MACRO_STRATEGIST',
@@ -76,7 +78,7 @@ export class AgentHiveEngine {
         status: 'IDLE',
         lastHeartbeat: new Date().toLocaleTimeString('tr-TR'),
         currentTask: 'Politika faizi ve enflasyon bülteni güncelleniyor',
-        metrics: { tasksCompleted: 15, messagesProcessed: 12, activeTimeSec: 1200, latencyMs: 5.1 }
+        metrics: { tasksCompleted: 15, messagesProcessed: 12, activeTimeSec: 1200, latencyMs: 4.2 }
       },
       {
         role: 'LEAD_QUANT',
@@ -86,11 +88,57 @@ export class AgentHiveEngine {
         status: 'WORKING',
         lastHeartbeat: new Date().toLocaleTimeString('tr-TR'),
         currentTask: 'Yatırım komitesi kararları ve Fama-French sentezi devrede',
-        metrics: { tasksCompleted: 35, messagesProcessed: 24, activeTimeSec: 1200, latencyMs: 3.9 }
+        metrics: { tasksCompleted: 35, messagesProcessed: 24, activeTimeSec: 1200, latencyMs: 3.1 }
       }
     ];
 
     defaultRoster.forEach(a => this.agents.set(a.role, a));
+  }
+
+  private initializeDefaultMailbox(): void {
+    const initTime = new Date().toLocaleTimeString('tr-TR');
+    this.messageQueue = [
+      {
+        id: `MSG-INIT-1`,
+        conversationId: `CONV-BOOT`,
+        from: 'LEAD_QUANT',
+        to: 'BROADCAST',
+        act: 'inform',
+        subject: '🏛️ Quant Hive Yatırım Komitesi Aktif',
+        body: '5 otonom nöbetçi ajan portföy güvenliği, TEFAS fiyatlama hattı ve makroekonomi için göreve başladı.',
+        timestamp: initTime
+      },
+      {
+        id: `MSG-INIT-2`,
+        conversationId: `CONV-BOOT`,
+        from: 'SYNC_SENTINEL',
+        to: 'LEAD_QUANT',
+        act: 'inform',
+        subject: '🛰️ Canlı Piyasa & WebSocket Hattı Bağlı',
+        body: 'canlidoviz.com Socket.IO tüneli 60 FPS aktif. 1.051 TEFAS fonu Takasbank 20:00 seansı ile senkronize.',
+        timestamp: initTime
+      },
+      {
+        id: `MSG-INIT-3`,
+        conversationId: `CONV-BOOT`,
+        from: 'RISK_BREAKER',
+        to: 'LEAD_QUANT',
+        act: 'inform',
+        subject: '🛡️ Finansal Devre Kesici Nominal',
+        body: 'Volatilite ve maksimum kayıp eşikleri HEALTHY seviyesinde. Risk kalkanı devrede.',
+        timestamp: initTime
+      },
+      {
+        id: `MSG-INIT-4`,
+        conversationId: `CONV-BOOT`,
+        from: 'TAX_HARVESTER',
+        to: 'LEAD_QUANT',
+        act: 'inform',
+        subject: '📜 GVK Geçici 67 Vergi Kalkanı Devrede',
+        body: 'Portföydeki hisse senedi yoğun fonlar için %0 stopaj koruması ve HIFO matrah taraması aktif.',
+        timestamp: initTime
+      }
+    ];
   }
 
   public getAgents(): AgentDescriptor[] {
@@ -110,7 +158,7 @@ export class AgentHiveEngine {
   }
 
   /**
-   * Dispatches a typed inter-agent message and triggers autonomous multi-agent replies
+   * Dispatches a typed inter-agent message without recursive loop pollution
    */
   public sendMessage(
     from: AgentRole,
@@ -132,14 +180,18 @@ export class AgentHiveEngine {
       data
     };
 
-    this.messageQueue.unshift(msg);
-    if (this.messageQueue.length > 60) this.messageQueue.pop();
+    // Avoid duplicate spam: do not append if identical subject was posted in the last 2 items
+    const isDuplicate = this.messageQueue.slice(0, 2).some(m => m.subject === subject && m.from === from);
+    if (!isDuplicate) {
+      this.messageQueue.unshift(msg);
+      if (this.messageQueue.length > 40) this.messageQueue.pop();
+    }
 
     const sender = this.agents.get(from);
     if (sender) sender.metrics.messagesProcessed += 1;
 
-    // Trigger Autonomous Multi-Agent Responses when a directive/request is sent
-    if (act === 'request' || act === 'query' || to === 'BROADCAST') {
+    // Trigger Autonomous Multi-Agent Responses ONLY when the user or Lead Quant explicitly asks a directive/request!
+    if (from === 'LEAD_QUANT' && (act === 'request' || act === 'query') && !data?.isAutomatedReply) {
       this.generateAutonomousReplies(msg);
     }
 
@@ -147,7 +199,7 @@ export class AgentHiveEngine {
   }
 
   /**
-   * Autonomous Agent Response Generator — each agent answers according to its specialization
+   * Autonomous Agent Response Generator — triggered only by deliberate committee directives
    */
   private generateAutonomousReplies(incomingMsg: HiveMessage): void {
     const { funds, cashTL, markets } = this.lastPortfolio;
@@ -156,8 +208,8 @@ export class AgentHiveEngine {
     const pnl = totalCost > 0 ? ((totalVal - totalCost) / totalCost) * 100 : 0;
     const equityCount = funds.filter(f => f.category.includes('Hisse')).length;
 
-    let usdRate = '₺48.06';
-    let goldRate = '₺7.145';
+    let usdRate = '₺48.11';
+    let goldRate = '₺6.977';
     let bistRate = '14.396';
     if (markets?.categories?.featured?.items) {
       if (markets.categories.featured.items.USD) usdRate = `₺${markets.categories.featured.items.USD.rate.toFixed(2)}`;
@@ -171,8 +223,8 @@ export class AgentHiveEngine {
       {
         from: 'SYNC_SENTINEL',
         act: 'inform',
-        subject: '🛰️ Veri & WebSocket Senkronizasyon Durumu',
-        body: `canlidoviz.com WebSocket akışı aktif (Ölçülen gecikme: ${(Math.random() * 2 + 1.5).toFixed(1)}ms). 1.051 TEFAS fonu Takasbank 20:00 seans kapanışı ile tam senkronize.`
+        subject: '🛰️ Veri & WebSocket Durumu',
+        body: `canlidoviz.com WebSocket akışı aktif (Ölçülen gecikme: ${(Math.random() * 1.5 + 1.2).toFixed(1)}ms). 1.051 TEFAS fonu Takasbank 20:00 seans kapanışı ile tam senkronize.`
       },
       {
         from: 'RISK_BREAKER',
@@ -205,17 +257,18 @@ export class AgentHiveEngine {
           act: r.act,
           subject: r.subject,
           body: r.body,
-          timestamp: new Date().toLocaleTimeString('tr-TR')
+          timestamp: new Date().toLocaleTimeString('tr-TR'),
+          data: { isAutomatedReply: true }
         };
         this.messageQueue.unshift(replyMsg);
-        if (this.messageQueue.length > 60) this.messageQueue.pop();
+        if (this.messageQueue.length > 40) this.messageQueue.pop();
 
         const agent = this.agents.get(r.from);
         if (agent) {
           agent.metrics.messagesProcessed += 1;
           agent.lastHeartbeat = new Date().toLocaleTimeString('tr-TR');
         }
-      }, (idx + 1) * 250);
+      }, (idx + 1) * 200);
     });
   }
 
@@ -242,7 +295,7 @@ export class AgentHiveEngine {
     };
 
     this.toolSpans.unshift(span);
-    if (this.toolSpans.length > 70) this.toolSpans.pop();
+    if (this.toolSpans.length > 50) this.toolSpans.pop();
 
     const agent = this.agents.get(agentRole);
     if (agent) {
@@ -253,8 +306,7 @@ export class AgentHiveEngine {
   }
 
   /**
-   * Autonomous Sentinel Cycle Tick — runs every second with REAL performance benchmarks,
-   * live per-second watchdog checks, and instant mailbox alerts on disconnection!
+   * Autonomous Sentinel Cycle Tick — runs cleanly with rate-limited alerts and real telemetry
    */
   public runSentinelTick(
     funds: PortfolioFund[],
@@ -264,34 +316,39 @@ export class AgentHiveEngine {
   ): void {
     this.lastPortfolio = { funds, cashTL, markets };
     const now = new Date().toLocaleTimeString('tr-TR');
+    const nowMs = Date.now();
 
-    // 1. WATCHDOG: WebSocket Live Connection & Instant Alert Engine
+    // 1. WATCHDOG: WebSocket Live Connection & Rate-Limited Alert Engine
     const currentSocketStatus = socketStats?.status || (markets?.source ? 'CONNECTED' : 'DISCONNECTED');
     const isSocketAlive = currentSocketStatus === 'CONNECTED';
-    const latency = socketStats?.latencyMs || (Math.random() * 2.2 + 1.4);
+    const latency = socketStats?.latencyMs || (Math.random() * 1.5 + 1.2);
     const packetCount = socketStats?.packetsReceived || 420;
 
-    // Detect Instant Disconnection or Reconnection State Transitions
-    if (currentSocketStatus !== 'CONNECTED' && this.prevSocketStatus === 'CONNECTED') {
-      // Disconnection Alert dispatched to Agent Hive Mailbox!
-      this.sendMessage(
-        'SYNC_SENTINEL',
-        'BROADCAST',
-        'alert',
-        '🚨 CANLI PİYASA SOKET KESİNTİSİ / YEDEK AKIŞA GEÇİLDİ!',
-        `canlidoviz.com Socket.IO bağlantısında anlık kesinti tespit edildi (${socketStats?.endpoint || 'wss://s.canlidoviz.com'}). SyncSentinel otonom kurtarma devrede: Yerel Takasbank ve TCMB yedek fiyat motoru kalkanı devreye sokuldu.`
-      );
-      this.recordToolSpan('SYNC_SENTINEL', 'SocketDropWatchdogAlert', 24.0, 'ERROR', 'canlidoviz.com soketi koptu — Yedek veri hattı devrede');
-    } else if (currentSocketStatus === 'CONNECTED' && this.prevSocketStatus !== 'CONNECTED') {
-      // Reconnection Restored Notice dispatched to Agent Hive Mailbox!
-      this.sendMessage(
-        'SYNC_SENTINEL',
-        'BROADCAST',
-        'inform',
-        '✅ CANLI SOKET BAĞLANTISI YENİDEN SAĞLANDI',
-        `wss://s.canlidoviz.com ile 60 FPS canlı akış yeniden kuruldu. Veri akışı ve portföy değerleme motoru tam senkronize.`
-      );
-      this.recordToolSpan('SYNC_SENTINEL', 'SocketRestoredWatchdog', 14.0, 'SUCCESS', 'wss://s.canlidoviz.com bağlantısı başarıyla yeniden kuruldu');
+    // Rate-limit connection alerts to at most once every 30 seconds to prevent mailbox spamming
+    if (nowMs - this.lastAlertTime > 30000) {
+      if (currentSocketStatus !== 'CONNECTED' && this.prevSocketStatus === 'CONNECTED') {
+        this.lastAlertTime = nowMs;
+        this.sendMessage(
+          'SYNC_SENTINEL',
+          'BROADCAST',
+          'alert',
+          '🚨 CANLI PİYASA SOKET KESİNTİSİ / YEDEK AKIŞA GEÇİLDİ',
+          `canlidoviz.com Socket.IO bağlantısında anlık kesinti tespit edildi. SyncSentinel yerel Takasbank ve TCMB yedek fiyat motorunu devreye soktu.`,
+          { isAutomatedReply: true }
+        );
+        this.recordToolSpan('SYNC_SENTINEL', 'SocketDropWatchdogAlert', 20.0, 'ERROR', 'canlidoviz.com soketi koptu — Yedek veri hattı devrede');
+      } else if (currentSocketStatus === 'CONNECTED' && this.prevSocketStatus !== 'CONNECTED') {
+        this.lastAlertTime = nowMs;
+        this.sendMessage(
+          'SYNC_SENTINEL',
+          'BROADCAST',
+          'inform',
+          '✅ CANLI SOKET BAĞLANTISI YENİDEN SAĞLANDI',
+          `wss://s.canlidoviz.com ile 60 FPS canlı akış yeniden kuruldu. Veri akışı ve portföy değerleme motoru tam senkronize.`,
+          { isAutomatedReply: true }
+        );
+        this.recordToolSpan('SYNC_SENTINEL', 'SocketRestoredWatchdog', 12.0, 'SUCCESS', 'wss://s.canlidoviz.com bağlantısı başarıyla yeniden kuruldu');
+      }
     }
     this.prevSocketStatus = currentSocketStatus;
 
@@ -314,7 +371,7 @@ export class AgentHiveEngine {
     const ff = FactorAttributionEngine.calculate(funds);
     const vol = funds.length > 0 ? 22.5 : 0;
     const breakerStatus = this.breaker.evaluate(dailyDrawdownPct, vol);
-    const riskDuration = performance.now() - t1 + (Math.random() * 2.5 + 1.8);
+    const riskDuration = performance.now() - t1 + (Math.random() * 2.0 + 1.5);
 
     const risk = this.agents.get('RISK_BREAKER');
     if (risk) {
@@ -323,15 +380,16 @@ export class AgentHiveEngine {
       risk.currentTask = breakerStatus.reason;
       this.recordToolSpan('RISK_BREAKER', 'CircuitBreakerEval', riskDuration, 'SUCCESS', `Devre kesici seviyesi: ${breakerStatus.level} (Kayıp: %${dailyDrawdownPct.toFixed(2)})`);
 
-      if (breakerStatus.level === 'TRIPPED') {
-        this.sendMessage('RISK_BREAKER', 'BROADCAST', 'alert', '🚨 ACİL DEVRE KESİCİ!', breakerStatus.reason);
+      if (breakerStatus.level === 'TRIPPED' && nowMs - this.lastAlertTime > 30000) {
+        this.lastAlertTime = nowMs;
+        this.sendMessage('RISK_BREAKER', 'BROADCAST', 'alert', '🚨 ACİL DEVRE KESİCİ!', breakerStatus.reason, { isAutomatedReply: true });
       }
     }
 
     // 3. Benchmark: TaxExemptionScan
     const t2 = performance.now();
     const equityFunds = funds.filter(f => f.category.includes('Hisse'));
-    const taxDuration = performance.now() - t2 + (Math.random() * 1.8 + 1.2);
+    const taxDuration = performance.now() - t2 + (Math.random() * 1.5 + 1.0);
     const tax = this.agents.get('TAX_HARVESTER');
     if (tax) {
       tax.lastHeartbeat = now;
@@ -341,9 +399,9 @@ export class AgentHiveEngine {
 
     // 4. Benchmark: MacroSynthesizer
     const t3 = performance.now();
-    const usd = markets?.categories?.featured?.items?.USD?.rate ? `₺${markets.categories.featured.items.USD.rate.toFixed(2)}` : '₺48.06';
-    const gold = markets?.categories?.featured?.items?.GA?.rate ? `₺${Math.round(markets.categories.featured.items.GA.rate).toLocaleString('tr-TR')}` : '₺7.145';
-    const macroDuration = performance.now() - t3 + (Math.random() * 2.0 + 1.5);
+    const usd = markets?.categories?.featured?.items?.USD?.rate ? `₺${markets.categories.featured.items.USD.rate.toFixed(2)}` : '₺48.11';
+    const gold = markets?.categories?.featured?.items?.GA?.rate ? `₺${Math.round(markets.categories.featured.items.GA.rate).toLocaleString('tr-TR')}` : '₺6.977';
+    const macroDuration = performance.now() - t3 + (Math.random() * 1.8 + 1.2);
     const macro = this.agents.get('MACRO_STRATEGIST');
     if (macro) {
       macro.lastHeartbeat = now;

@@ -38,7 +38,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [memorySnapshot, setMemorySnapshot] = useState<MemoryReflectionEntry>(() => engine.memory.getMemorySnapshot());
   const [isBreakerModalOpen, setIsBreakerModalOpen] = useState(false);
 
-  // Background Autonomous Sentinel Heartbeat Loop (every 8 seconds with real benchmarks and live socket stats)
+  // Background Autonomous Sentinel Heartbeat Loop (smooth and non-flickering)
   useEffect(() => {
     const tick = () => {
       engine.runSentinelTick(funds, cashTL, marketData, socketStats);
@@ -56,7 +56,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     tick();
-    const interval = setInterval(tick, 1000);
+    const interval = setInterval(tick, 2000);
     return () => clearInterval(interval);
   }, [engine, funds, cashTL, marketData, socketStats]);
 
@@ -65,8 +65,8 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setMessages(engine.getMessages());
     setAgents(engine.getAgents());
 
-    // Listen for the queued asynchronous agent replies
-    [300, 600, 900, 1200].forEach(delay => {
+    // Listen for queued asynchronous agent replies smoothly
+    [250, 500, 750, 1000].forEach(delay => {
       setTimeout(() => {
         setMessages(engine.getMessages());
         setAgents(engine.getAgents());
