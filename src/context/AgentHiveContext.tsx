@@ -56,7 +56,7 @@ export const AgentHiveProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     tick();
-    const interval = setInterval(tick, 8000);
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, [engine, funds, cashTL, marketData, socketStats]);
 
