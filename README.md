@@ -1,63 +1,65 @@
-# 🌌 Zenith Atlas — Institutional Quantitative Terminal
-### Kurumsal Seviye TEFAS Fon Analitiği, Çoklu Portföy Yönetimi & Kantitatif Strateji Terminali
+# 🌌 Zenith Atlas — Institutional Quantitative Finance Terminal
 
-[![Canlı Web Terminali](https://img.shields.io/badge/Canlı_Terminal-cagrik34.github.io%2Fzenith--atlas-10B981?style=for-the-badge&logo=githubpages&logoColor=white)](https://cagrik34.github.io/zenith-atlas/)
-[![React 19](https://img.shields.io/badge/React-19.0.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite 6](https://img.shields.io/badge/Vite-6.2.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2_Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![PWA Ready](https://img.shields.io/badge/PWA-100%25_Offline_Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-3B82F6?style=for-the-badge)](https://opensource.org/licenses/MIT)
+> High-Performance TEFAS Mutual Funds Analytics, Multi-Asset Portfolio Management & Quantitative Strategy Engine.
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![React 19](https://img.shields.io/badge/React-19.x-61dafb.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8_Strict-3178c6.svg)](https://www.typescriptlang.org/)
+[![Vite 6](https://img.shields.io/badge/Vite-6.x-646cff.svg)](https://vitejs.dev/)
+[![PWA](https://img.shields.io/badge/PWA-Offline--First-orange.svg)](https://web.dev/progressive-web-apps/)
 
-## 📌 Genel Bakış
-
-**Zenith Atlas**, Türkiye ve küresel sermaye piyasalarında (**TEFAS, Borsa İstanbul, Serbest Piyasa, TCMB**) işlem gören yatırım araçlarını kurumsal fon yöneticisi, aile ofisi (Family Office) ve kantitatif analist standartlarında analiz eden **kurumsal düzeyde açık kaynaklı finansal analiz terminalidir**.
-
-Kullanıcı portföy verilerini hiçbir harici sunucuya aktarmaz (**Zero-Knowledge Client-Side Architecture**); tüm optimizasyon, Fama-French regresyonu, Black-Litterman ve kriz stres testleri doğrudan tarayıcı ortamında istemci tarafında hesaplanır.
+[🇹🇷 Türkçe Dokümantasyon için tıklayınız](./README.tr.md)
 
 ---
 
-## 🏛️ Mimari & Veri Akış Şeması
+## 📌 Overview
+
+**Zenith Atlas** is an open-source, institutional-grade quantitative analytics and portfolio management terminal designed for asset managers, family offices, and quantitative researchers tracking Turkish and global capital markets (1,051 TEFAS mutual funds, Borsa Istanbul, FX, commodities, and CBRT macroeconomic indicators).
+
+Operating under a **Zero-Knowledge Client-Side Architecture**, zero portfolio telemetry or trade data is transmitted to external servers. All factor regressions, Bayesian allocations, and Monte Carlo stress tests execute entirely in-browser.
+
+---
+
+## 🏛️ Architecture & Data Flow Diagram
 
 ```mermaid
 graph TD
-    subgraph CLIENT [🖥️ Modern React 19 + TypeScript Terminali]
-        UI[Kullanıcı Arayüzü: Dashboard, Fonlar, Screener, Isı Haritası, Quant, Strateji, Hive]
-        WS_CLIENT[Canlı WebSocket İstemcisi]
-        IDB[(IndexedDB & LocalStorage Portföy Deposu)]
+    subgraph CLIENT [🖥️ Modern React 19 + TypeScript Terminal]
+        UI[User Interface: Dashboard, Funds, Screener, Heatmap, Quant, Strategy, Hive]
+        WS_CLIENT[Live WebSocket Client]
+        IDB[(IndexedDB & LocalStorage Portfolio Store)]
         
-        subgraph HIVE [🤖 Zenith Quant Hive: 5 Otonom Ajan]
-            A1[SyncSentinel: TEFAS Seans & Veri Doğrulama]
-            A2[LeadQuant: Fama-French Alfa & Faktör Atfı]
-            A3[RiskBreaker: Devre Kesici & Volatilite Denetimi]
-            A4[TaxHarvester: Stopaj & Vergi Optimizasyonu]
-            A5[MacroStrategist: TCMB & TÜİK Makro Dağılımı]
+        subgraph HIVE [🤖 Zenith Quant Hive: 5 Autonomous Agents]
+            A1[SyncSentinel: TEFAS Session & Data Reconciliation]
+            A2[LeadQuant: Fama-French Alpha & Factor Attribution]
+            A3[RiskBreaker: Circuit Breaker & Volatility Audit]
+            A4[TaxHarvester: Withholding & Tax Optimization]
+            A5[MacroStrategist: CBRT & Inflation Macro Allocation]
         end
 
-        subgraph ENGINES [🧮 11 Kantitatif Matematik Motoru]
-            E1[FactorAttributionEngine: Fama-French 5-Faktör]
-            E2[RollingCorrelationEngine: 30G/90G/365G Korelasyon & PCA]
-            E3[BlackLittermanEngine: Bayesyen Varlık Dağılımı]
+        subgraph ENGINES [🧮 11 Quantitative Math Engines]
+            E1[FactorAttributionEngine: Fama-French 5-Factor]
+            E2[RollingCorrelationEngine: 30D/90D/365D Correlation & PCA]
+            E3[BlackLittermanEngine: Bayesian Asset Allocation]
             E4[HrpEngine: Hierarchical Risk Parity]
-            E5[MonteCarloEngine: 10.000 Patikalı Simülasyon]
-            E6[TaxLossHarvestingEngine: HIFO Vergi Kalkanı]
-            E7[SyntheticStressEngine: Tarihsel ve Sentetik Kriz Testleri]
-            E8[SquarifiedTreemapEngine: Finviz Stili Ağaç Haritası]
-            E9[VoiceBriefingEngine: Web Speech AI Türkçe Bülten]
+            E5[MonteCarloEngine: 10,000-Path Simulation]
+            E6[TaxLossHarvestingEngine: HIFO Tax Shield]
+            E7[SyntheticStressEngine: Historical & Synthetic Crisis Stress]
+            E8[SquarifiedTreemapEngine: Finviz-Style Treemap]
+            E9[VoiceBriefingEngine: Web Speech AI Voice Engine]
             E10[P2pLiveSyncEngine: WebRTC & QR Teleport]
-            E11[FinancialCircuitBreaker: 3 Seviyeli Devre Kesici]
+            E11[FinancialCircuitBreaker: 3-Tier Circuit Breaker]
         end
     end
 
-    subgraph SOURCES [🌐 Resmi Veri Kaynakları & Canlı Akış]
-        S1[Takasbank TEFAS Resmi API: 1.051 Fon]
-        S2[wss://s.canlidoviz.com: Canlı Döviz, Altın & BIST]
-        S3[TCMB & TÜİK: Politika Faizi %37 & TÜFE %31.75]
+    subgraph SOURCES [🌐 Official Data Sources & Live Feeds]
+        S1[Takasbank TEFAS Official API: 1,051 Funds]
+        S2[wss://s.canlidoviz.com: Live FX, Gold & BIST]
+        S3[CBRT & TUIK: Repo Rate %37 & CPI %31.75]
     end
 
-    S2 -->|Gerçek Zamanlı WebSocket| WS_CLIENT
-    S1 & S3 -->|Otomatik Senkronizasyon & Paket Veri| IDB
+    S2 -->|Real-Time WebSocket| WS_CLIENT
+    S1 & S3 -->|Automated Sync & Bundled Data| IDB
     WS_CLIENT --> UI
     IDB --> HIVE
     HIVE --> ENGINES
@@ -66,128 +68,112 @@ graph TD
 
 ---
 
-## 🌟 Temel Modüller & Fonksiyonel Kabiliyetler
+## 🌟 Core Modules & Capabilities
 
-### 1. 🤖 Zenith Quant Hive — 5 Uzman Otonom Ajan Ağı
-* **SyncSentinel:** 1.051 TEFAS fonunu ve Takasbank 20:00 seans kapanışını denetler.
-* **LeadQuant:** Fama-French 5-Faktör Jensen's Alpha, Beta, Sharpe, Sortino ve Calmar rasyolarını hesaplar.
-* **RiskBreaker:** Portföy konsantrasyonu ve volatilite sınırlarını izleyerek 3 seviyeli Devre Kesiciyi (**HEALTHY**, **WARNING**, **TRIPPED**) yönetir.
-* **TaxHarvester:** %0 stopajlı Hisse Senedi Yoğun fon geçişlerini ve vergi avantajlarını modeller.
-* **MacroStrategist:** TCMB (%37) politika faizi ve enflasyon verilerine göre varlık dağılım önerileri sunar.
+### 1. 🤖 Zenith Quant Hive — 5 Autonomous Agents
+* **SyncSentinel:** Monitors 1,051 TEFAS mutual funds and executes Takasbank 20:00 session settlement reconciliation.
+* **LeadQuant:** Computes Fama-French 5-Factor attribution, Jensen's Alpha, Beta, Sharpe, Sortino, and Calmar ratios.
+* **RiskBreaker:** Continuously tracks volatility thresholds and portfolio concentration, enforcing a 3-tier circuit breaker (`HEALTHY`, `WARNING`, `TRIPPED`).
+* **TaxHarvester:** Simulates HIFO tax loss harvesting and optimizes allocations under Turkish Presidential Decree 9075 (0% withholding tax equity funds).
+* **MacroStrategist:** Evaluates macro regimes based on CBRT policy rates and inflation dynamics to recommend asset allocation tilts.
 
-### 2. 🧮 İleri Düzey Kantitatif Portföy Analitiği
-* **Fama-French 5-Faktör Ayrıştırması:** Piyasa ($\beta$), Büyüklük (SMB), Değer (HML), Kârlılık (RMW) ve Yatırım (CMA) faktörleri üzerinden saf yöneticilik alfa katsayısını hesaplar.
-* **Black-Litterman Modeli:** Piyasa dengesi ile yatırımcı görüşlerini Bayesyen istatistikle birleştirir.
-* **Hierarchical Risk Parity (HRP):** Marcos Lopez de Prado'nun makine öğrenimi tabanlı kümeleme risk paritesi algoritmasını çalıştırır.
-* **Monte Carlo Simülasyonu:** 10.000 iterasyonlu Geometrik Brownian Hareketi ile 1 ila 5 yıllık getiri dağılımlarını modeller.
-* **Kriz Stres Testleri:** 2008 Küresel Krizi, 2020 Pandemi Şoku ve 2021 Kur Şoku senaryoları altında portföy dayanıklılığını test eder.
+### 2. 🧮 Advanced Quantitative Portfolio Analytics
+* **Fama-French 5-Factor Decomposition:** Decomposes returns across Market ($\beta$), Size (SMB), Value (HML), Profitability (RMW), and Investment (CMA) factors to isolate pure managerial alpha.
+* **Black-Litterman Model:** Blends market equilibrium with subjective investor views using Bayesian statistical shrinkage.
+* **Hierarchical Risk Parity (HRP):** Executes machine learning-based hierarchical tree clustering (Marcos Lopez de Prado) for robust diversification without matrix inversion.
+* **Monte Carlo Simulation:** 10,000-path Geometric Brownian Motion (GBM) projecting 1-to-5-year probabilistic return cones.
+* **Crisis Stress Testing:** Simulates portfolio drawdown under historical shocks: 2008 Global Financial Crisis, 2020 Pandemic Shock, and 2021 Turkish Lira FX Shock.
 
-### 3. 🔍 1.051 TEFAS Fonu Filtreleme & Anlık Otomatik Tanıma
-* 1.051 resmi TEFAS fonunun tamamını içeren gömülü veritabanı.
-* Fon kodu yazıldığı anda **Fon Adı, TEFAS Kategorisi ve Takasbank Güncel Fiyatı** otomatik olarak doldurulur.
-* Kategori, getiri, fon büyüklüğü ve yönetim ücretine göre çok kriterli filtreleme ve sayfalama.
+### 3. 🔍 1,051 Mutual Funds Screener & Recognition Engine
+* Embedded offline database indexing all 1,051 official TEFAS mutual funds.
+* Sub-millisecond code lookup auto-populates fund metadata, category classification, and Takasbank settlement pricing.
+* Multi-criteria sorting and filtering by AUM, expense ratio, annualized alpha, and category.
 
-### 4. 🗺️ Ağaç Isı Haritası (Squarified Treemap)
-* 1.051 TEFAS fonunu ve portföy dağılımını Bruls-Huizing-van Wijk algoritmasıyla orantılı alan blokları ve HSL renk skalasıyla görselleştirir.
+### 4. 🗺️ Squarified Treemap Heatmap
+* Visualizes 1,051 TEFAS funds and user portfolios via the **Bruls-Huizing-van Wijk** tiling algorithm using HSL dynamic color scales.
 
-### 5. 📑 Goldman Sachs Standartlarında 4 Sayfalık A4 Pitchbook & İcra Özeti
-* Varlık dağılımı, faktör katsayıları, kriz simülasyonları ve getiri projeksiyonlarını içeren kurumsal PDF raporlama motoru.
+### 5. 📑 Institutional 4-Page A4 Pitchbook Engine
+* Generates comprehensive Goldman-standard A4 PDF executive summaries containing factor attributions, risk metrics, and simulation paths.
 
-### 6. 🎙️ Zenith Voice AI — Türkçe Sabah Piyasa Bülteni
-* Web Speech API tabanlı ses motoru ile portföyün net durumunu, günlük değişimini ve piyasa açılışını seslendirir.
+### 6. 🎙️ Zenith Voice AI
+* Web Speech API-powered voice engine synthesizing daily portfolio summaries, net asset values, and market opening briefings in Turkish.
 
-### 7. 📲 P2P QR Kod Mobil Işınlama & Mobil Uyumlu Arayüz
-* Portföy verisini hiçbir sunucuya yüklemeden, uçtan uca şifreli doğrudan URL hash ile kameradan taratarak mobil cihaza aktarır.
-* Mobil ekranlar için optimize edilmiş alt navigasyon çubuğu (Bottom Dock), kaydırılabilir sekmeler ve dokunmatik çekmece menüsü.
+### 7. 📲 Serverless P2P Mobile Teleportation
+* Zero-cloud, camera-based mobile portfolio synchronization via high-density URL hash QR teleportation.
+* Mobile-first responsive UI featuring bottom dock navigation, swipeable tabs, and touch drawers.
 
-### 8. 🛡️ React 19 Error Boundary & Çalışma Zamanı Hata İzolasyonu
-* Olası beklenmeyen grafik veya veri hatalarında uygulamanın beyaz ekrana düşmesini engelleyen, yerel portföyü izole eden ve kullanıcıya güvenli kurtarma seçeneği sunan kurumsal hata kalkanı.
-
+### 8. 🛡️ Fault-Tolerant React 19 Error Boundary
+* Enterprise runtime resilience layer preventing white-screen crashes, isolating UI state faults, and enabling graceful local data recovery.
 
 ---
 
-## 🚀 Kurulum & Çalıştırma
+## 🚀 Getting Started
 
-### Canlı Web Sürümü:
-Terminali herhangi bir kurulum yapmadan doğrudan [https://cagrik34.github.io/zenith-atlas/](https://cagrik34.github.io/zenith-atlas/) adresinden kullanabilirsiniz.
+### Live Terminal
+Access the production build directly with zero setup:
+👉 **[https://cagrik34.github.io/zenith-atlas/](https://cagrik34.github.io/zenith-atlas/)**
 
-### Yerel Geliştirme (Local Development):
+### Local Development
 
-#### Gereksinimler:
-* **Node.js:** `v20+` (Önerilen: `v22+ LTS`)
-* **npm:** `v10+`
+**Prerequisites:**
+* Node.js v20+ (v22+ LTS recommended)
+* npm v10+
 
 ```bash
-# 1. Depoyu klonlayın
+# 1. Clone repository
 git clone https://github.com/Cagrik34/zenith-atlas.git
 cd zenith-atlas
 
-# 2. Bağımlılıkları yükleyin
+# 2. Install dependencies
 npm install
 
-# 3. Geliştirme sunucusunu başlatın
+# 3. Start development server
 npm run dev
-# -> http://localhost:3000 adresinde anında açılır.
 
-# 4. Üretim paketini derleyin (Strict TypeScript & PWA)
+# 4. Build for production (Strict TypeScript & PWA)
 npm run build
 
-# 5. Üretim önizlemesi
+# 5. Preview production build locally
 npm run preview
 ```
 
 ---
 
-## 📁 Proje Dizin Yapısı
+## 📁 Directory Structure
 
 ```text
-Zenith-Atlas/
-├── 📁 .github/                # GitHub Actions Otomatik Dağıtım (CI/CD)
-│   └── 📁 workflows/deploy.yml
-├── 📁 public/                 # Statik PWA Varlıkları & İkonlar
-│   ├── 📁 data/               # 1.051 TEFAS fonu, piyasa oranları, haberler
-│   ├── 📁 icons/              # PWA uygulama ikonları
-│   ├── favicon.svg            # Vektörel Z-Prism logosu
-│   └── manifest.webmanifest   # PWA mobil manifesti
-│
-├── 📁 scripts/                # Senkronizasyon Scriptleri (Opsiyonel Manuel Tarayıcı)
-│   └── sync.py
-│
-├── 📁 src/                    # React 19 + TypeScript Kaynak Kodları
-│   ├── 📁 components/         # Modüler Bileşenler (Dashboard, Funds, Screener, Quant, vb.)
-│   ├── 📁 context/            # PortfolioContext, MarketContext, AgentHiveContext
-│   ├── 📁 data/               # Dahili derlenmiş statik veri paketleri
-│   ├── 📁 engines/            # 11 Kantitatif Matematik ve Analiz Motoru
-│   ├── 📁 hooks/              # useAutoSync, useLivePrices
-│   ├── 📁 styles/             # index.css (Kurumsal Tasarım Sistemi)
-│   ├── 📁 types/              # Katı TypeScript Tip Tanımları
-│   ├── 📁 utils/              # formatters.ts, excelExport.ts, storage.ts
-│   ├── App.tsx                # Ana Uygulama & Global Modallar
-│   ├── main.tsx               # React 19 Kök Giriş Noktası
-│   └── vite-env.d.ts          # Vite Ortam Tip Tanımları
-│
-├── 📄 index.html              # HTML5 Giriş Dosyası
-├── 📄 package.json            # Bağımlılıklar & Scriptler
-├── 📄 requirements.txt        # Python Bağımlılıkları (Opsiyonel Sync)
-├── 📄 start.bat               # Windows Tek Tık Başlatıcı
-├── 📄 tsconfig.json           # TypeScript Katı Tip Yapılandırması
-└── 📄 vite.config.ts          # Vite 6 + React + PWA Yapılandırması
+zenith-atlas/
+├── .github/                # CI/CD GitHub Actions deployment workflows
+├── public/                 # Static PWA assets, manifest, and icons
+├── scripts/                # Python-based data ingestion & sync utilities (sync.py)
+├── src/
+│   ├── components/         # Modular UI components (Dashboard, Quant, Screener, etc.)
+│   ├── context/            # React Contexts (Portfolio, Market, AgentHive)
+│   ├── data/               # Bundled static datasets
+│   ├── engines/            # 11 Quantitative mathematical analysis engines
+│   ├── hooks/              # Custom reactive hooks (useAutoSync, useLivePrices)
+│   ├── styles/             # Enterprise Glassmorphism design system
+│   ├── types/              # Strict TypeScript definitions
+│   └── utils/              # Export formats, math helpers, and storage drivers
+├── index.html              # Entry HTML5 document
+├── package.json            # Node.js dependencies and build scripts
+├── tsconfig.json           # Strict TypeScript configuration
+└── vite.config.ts          # Vite 6 + manualChunks Rollup optimization
 ```
 
 ---
 
-## 🛡️ Siber Güvenlik & Gizlilik İlkeleri
+## 🛡️ Security & Zero-Knowledge Architecture
 
-* **Zero-Knowledge Architecture:** Portföy büyüklüğü, işlem geçmişi ve nakit bakiyesi hiçbir harici sunucuya veya veritabanına iletilmez; tüm veriler kullanıcının yerel tarayıcısında saklanır.
-* **XSS Sanitization:** `escapeHtml` ve React 19 DOM escaping mekanizmaları.
-* **Excel DDE Formula Injection Kalkanı:** CSV ve Excel ihraçlarında `=, +, -, @` karakterli formül enjeksiyonu saldırıları temizlenir (`sanitizeCsvCell`).
-* **Content Security & Subresource Integrity:** Harici script bağımlılığı barındırmayan yerleşik güvenli mimari.
+* **Zero-Knowledge Execution:** Portfolio balances, trade histories, and cost positions remain strictly in local browser storage (`IndexedDB` / `localStorage`).
+* **Sanitization:** Input escaping with `escapeHtml` and React 19 DOM safeguards.
+* **Formula Injection Defense:** CSV/Excel export cells sanitized via `sanitizeCsvCell` against Excel Dynamic Data Exchange (DDE) formula execution (`=`, `+`, `-`, `@`).
 
 ---
 
-## 📜 Lisans & Telif Hakkı
+## 📜 License & Copyright
 
-Bu proje **MIT Lisansı** altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.
+Distributed under the **MIT License**. See `LICENSE` for details.
 
-**Geliştirici:** Çağrı Giray Keşan  
-**Telif Hakkı:** © 2026 Çağrı Giray Keşan. Tüm Hakları Saklıdır.
+**Author:** Çağrı Giray Keşan  
+**Copyright:** © 2026 Çağrı Giray Keşan. All Rights Reserved.
