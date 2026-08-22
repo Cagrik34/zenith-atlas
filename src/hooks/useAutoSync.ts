@@ -4,8 +4,8 @@ import { useMarket } from '../context/MarketContext';
 import initialPricesData from '../data/prices.json';
 
 /**
- * Sıfır-Müdahale Arka Plan Otomatik Senkronizasyon Kancası
- * Sayfa açılışında ve her 60 saniyede bir resmi verileri tazeler (Sonsuz döngü ve titreme korumalı)
+ * Background Automatic Synchronization Hook
+ * Manages periodic 60-second synchronization for TEFAS prices and live market rates.
  */
 export function useAutoSync() {
   const { syncLivePrices } = usePortfolio();

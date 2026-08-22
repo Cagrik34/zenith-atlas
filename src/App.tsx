@@ -109,7 +109,7 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
-      {/* 1. Sabit Üst Header Bar (Titreme/Kayma Engelli & Mobil Uyumlu) */}
+      {/* Top Header Navigation */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -123,10 +123,10 @@ const AppContent: React.FC = () => {
         isSyncing={isSyncing}
       />
 
-      {/* 2. Donanım Hızlandırmalı 60 FPS Canlı Ticker */}
+      {/* Live Market Marquee Ticker */}
       <TerminalTicker />
 
-      {/* 3. Ana İçerik Alanı (Kenarlardan Dengeli Boşluklu ve Taşmasız) */}
+      {/* Main Content Workspace */}
       <main className="app-main">
         {activeTab === 'dashboard' && <DashboardTab onNavigateTab={setActiveTab} />}
         {activeTab === 'funds' && <FundsTab />}
@@ -138,7 +138,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'zenith-ai' && <ZenithAiTab />}
       </main>
 
-      {/* 4. Mobil Alt Navigasyon Dock (Sadece Mobil Ekranlarda Görünür) */}
+      {/* Mobile Bottom Navigation Dock */}
       <MobileBottomNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
