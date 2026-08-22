@@ -168,6 +168,8 @@ Zenith-Atlas/
 │
 ├── 📄 index.html              # HTML5 Giriş Dosyası
 ├── 📄 package.json            # Bağımlılıklar & Scriptler
+├── 📄 requirements.txt        # Python Bağımlılıkları (Opsiyonel Sync)
+├── 📄 start.bat               # Windows Tek Tık Başlatıcı
 ├── 📄 tsconfig.json           # TypeScript Katı Tip Yapılandırması
 └── 📄 vite.config.ts          # Vite 6 + React + PWA Yapılandırması
 ```
