@@ -100,6 +100,10 @@ graph TD
 * Portföy verisini hiçbir sunucuya yüklemeden, uçtan uca şifreli doğrudan URL hash ile kameradan taratarak mobil cihaza aktarır.
 * Mobil ekranlar için optimize edilmiş alt navigasyon çubuğu (Bottom Dock), kaydırılabilir sekmeler ve dokunmatik çekmece menüsü.
 
+### 8. 🛡️ React 19 Error Boundary & Çalışma Zamanı Hata İzolasyonu
+* Olası beklenmeyen grafik veya veri hatalarında uygulamanın beyaz ekrana düşmesini engelleyen, yerel portföyü izole eden ve kullanıcıya güvenli kurtarma seçeneği sunan kurumsal hata kalkanı.
+
+
 ---
 
 ## 🚀 Kurulum & Çalıştırma
