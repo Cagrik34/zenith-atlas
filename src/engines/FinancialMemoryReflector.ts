@@ -26,7 +26,7 @@ export class FinancialMemoryReflector {
 
   private loadFromStorage(): MemoryReflectionEntry {
     try {
-      const raw = localStorage.getItem(MEMORY_STORAGE_KEY);
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(MEMORY_STORAGE_KEY) : null;
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.pinnedFacts)) {
@@ -49,7 +49,7 @@ export class FinancialMemoryReflector {
 
   private saveToStorage(): void {
     try {
-      localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(this.state));
+      if (typeof localStorage !== 'undefined') { localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify(this.state)); }
     } catch (e) {
       console.warn('MemoryReflector save error:', e);
     }

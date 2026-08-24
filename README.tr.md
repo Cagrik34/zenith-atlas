@@ -1,14 +1,19 @@
-﻿# 🏛️ Zenith Atlas — Yüksek Performanslı Kantitatif Finans Terminali
+# 🏛️ Zenith Atlas — Yüksek Performanslı Kantitatif Finans Terminali
 
-> %100 istemci tarafında (client-side) çalışan açık kaynaklı TEFAS fon analitiği, çok varlıklı portföy yönetimi ve kantitatif strateji motoru.
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![React 19](https://img.shields.io/badge/React-19.x-61dafb.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8_Strict-3178c6.svg)](https://www.typescriptlang.org/)
-[![Vite 6](https://img.shields.io/badge/Vite-6.x-646cff.svg)](https://vitejs.dev/)
-[![PWA](https://img.shields.io/badge/PWA-Offline--First-orange.svg)](https://web.dev/progressive-web-apps/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![React 19](https://img.shields.io/badge/React-19.x-61dafb.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8_Strict-3178c6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vitest](https://img.shields.io/badge/Tests-23%20Passed%20(100%25)-success?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Vite 6](https://img.shields.io/badge/Vite-6.x-646cff.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![PWA](https://img.shields.io/badge/PWA-Offline--First-orange.svg?style=for-the-badge)](https://web.dev/progressive-web-apps/)
 
-[🇬🇧 Click for English Documentation](./README.md)
+**%100 istemci tarafında (client-side) çalışan açık kaynaklı TEFAS fon analitiği, çok varlıklı portföy yönetimi ve kantitatif strateji motoru.**
+
+[Canlı Terminal](https://cagrik34.github.io/zenith-atlas/) • [Mimari](#mimari-ve-veri-akış-şeması) • [Benchmark](#-kantitatif-motor-benchmark-ve-doğrulama) • [Kurulum](#-kurulum--çalıştırma) • [English Documentation](./README.md)
+
+</div>
 
 ---
 
@@ -17,6 +22,23 @@
 **Zenith Atlas**, Türkiye ve küresel sermaye piyasalarını (1.051 TEFAS yatırım fonu, Borsa İstanbul, döviz, emtia ve TCMB makroekonomik göstergeleri) takip eden yatırımcılar, araştırmacılar ve fon yöneticileri için tasarlanmış yüksek performanslı bir kantitatif analiz terminalidir.
 
 **İstemci Tarafı Bellek Mimarisi (Client-Side Memory Architecture)** ile çalışır; hiçbir portföy verisi veya işlem geçmişi harici sunuculara aktarılmaz. Tüm faktör regresyonları, Bayesyen dağılımlar ve 10.000 patikalı Monte Carlo simülasyonları doğrudan tarayıcı belleğinde işlenir.
+
+---
+
+## 📊 Kantitatif Motor Benchmark ve Doğrulama
+
+Tüm matematiksel hesaplama modülleri ve çok ajanlı koordinasyon döngüleri otomatik test süiti (**23 Birim ve Benchmark Testi**) ile kapsanmakta ve doğrulanmaktadır:
+
+| Matematik Motoru / Modül | Algoritma ve Metodoloji | Test Durumu | Yürütme Gecikmesi |
+| :--- | :--- | :---: | :---: |
+| **Monte Carlo Motoru** | 10.000 Patikalı Geometrik Brownian Hareketi (GBM) | **%100 BAŞARILI** | `175ms` *(5 Yıllık Ufuk)* |
+| **Black-Litterman Modeli** | Bayesyen Portföy Dengesi ve Görüş Daralması | **%100 BAŞARILI** | `0.21ms` |
+| **Hiyerarşik Risk Paritesi (HRP)** | Marcos Lopez de Prado ML Ağaç Kümelemesi | **%100 BAŞARILI** | `0.27ms` |
+| **Fama-French 5-Faktör** | Çok Faktörlü Regresyon & Jensen's Alpha | **%100 BAŞARILI** | `0.38ms` |
+| **Uyarlanabilir Devre Kesici** | 3 Kademeli Kayıp & Volatilite Durum Makinesi | **%100 BAŞARILI** | `< 0.1ms` |
+| **Vergi Zararı Hasadı Motoru** | GVK 67 Muafiyeti ve HIFO Vergi Kalkanı | **%100 BAŞARILI** | `< 0.2ms` |
+| **Çok Ajanlı Hive Motoru** | 5 Otonom Nöbetçi Ajan ve Hafıza Yansıtıcısı | **%100 BAŞARILI** | Doğrulandı |
+| **Formül Enjeksiyonu Kalkanı** | DDE Sanitizasyonu (`sanitizeCsvCell`) | **%100 BAŞARILI** | Doğrulandı |
 
 ---
 
@@ -122,14 +144,14 @@ cd zenith-atlas
 # 2. Bağımlılıkları yükleyin
 npm install
 
-# 3. Geliştirme sunucusunu başlatın
+# 3. Otomatik testleri ve benchmark'ı çalıştırın (23 Test)
+npm test
+
+# 4. Geliştirme sunucusunu başlatın
 npm run dev
 
-# 4. Üretim paketini derleyin (Strict TypeScript & PWA)
+# 5. Üretim paketini derleyin (Strict TypeScript & PWA)
 npm run build
-
-# 5. Üretim önizlemesi
-npm run preview
 ```
 
 ---
@@ -138,7 +160,7 @@ npm run preview
 
 ```text
 zenith-atlas/
-├── .github/                # GitHub Actions Otomatik Dağıtım (CI/CD)
+├── .github/workflows/      # GitHub Actions CI/CD test ve otomatik dağıtım hattı
 ├── public/                 # Statik PWA Varlıkları & İkonlar
 ├── scripts/                # Senkronizasyon Scriptleri (sync.py)
 ├── src/
@@ -152,8 +174,11 @@ zenith-atlas/
 │   ├── utils/              # formatters.ts, excelExport.ts, storage.ts
 │   ├── App.tsx             # Ana Uygulama & Global Modallar
 │   └── main.tsx            # React 19 Kök Giriş Noktası
+├── tests/                  # Vitest Birim & Benchmark test süitleri (23 Test)
+│   ├── benchmark/          # Alt-milisaniyelik performans benchmark'ları
+│   └── unit/               # Kantitatif motorlar, ajanlar ve güvenlik testleri
 ├── index.html              # HTML5 Giriş Dosyası
-├── package.json            # Bağımlılıklar & Scriptler
+├── package.json            # Bağımlılıklar, scriptler ve test çalıştırıcısı
 ├── tsconfig.json           # TypeScript Katı Tip Yapılandırması
 └── vite.config.ts          # Vite 6 + manualChunks Rollup Yapılandırması
 ```

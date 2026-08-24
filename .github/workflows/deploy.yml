@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  test-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -34,17 +37,23 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Zenith Atlas Production Bundle
+      - name: Run Quantitative Engines & Security Test Suite (23 Tests)
+        run: npm test
+
+      - name: Build Zenith Atlas Production Bundle (Strict TypeScript & PWA)
         run: npm run build
 
       - name: Setup GitHub Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
       - name: Upload Artifacts
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'
 
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v4
